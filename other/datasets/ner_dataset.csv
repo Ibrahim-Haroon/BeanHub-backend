@@ -1,0 +1,28 @@
+sentence_number,word,tag
+1,Are,O
+1,you,O
+1,guys,O
+1,open,O
+2,I'll,O
+2,a,O
+2,medium,B_SIZE
+2,espresso,I_COFFEE_TYPE
+2,with,O
+2,three,B_QUANTITY
+2,sugars,I_ADD_ON
+3,If,O
+3,you,O
+3,have,O
+3,any,O
+3,more,O
+3,cinnamon rolls,B_BAKERY_ITEM
+3,left,O
+3,I'll,O
+3,take,O
+3,one, I_QUANTITY
+3,and,O
+3,then,O
+3,also,O
+3,just,O
+3,2,B_QUANTITY
+3,black coffees,I_COFFEE_TYPE

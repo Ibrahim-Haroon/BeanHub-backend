@@ -1,0 +1,44 @@
+{
+  "_name_or_path": "bert-base-cased",
+  "architectures": [
+    "BertForTokenClassification"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "classifier_dropout": null,
+  "gradient_checkpointing": false,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "O",
+    "1": "B_SIZE",
+    "2": "I_COFFEE_TYPE",
+    "3": "B_QUANTITY",
+    "4": "I_ADD_ON",
+    "5": "B_BAKERY_ITEM",
+    "6": " I_QUANTITY"
+  },
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "label2id": {
+    " I_QUANTITY": 6,
+    "B_BAKERY_ITEM": 5,
+    "B_QUANTITY": 3,
+    "B_SIZE": 1,
+    "I_ADD_ON": 4,
+    "I_COFFEE_TYPE": 2,
+    "O": 0
+  },
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 512,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "pad_token_id": 0,
+  "position_embedding_type": "absolute",
+  "torch_dtype": "float32",
+  "transformers_version": "4.36.2",
+  "type_vocab_size": 2,
+  "use_cache": true,
+  "vocab_size": 28996
+}
