@@ -15,7 +15,7 @@ def mock_components(mocker):
     return {
         'ner_model_mock': ner_model_mock,
         'openai_embedding_api': mocker.patch('src.vector_db.similarity_search.openai_embedding_api'),
-        'connection_string': mocker.patch('src.vector_db.aws_database_auth.py.connection_string'),
+        'connection_string': mocker.patch('src.vector_db.aws_database_auth.connection_string'),
         'connect': mocker.patch('src.vector_db.similarity_search.psycopg2.connect'),
     }
 
