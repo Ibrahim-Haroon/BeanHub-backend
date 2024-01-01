@@ -15,8 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.http import HttpResponse
+from django.urls import path, include
+
+
+def root_view(request):
+    return HttpResponse("Hello! You're at the root of the BeanHub server.")
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", root_view, name='root'),
+    path('upload/', include('AudioEndpoint.urls')),
 ]
