@@ -9,7 +9,7 @@ import csv
 def mock_components(mocker):
     return {
         'openai_embedding_api': mocker.patch('src.vector_db.fill_vectordb.openai_embedding_api'),
-        'connection_string': mocker.patch('src.vector_db.aws_database_auth.py.connection_string'),
+        'connection_string': mocker.patch('src.vector_db.aws_database_auth.connection_string'),
         'register_vector': mocker.patch('pgvector.psycopg2.register_vector'),
         'connect': mocker.patch('src.vector_db.fill_vectordb.psycopg2.connect'),
         'input': mocker.patch('builtins.input'),

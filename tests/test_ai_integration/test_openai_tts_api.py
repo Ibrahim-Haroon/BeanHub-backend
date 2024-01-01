@@ -3,7 +3,7 @@ import pytest
 from mock import MagicMock, patch
 from typing import Final
 
-script_path: Final[str] = 'scripts.ai_integration.openai_tts_api'
+script_path: Final[str] = 'src.ai_integration.openai_tts_api'
 
 
 @pytest.fixture
