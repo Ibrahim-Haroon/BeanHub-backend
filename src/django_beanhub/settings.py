@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     'rest_framework',
-    'AudioEndpoint',
+    'src.AudioEndpoint',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +52,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "django_beanhub.urls"
+ROOT_URLCONF = "src.django_beanhub.urls"
 
 TEMPLATES = [
     {
@@ -70,7 +70,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "django_beanhub.wsgi.application"
+WSGI_APPLICATION = "src.django_beanhub.wsgi.application"
 
 
 # Database
