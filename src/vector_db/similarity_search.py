@@ -1,9 +1,9 @@
 import psycopg2
 from io import StringIO
-from scripts.server.vector_db.aws_secret import get_secret
-from scripts.ai_integration.openai_embeddings_api import *
-from scripts.server.vector_db.connection_string import connection_string
-from scripts.ai_integration.nlp_bert import ner_transformer
+from src.vector_db.aws_sdk_auth import get_secret
+from src.ai_integration.openai_embeddings_api import *
+from src.vector_db.aws_database_auth import connection_string
+from src.ai_integration.nlp_bert import ner_transformer
 import numpy as np
 
 
