@@ -7,7 +7,7 @@ from src.ai_integration.nlp_bert import ner_transformer
 import numpy as np
 
 
-def contains(order: str, top_k: int = 3, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> object:
+def get(order: str, top_k: int = 3, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> object:
     """
 
     @rtype: list[list[float]] + boolean
@@ -21,10 +21,7 @@ def contains(order: str, top_k: int = 3, key: str = None, aws_csv_file: StringIO
     if not order:
         return None, False
 
-    formatted_thing = ner_transformer(order)
-
-    embedding = openai_embedding_api(str(formatted_thing), key)
-
+    embedding = openai_embedding_api(order, key)
 
     get_secret(aws_csv_file if not None else None)
     db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
@@ -52,7 +49,7 @@ def main() -> int:
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
-    contains(order="dummy", key=key)
+    get(order="dummy", key=key)
 
     return 0
 
