@@ -66,5 +66,5 @@ def main(key_path: str) -> int:
 
 
 if __name__ == "__main__":
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
     main(key_file_path)
