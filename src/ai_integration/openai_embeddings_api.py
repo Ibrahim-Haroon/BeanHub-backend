@@ -1,6 +1,7 @@
 from langchain.embeddings import OpenAIEmbeddings
 from os import path
 import pandas as pd
+import math
 
 
 def openai_embedding_api(text: str, api_key: str = None) -> []:
@@ -17,6 +18,50 @@ def openai_embedding_api(text: str, api_key: str = None) -> []:
     return embeddings.embed_query(text)
 
 
+def get_item_quantity(row: pd.Series) -> str or int:
+    """
+
+    @rtype: string or int
+    @param row: object from pandas dataframe
+    @return: "combo" if item is a combo, else return the quantity
+    """
+    item_quantity = row
+    if isinstance(item_quantity, float) and math.isnan(item_quantity):
+        return "combo"
+    else:
+        return int(item_quantity)
+
+
+
+def get_common_allergin(row: pd.Series) -> str:
+    """
+
+    @rtype: str
+    @param row: object from pandas dataframe
+    @return: "none" if item has no common allergin, else return the allergin
+    """
+    common_allergin = row
+    if isinstance(common_allergin, float) and math.isnan(common_allergin):
+        return "none"
+    else:
+        return str(common_allergin)
+
+
+def get_calorie_range(row: pd.Series) -> tuple[int, int]:
+    """
+
+    @rtype: tuple[int, int]
+    @param row: object from pandas dataframe
+    @return: if object has set calories then tuple of min, min, else return tuple of min and max calories
+    """
+    calorie_range = row.split('-')
+    min_cal = calorie_range[0]
+    if len(calorie_range) == 1:
+        return min_cal, min_cal
+    else:
+        max_cal = calorie_range[1]
+        return min_cal, max_cal
+
 
 def parse_menu_csv() -> list[dict]:
     """
@@ -32,11 +77,17 @@ def parse_menu_csv() -> list[dict]:
 
     for index, row in df.iterrows():
         item_name = row['item_name']
+        item_quantity = get_item_quantity(row['item_quantity'])
+        common_allergin = get_common_allergin(row['common_allergin'])
+        min_calories, max_calories = get_calorie_range(row['num_calories'])
         price = row['price']
 
         item = {
             "MenuItem": {
                 "itemName": item_name,
+                "item_quantity": item_quantity,
+                "common_allergin": common_allergin,
+                "num_calories": (min_calories) if max_calories == min_calories else (min_calories, max_calories),
                 "price": float(price)
             }
         }
@@ -56,6 +107,8 @@ def main(key_path: str) -> int:
         key = api_key.readline().strip()
 
     menu = parse_menu_csv()
+
+    print(menu)
 
     vectors = []
 
