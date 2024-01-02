@@ -2,3 +2,6 @@
 .idea/
 *.DS_Store
 db.sqlite3
+other/api_key.txt
+other/aws-info.csv
+other/database-info.csv
