@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class AudioendpointConfig(AppConfig):
+class AudioEndpointConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "src.AudioEndpoint"
+    name = "src.audio_endpoint"
