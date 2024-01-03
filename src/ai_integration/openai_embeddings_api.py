@@ -84,7 +84,7 @@ def parse_menu_csv() -> list[dict]:
 
         item = {
             "MenuItem": {
-                "itemName": item_name,
+                "item_name": item_name,
                 "item_quantity": item_quantity,
                 "common_allergin": common_allergin,
                 "num_calories": (min_calories, max_calories),
