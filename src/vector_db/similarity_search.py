@@ -1,6 +1,7 @@
 import psycopg2
 from io import StringIO
 from src.vector_db.aws_sdk_auth import get_secret
+from pgvector.psycopg2 import register_vector
 from src.ai_integration.openai_embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.nlp_bert import ner_transformer
@@ -22,17 +23,21 @@ def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file:
         return None, False
 
     formatted_thing = ner_transformer(order)
-    embedding = openai_embedding_api(str(formatted_thing), key)
 
     get_secret(aws_csv_file if not None else None)
     db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
     db_connection.set_session(autocommit=True)
 
     cur = db_connection.cursor()
-    cur.execute(f""" SELECTED id, item_name, item_quantity, common_allergin, num_calories, price, embeddings
-                    FROM products
-                    ORDER BY embeddings <-> %s limit {top_k};""",
+
+    embedding = openai_embedding_api(str(formatted_thing), key)
+    register_vector(db_connection)
+
+    cur.execute(f""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
+                        FROM products
+                        ORDER BY embeddings <-> %s limit {top_k};""",
                 (np.array(embedding),))
+
     results = cur.fetchall()
 
     cur.close()
@@ -42,7 +47,7 @@ def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file:
 
 
 def main() -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
