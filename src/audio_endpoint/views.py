@@ -45,7 +45,7 @@ class AudioView(APIView):
             s3.download_file(self.bucket_name, most_recent['Key'], temp_file.name)
             temp_file.close()
 
-            _, transcription = get_transcription(temp_file.name)
+            transcription = get_transcription(temp_file.name)
         finally:
             os.remove(temp_file.name)
 
