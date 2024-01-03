@@ -33,7 +33,7 @@ def main(text: str) -> int:
     @param text: desired text to convert into audio
     @return: 0 if success
     """
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key")
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
