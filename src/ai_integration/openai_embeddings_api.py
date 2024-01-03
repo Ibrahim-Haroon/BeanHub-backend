@@ -18,16 +18,16 @@ def openai_embedding_api(text: str, api_key: str = None) -> []:
     return embeddings.embed_query(text)
 
 
-def get_item_quantity(row: pd.Series) -> str or int:
+def get_item_quantity(row: pd.Series) -> int:
     """
 
-    @rtype: string or int
+    @rtype: int
     @param row: object from pandas dataframe
-    @return: "combo" if item is a combo, else return the quantity
+    @return: INT_MAX if item is a combo, else return the quantity
     """
     item_quantity = row
     if isinstance(item_quantity, float) and math.isnan(item_quantity):
-        return "combo"
+        return 0x7fffffff
     else:
         return int(item_quantity)
 
@@ -87,7 +87,7 @@ def parse_menu_csv() -> list[dict]:
                 "itemName": item_name,
                 "item_quantity": item_quantity,
                 "common_allergin": common_allergin,
-                "num_calories": (min_calories) if max_calories == min_calories else (min_calories, max_calories),
+                "num_calories": (min_calories, max_calories),
                 "price": float(price)
             }
         }
@@ -108,12 +108,15 @@ def main(key_path: str) -> int:
 
     menu = parse_menu_csv()
 
-    print(menu)
+    # print(menu)
 
     vectors = []
 
     for item in menu:
-        vectors.append(openai_embedding_api(str(item), key))
+        # vectors.append(openai_embedding_api(str(item), key))
+        num_calories = (int(item["MenuItem"]["num_calories"][0]), int(item["MenuItem"]["num_calories"][1]))
+        # print(type(item["MenuItem"]["num_calories"][0]))
+        print(num_calories)
 
     return 0
 
