@@ -133,26 +133,5 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-secret_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "aws-info.csv")
-df = pd.read_csv(secret_file_path)
-
-row = df.iloc[0]
-
-region_name = row['region_name']
-aws_access_key_id = row['aws_access_key_id']
-aws_secret_access_key = row['aws_secret_access_key']
-
-# AWS S3
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
-# https://codewithmuh.medium.com/configure-aws-s3-with-django-5163abc6dd48
-AWS_ACCESS_KEY_ID = aws_access_key_id
-AWS_SECRET_ACCESS_KEY = aws_secret_access_key
-AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = 's3v4',
-AWS_S3_REGION_NAME = region_name
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_S3_VERITY = True
-
 # Tell django-storages the domain to use to refer to static files.
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
