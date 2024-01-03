@@ -1,10 +1,12 @@
 import psycopg2
-from pgvector.psycopg2 import register_vector
-from src.ai_integration.openai_embeddings_api import *
-from src.vector_db.aws_sdk_auth import get_secret
-from src.vector_db.aws_database_auth import connection_string
 from other.red import inputRED
 from io import StringIO
+from pgvector.psycopg2 import register_vector
+from psycopg2.extras import register_composite
+from src.vector_db.aws_sdk_auth import get_secret
+from src.ai_integration.openai_embeddings_api import *
+from src.vector_db.aws_database_auth import connection_string
+
 
 
 def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> bool:
@@ -29,6 +31,19 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
     db_connection.set_session(autocommit=True)
 
     cur = db_connection.cursor()
+
+    cur.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'calorie_range') THEN
+                CREATE TYPE calorie_range AS (
+                    min int,
+                    max int
+                );
+            END IF;
+        END $$;
+    """)
+
+
     cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
     register_vector(db_connection)
     cur.execute("DROP TABLE IF EXISTS products;")
@@ -39,27 +54,30 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
                 item_name text,
                 item_quantity int,
                 common_allergin text,
-                num_calories, int,
+                num_calories calorie_range,
                 price double precision,
                 embeddings vector(1536)
             );
-        """)
+    """)
 
     for item in data:
+        num_calories = (int(item["MenuItem"]["num_calories"][0]), int(item["MenuItem"]["num_calories"][1]))
+
         cur.execute("""
             INSERT INTO products (item_name, item_quantity, common_allergin, num_calories, price, embeddings)
             VALUES (%s, %s, %s, %s, %s, %s);
         """, (item["MenuItem"]["itemName"],
               item["MenuItem"]["item_quantity"],
               item["MenuItem"]["common_allergin"],
-              item["MenuItem"]["num_calories"],
+              num_calories,
               item["MenuItem"]["price"],
               openai_embedding_api(str(item), key)))
 
     cur.execute("""
             CREATE INDEX ON products
             USING ivfflat (embeddings) WITH (lists = 8);
-        """)
+    """)
+
     cur.execute("VACUUM ANALYZE products;")
 
     cur.close()
@@ -69,7 +87,7 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
 
 
 def main() -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
