@@ -2,58 +2,63 @@ import speech_recognition as speech
 from pydub import AudioSegment
 
 
-def record_until_silence(source=None) -> object:
+def get_transcription(source: str = None) -> str:
     """
 
-    @rtype: object, str
-    @param source: .wav file = if you have an existing audio file to transcribe else use microphone
-    @return: audio recording + transcription = recording is sped up version of source
+    @rtype: str
+    @param source: str = if you have an existing audio file path to transcribe else use microphone
+    @return: transcription
     """
     recognizer = speech.Recognizer()
-    audio_data = None
+
     transcribed_audio = None
 
-    if source is None:
-        audio_data = []
-        with speech.Microphone() as audio_source:
-            print("Recording... Speak until you want to stop.")
+    with speech.AudioFile(source) as audio_source:
+        audio = recognizer.record(audio_source)
 
-            # Adjust for ambient noise
-            recognizer.adjust_for_ambient_noise(audio_source, duration=1)
+        try:
+            transcribed_audio = recognizer.recognize_google(audio)
+        except speech.UnknownValueError:
+            print("Google Speech Recognition could not understand audio")
+            return "None"
+        except speech.RequestError as e:
+            print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
-            while True:
-                try:
-                    audio_chunk = recognizer.listen(audio_source, timeout=1)
-                    audio_data.append(audio_chunk.frame_data)
+    return transcribed_audio
 
-                    # Try to convert speech to text
-                    transcribed_audio = recognizer.recognize_google(audio_chunk)
-                    print(f"Recognized: {transcribed_audio}")
 
-                except speech.WaitTimeoutError:
-                    print("Timeout. No speech detected.")
-                    break
-                except speech.UnknownValueError:
-                    print("Could not understand audio.")
-                except speech.RequestError as e:
-                    print(f"Google Speech Recognition request failed: {e}")
 
-        audio_data = b"".join(audio_data)
+def record_until_silence() -> bytes and str:
+    recognizer = speech.Recognizer()
+    audio_data = []
+    transcribed_audio = None
 
-    else:
-        with speech.AudioFile(source) as audio_source:
-            audio = recognizer.record(audio_source)
+    with speech.Microphone() as audio_source:
+        print("Recording... Speak until you want to stop.")
 
+        # Adjust for ambient noise
+        recognizer.adjust_for_ambient_noise(audio_source, duration=1)
+
+        while True:
             try:
-                transcribed_audio = recognizer.recognize_google(audio)
+                audio_chunk = recognizer.listen(audio_source, timeout=1)
+                audio_data.append(audio_chunk.frame_data)
+
+                # Try to convert speech to text
+                transcribed_audio = recognizer.recognize_google(audio_chunk)
+                print(f"Recognized: {transcribed_audio}")
+
+            except speech.WaitTimeoutError:
+                print("Timeout. No speech detected.")
+                break
             except speech.UnknownValueError:
-                print("Google Speech Recognition could not understand audio")
-                return None, None
+                print("Could not understand audio.")
             except speech.RequestError as e:
-                print("Could not request results from Google Speech Recognition service; {0}".format(e))
+                print(f"Google Speech Recognition request failed: {e}")
+
+    audio_data = b"".join(audio_data)
 
     return audio_data, transcribed_audio
-
 
 
 def save_as_mp3(audio_data, output_filename: str = "recorded_audio.mp3", print_completion: bool = False) -> None:
@@ -71,6 +76,6 @@ def save_as_mp3(audio_data, output_filename: str = "recorded_audio.mp3", print_c
 
 
 if __name__ == "__main__":
-    recorded_audio, _ = record_until_silence()
+    recorded_audio, transcription = record_until_silence()
     if recorded_audio is not None:
         save_as_mp3(recorded_audio)
