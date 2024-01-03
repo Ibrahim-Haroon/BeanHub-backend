@@ -5,7 +5,7 @@ from rest_framework import status
 from .serializers import AudioResponseSerializer
 
 
-class AudioUploadView(APIView):
+class AudioView(APIView):
     parser_classes = [MultiPartParser]
 
     def post(self, request, format=None):

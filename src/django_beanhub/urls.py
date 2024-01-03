@@ -26,5 +26,5 @@ def root_view(request):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", root_view, name='root'),
-    path('upload/', include('src.audio_endpoint.urls')),
+    path('audio_endpoint/', include('src.audio_endpoint.urls')),
 ]
