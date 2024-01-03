@@ -4,7 +4,7 @@ from .models import AudioFile
 
 @admin.register(AudioFile)
 class AudioAdmin(admin.ModelAdmin):
-    list_display = ['file', 'floating_point_number']
+    list_display = ['display_audio', 'floating_point_number']
 
     def display_audio(self, obj):
         return obj.file.url if obj.file else None
