@@ -30,9 +30,21 @@ def test_openai_embeddings_api(mock_openai):
 
 def test_parse_menu_csv(mocker):
     # Arrange
-    expected_output = [{'MenuItem': {'itemName': 'test', 'price': 0.0}}]
+    expected_output = [{"MenuItem": {
+        "item_name": "item_name",
+        "item_quantity": 2,
+        "common_allergin": "common_allergin",
+        "num_calories": ('0', '0'),
+        "price": 0.0}
+    }]
 
-    mocker.patch('pandas.read_csv', return_value=pd.DataFrame({"item_name": ["test"], "price": [0.0]}))
+    mocker.patch('pandas.read_csv', return_value=pd.DataFrame({
+        "item_name": ["item_name"],
+        "item_quantity": [2],
+        "common_allergin": ["common_allergin"],
+        "num_calories": ["0-0"],
+        "price": [0.0]})
+    )
 
     # Act
     result = parse_menu_csv()
