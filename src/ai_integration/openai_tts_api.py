@@ -2,7 +2,7 @@ from os import path
 from openai import OpenAI
 
 
-def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: str = "tts_recording.mp3") -> None:
+def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: str = None) -> bytes:
     """
 
     @rtype: None
@@ -23,7 +23,10 @@ def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: s
 
     )
 
-    response.stream_to_file(audio_file_path)
+    if audio_file_path:
+        response.stream_to_file(audio_file_path)
+
+    return response.content
 
 
 def main(text: str) -> int:
