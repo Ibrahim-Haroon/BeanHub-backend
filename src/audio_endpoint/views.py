@@ -1,4 +1,5 @@
 import os
+import time
 import boto3
 import tempfile
 import pandas as pd
@@ -56,9 +57,10 @@ class AudioView(APIView):
                 f.write(res_audio)
 
             s3.upload_file(res_audio_path, self.bucket_name, "result.wav")
+            current_timestamp = int(time.time() * 1000)
 
             response_data = {
-                'file': f"{self.bucket_name}/result.wav",
+                'file': f"result_{current_timestamp}.wav",
                 'floating_point_number': price
             }
 
