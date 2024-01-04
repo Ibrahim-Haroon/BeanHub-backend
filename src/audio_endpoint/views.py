@@ -27,10 +27,7 @@ class AudioView(APIView):
         self.aws_secret_access_key = row['aws_secret_access_key']
         self.bucket_name = "beanhubbucket"
 
-    def post(self, request, format=None):
-        if 'file' not in request.data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
+    def get(self, format=None):
         s3 = boto3.client('s3', aws_access_key_id=self.aws_access_key_id,
                           aws_secret_access_key=self.aws_secret_access_key,
                           region_name=self.region_name)
