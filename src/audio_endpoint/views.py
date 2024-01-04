@@ -58,7 +58,7 @@ class AudioView(APIView):
             s3.upload_file(res_audio_path, self.bucket_name, "result.wav")
 
             response_data = {
-                'file': f"s3://{self.bucket_name}/result.wav",
+                'file': f"{self.bucket_name}/result.wav",
                 'floating_point_number': price
             }
 
