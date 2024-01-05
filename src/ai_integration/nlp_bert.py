@@ -73,4 +73,6 @@ def format_ner(ner_prediction: list, print_final_format: bool = False):
 
 
 if __name__ == "__main__":
-    ner_transformer()
+    res = ner_transformer("Can I get a caramel latte and an egg and cheese sandwich?")
+    print(res)
+
