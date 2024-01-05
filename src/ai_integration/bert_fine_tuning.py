@@ -35,7 +35,7 @@ def __labels__(data: pd.core.frame.DataFrame) -> []:
 
 def __args__() -> NERArgs:
     args = NERArgs()
-    args.num_train_epochs = 6
+    args.num_train_epochs = 12
     args.learning_rate = 1e-4
     args.overwrite_output_dir = True
     args.train_batch_size = 32
@@ -66,6 +66,7 @@ def fine_tune_bert(model_save_path: str = None) -> bool:
         if (str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants"):
             return False
 
+    save_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "other/genai_models/")
     data = load_data()
 
     if data.empty:
@@ -84,9 +85,11 @@ def fine_tune_bert(model_save_path: str = None) -> bool:
     if model_save_path:
         model.save_model(model_save_path, model=model.model)
     else:
-        save_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "other/genai_models/")
         model.save_model(save_path, model=model.model)
 
+    result, model_outputs, preds_list = model.eval_model(test)
+
+    print(result)
 
     return True
 
