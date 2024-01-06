@@ -16,19 +16,25 @@ Mango tea,4,"Mango, Tea Leaves, Additives/ Flavorings",0-100,5.00
 Jasmine,1,"Pollen, Jasmine, Tea Leaves",0-50,7.00
 Green tea,2,"Pollen, Additives",2-50,10.00
 Mint tea,6,"Pollen, Additives",2-50,10.00
-Non-Coffee + Dessert (Combo 1),,,500-1200,8.00
-Coffee + Dessert (Combo 2),,,250-700,9.00
-Tea + Dessert (Combo 3),,,200-700,11.00
-Hazelnut,,Nut,30,0.50
-Whipped Cream,,,50,0.50
-Caramel,,,60,0.50
-Vanilla,,,20,.50
+Non-Coffee + Dessert (Combo 1),N/A,N/A,500-1200,8.00
+Coffee + Dessert (Combo 2),N/A,N/A,250-700,9.00
+Tea + Dessert (Combo 3),N/A,N/A,200-700,11.00
+Hazelnut,N/A,Nut,30,0.50
+Whipped Cream,N/A,None,50,0.50
+Caramel,N/A,None,60,0.50
+Vanilla,N/A,None,20,.50
 Egg and Cheese,7,Lactose,360,5.00
 Bacon Egg and Cheese,6,"Lactose, Gluten",420,6.00
 Vegan Egg and Cheese,2,Gluten,300,6.00
 Hashbrowns,22,Gluten,150,2.50
-Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
-Donut,24,"Lactose, Gluten, Eggs, Soy, Nuts, Seeds",200-500,2.00
+Plain Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
+Everything Bagel w/ cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
+Sesame Bagel w/ cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
+Cinnamon Raisin Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
+Glazed Donut,12,"Lactose, Gluten, Eggs, Soy",200-500,2.00
+Strawberry Donut,9,"Lactose, Gluten, Eggs, Soy",200-500,2.00
+Chocolate Donut,4,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.00
+Boston Cream Donut,6,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.00
 Lemon Cake,8,"Dairy, Eggs, Wheat, Nuts, Soy, Lemons",300-400,2.50
 Muffin,2,"Gluten, Dairy, Eggs, Nuts, Soy, Cocoa",100-400,3.00
 Chocolate Chip Cookie,24,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.50
