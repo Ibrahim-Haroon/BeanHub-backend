@@ -1,20 +1,16 @@
 item_name,item_quantity,common_allergin,num_calories,price
 Espresso,2,None,2,5.00
 Double Espresso,4,None,4,5.00
-Latte,0,Milk (if made with),120-180,5.00
+Latte,0,Lactose (if made with),120-180,5.00
 Americano,2,None,5-25,7.00
-Macchiato,9,Milk (if added),15-30,8.00
-Flat White,1,Milk (if added),120-160,9.00
-Cappuccino,6,Milk (if added),60-120,10.00
-Hot chocolate,5,"Milk, Soy, Nuts, Gluten, Cocoa, Additives",150-250,5.00
-Milkshake,11,"Milk, Nuts (flavor dependent), Soy, Gluten, Flavoring/ Additives",300-800,5.00
+Macchiato,9,Lactose (if added),15-30,8.00
+Flat White,1,Lactose (if added),120-160,9.00
+Cappuccino,6,Lactose (if added),60-120,10.00
+Hot chocolate,5,"Lactose, Soy, Nuts, Gluten, Cocoa, Additives",150-250,5.00
+Fruit Juice,11,,300-800,5.00
 Smoothie,3,"Nuts, Dairy, Soy, Gluten, Fruits",150-300,5.00
 Lemonade,1,"Citrus, Sulfites, Fruits, Additives",100-120,7.00
-Vanilla milkshake,7,"Milk, Vanilla, Nuts, (if added)",300-400,8.00
-Donut,24,"Milk, Gluten, Eggs, Soy, Nuts, Seeds",200-500,5.00
-Cinnamon Roll,16,"Gluten, Dairy, Eggs, Nuts, Soy, Spices",300-800,5.00
-Lemon pie,8,"Dairy, Eggs, Wheat, Nuts, Soy, Lemons",300-400,5.00
-Brownie,5,"Gluten, Dairy, Eggs, Nuts, Soy, Cocoa",100-400,5.00
+Vanilla milkshake,7,"Lactose, Vanilla, Nuts, (if added)",300-400,8.00
 Lemon tea,2,"Citrus, Tea,  Additives",2-50,5.00
 Mango tea,4,"Mango, Tea Leaves, Additives/ Flavorings",0-100,5.00
 Jasmine,1,"Pollen, Jasmine, Tea Leaves",0-50,7.00
@@ -23,3 +19,17 @@ Mint tea,6,"Pollen, Additives",2-50,10.00
 Non-Coffee + Dessert (Combo 1),,,500-1200,8.00
 Coffee + Dessert (Combo 2),,,250-700,9.00
 Tea + Dessert (Combo 3),,,200-700,11.00
+Hazelnut,,Nut,30,0.50
+Whipped Cream,,,50,0.50
+Caramel,,,60,0.50
+Vanilla,,,20,.50
+Egg and Cheese,7,Lactose,360,5.00
+Bacon Egg and Cheese,6,"Lactose, Gluten",420,6.00
+Vegan Egg and Cheese,2,Gluten,300,6.00
+Hashbrowns,22,Gluten,150,2.50
+Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
+Donut,24,"Lactose, Gluten, Eggs, Soy, Nuts, Seeds",200-500,2.00
+Lemon Cake,8,"Dairy, Eggs, Wheat, Nuts, Soy, Lemons",300-400,2.50
+Muffin,2,"Gluten, Dairy, Eggs, Nuts, Soy, Cocoa",100-400,3.00
+Chocolate Chip Cookie,24,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.50
+Brownie,5,"Gluten, Dairy, Eggs, Nuts, Soy, Cocoa",100-400,4.50
