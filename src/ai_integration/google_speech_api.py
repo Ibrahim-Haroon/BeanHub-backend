@@ -6,9 +6,13 @@ def get_transcription(source: str = None) -> str:
     """
 
     @rtype: str
-    @param source: str = if you have an existing audio file path to transcribe else use microphone
+    @param source: str = file path of an audio file
     @return: transcription
     """
+
+    if not source:
+        return "None"
+
     recognizer = speech.Recognizer()
 
     transcribed_audio = None
@@ -29,6 +33,11 @@ def get_transcription(source: str = None) -> str:
 
 
 def record_until_silence() -> bytes and str:
+    """
+
+    @rtype: bytes and str
+    @return: audio file containing recording of microphone and transcription
+    """
     recognizer = speech.Recognizer()
     audio_data = []
     transcribed_audio = None
@@ -61,11 +70,11 @@ def record_until_silence() -> bytes and str:
     return audio_data, transcribed_audio
 
 
-def save_as_mp3(audio_data, output_filename: str = "recorded_audio.mp3", print_completion: bool = False) -> None:
+def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.mp3", print_completion: bool = False) -> None:
     """
 
-    @param print_completion: bool = pass True if you want completion notification
-    @param audio_data: object to save in .mp3 format
+    @param print_completion: boolean for whether you want notification of completion
+    @param audio_data: audio to save in .mp3 format
     @param output_filename: file name to save audio object under
     @return None
     """
