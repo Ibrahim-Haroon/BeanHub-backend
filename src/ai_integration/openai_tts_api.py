@@ -5,11 +5,11 @@ from openai import OpenAI
 def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: str = None) -> bytes:
     """
 
-    @rtype: None
+    @rtype: bytes
     @param text: desired text to convert into audio
     @param api_key: key for OpenAI auth
-    @param audio_file_path: file path and name to save audio under
-    @return None
+    @param audio_file_path: file path to save if wanted
+    @return audio
     """
     if api_key:
         client = OpenAI(api_key=api_key)
@@ -30,12 +30,6 @@ def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: s
 
 
 def main(text: str) -> int:
-    """
-
-    @rtype: int
-    @param text: desired text to convert into audio
-    @return: 0 if success
-    """
     key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
