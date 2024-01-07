@@ -8,7 +8,7 @@ from src.ai_integration.nlp_bert import ner_transformer
 import numpy as np
 
 
-def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> object:
+def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> list and bool:
     """
 
     @rtype: list[list[float]] + boolean
