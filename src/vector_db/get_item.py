@@ -7,12 +7,11 @@ from pgvector.psycopg2 import register_vector
 import numpy as np
 
 
-def get(order: str, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> object:
+def get(order: str, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> str and bool:
     """
 
     @rtype: str + bool
     @param order: customers order ex. "Can I have a black coffee with 3 shots of cream."
-    @param top_k: The number of closest embeddings you want
     @param key: OpenAI auth
     @param aws_csv_file: AWS SDK auth
     @param database_csv_file: AWS RDS and PostgreSQL auth
