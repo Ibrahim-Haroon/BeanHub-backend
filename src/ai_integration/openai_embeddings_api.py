@@ -7,10 +7,10 @@ import math
 def openai_embedding_api(text: str, api_key: str = None) -> []:
     """
 
-    @rtype: list[list[float]], embeddings object
-    @param text: str = contains item name and price
-    @param api_key: auth method for OpenAI
-    @return: vector menu item to insert into test_vector_db
+    @rtype: list[list[float]] (embeddings vector)
+    @param text: str = menu item
+    @param api_key: auth key for OpenAI
+    @return: vector of menu item
     """
 
     embeddings = OpenAIEmbeddings(api_key=api_key)
@@ -67,7 +67,7 @@ def parse_menu_csv() -> list[dict]:
     """
 
     @rtype: list[dict]
-    @return: JSON object menu items packaged in a list
+    @return: JSON object of menu items
     """
     menu_items = []
 
