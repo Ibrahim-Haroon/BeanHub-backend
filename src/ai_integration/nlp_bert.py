@@ -9,7 +9,7 @@ def ner_transformer(input_string: str = None, print_prediction: bool = False) ->
     @rtype: list of dictionaries
     @param input_string: customer request ex. "I want a black coffee"
     @param print_prediction: boolean flag to print predictions
-    @return: predictions generated from fine-tune transformer
+    @return: predictions generated from fine-tuned transformer
     """
     if not input_string or not isinstance(input_string, str):
         return []
@@ -26,7 +26,11 @@ def ner_transformer(input_string: str = None, print_prediction: bool = False) ->
     return prediction
 
 
-def format_ner(ner_prediction: list, print_final_format: bool = False):
+def format_ner(ner_prediction: list, print_final_format: bool = False) -> []:
+    """
+
+    @update: Will be deleted soon
+    """
     order = []
     formatted_order = []
 
