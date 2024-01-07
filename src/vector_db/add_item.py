@@ -32,7 +32,7 @@ def add_item(item: dict, key: str = None, aws_csv_file: StringIO = None, databas
                   item["MenuItem"]["common_allergin"],
                   item["MenuItem"]["num_calories"],
                   item["MenuItem"]["price"],
-                  openai_embedding_api(str(item), key)))
+                  openai_embedding_api(str(item), key if key else None)))
 
     cur.close()
     db_connection.close()

@@ -71,7 +71,7 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
               item["MenuItem"]["common_allergin"],
               num_calories,
               item["MenuItem"]["price"],
-              openai_embedding_api(str(item), key)))
+              openai_embedding_api(str(item), key if key else None)))
 
     cur.execute("""
             CREATE INDEX ON products
