@@ -8,9 +8,9 @@ from io import StringIO
 def get_secret(csv_file: StringIO = None) -> dict:
     """
 
-    @purpose: validate Amazon SDK
+    @purpose: SDK for AWS
     @rtype: dict
-    @param csv_file: can be passed if you want to pass in own AWS authentication and is used for unit tests
+    @param csv_file: used for unit tests and if you want to pass in own AWS authentication
     @return: ex. {"username":"username","password":"pass","engine":"engine","host":"host","port":5432,"dbname":"name","dbInstanceIdentifier":"db-id"}
     """
 
