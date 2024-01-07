@@ -2,14 +2,14 @@ name: backend
 
 on:
   push:
-    # paths:
-    #   - '**.py'
-    #   - 'requirements.txt'
+    paths:
+      - '**.py'
+      - 'requirements.txt'
       
   pull_request:
-    # paths:
-    #   - '**.py'
-    #   - 'requirements.txt'
+    paths:
+      - '**.py'
+      - 'requirements.txt'
 
 jobs:
   build:
