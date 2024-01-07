@@ -9,7 +9,13 @@ from other.red import inputRED
 
 
 def load_data(csv_file: StringIO = None, display_data: bool = False) -> pd.core.frame.DataFrame:
+    """
 
+    @rtype: pandas DataFrame
+    @param csv_file: dataset containing tagged sentences
+    @param display_data: boolean to print the amount of columns in csv_file
+    @return: formatted dataset which is parsable by transformer
+    """
     if csv_file is None:
         data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "other/datasets", "ner_dataset.csv")
         data = pd.read_csv(data_path)
@@ -30,10 +36,21 @@ def load_data(csv_file: StringIO = None, display_data: bool = False) -> pd.core.
 
 
 def __labels__(data: pd.core.frame.DataFrame) -> []:
+    """
+
+    @rtype: list(str)
+    @param data: formatted dataset
+    @return: list of labels ex. B-COFFEE-TYPE, I-BAKERY-ITEM
+    """
     return data["labels"].unique().tolist()
 
 
 def __args__() -> NERArgs:
+    """
+
+    @rtype: NERArgs
+    @return: class which contains args/params for NER class
+    """
     args = NERArgs()
     args.num_train_epochs = 12
     args.learning_rate = 1e-4
@@ -44,8 +61,13 @@ def __args__() -> NERArgs:
     return args
 
 
-def separate_into_test_and_train(data: pd.core.frame.DataFrame) -> object:
+def separate_into_test_and_train(data: pd.core.frame.DataFrame) -> tuple and tuple:
+    """
 
+    @rtype: 2x tuple[DataFrame, DataFrame]
+    @param data: formatted dataset
+    @return: dataset split into train (80% original) and test (20% original)
+    """
     X = data[["sentence_id", "words"]]
     Y = data["labels"]
 
@@ -58,8 +80,12 @@ def separate_into_test_and_train(data: pd.core.frame.DataFrame) -> object:
     return train_data, test_data
 
 
-def fine_tune_bert(model_save_path: str = None) -> bool:
+def fine_tune_ner_bert(model_save_path: str = None) -> bool:
+    """
 
+    @param model_save_path: if you want to change default save path of `other/genai_models/`
+    @return: boolean to know training was success
+    """
     if (inputRED("ARE YOU SURE YOU WANT TO DELETE AND REFINE BERT: ") != "YES"):
         return False
     else:
@@ -95,7 +121,7 @@ def fine_tune_bert(model_save_path: str = None) -> bool:
 
 
 def main() -> int:
-    fine_tune_bert()
+    fine_tune_ner_bert()
 
     return 0
 
