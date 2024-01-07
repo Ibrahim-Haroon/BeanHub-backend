@@ -10,9 +10,9 @@ def add_item(item: dict, key: str = None, aws_csv_file: StringIO = None, databas
 
     @rtype: boolean
     @param item: new menu item to insert ex. {"MenuItem": {"itemName": "new_item", "item_quantity": "5", "common_allergin": "peanuts","num_calories": "250", "price": 1.25} }
-    @param key: provide own OpenAI auth
-    @param aws_csv_file: provide own AWS SDK auth
-    @param database_csv_file: provide AWS RDS and PostgreSQL auth
+    @param key: auth key for OpenAI
+    @param aws_csv_file: SDK auth for AWS
+    @param database_csv_file: auth to manager AWS RDS and PostgreSQL database
     @return: success if added into database else failure
     """
     if not item:
