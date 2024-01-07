@@ -7,7 +7,7 @@ from pgvector.psycopg2 import register_vector
 import numpy as np
 
 
-def get(order: str, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> str and bool:
+def get_item(order: str, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> str and bool:
     """
 
     @rtype: str + bool
@@ -47,7 +47,7 @@ def main() -> int:
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
-    res = get(order="cappuccino", key=key)
+    res = get_item(order="cappuccino", key=key)
 
     print(res)
 
