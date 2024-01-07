@@ -15,8 +15,8 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
     @rtype: bool
     @param data: all the menu items which have to be embedded and inserted in DB
     @param key: key for OpenAI auth
-    @param aws_csv_file: can be passed if you want to pass in own AWS authentication and is used for unit tests
-    @param database_csv_file: can be passed if you want to pass in own database authentication and is used for unit tests
+    @param aws_csv_file:  used for unit tests and if you want to pass in own AWS authentication
+    @param database_csv_file: used for unit tests and if you want to pass in own database authentication
     @return: true if successfully created and filled table
     """
 
