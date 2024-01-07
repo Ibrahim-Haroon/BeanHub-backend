@@ -1,7 +1,9 @@
 from django.db import models
+import uuid
 
 
 class AudioFile(models.Model):
-    file = models.CharField(max_length=100)
-    floating_point_number = models.FloatField(null=True, blank=True)
+    file_path = models.CharField(max_length=100)
+    unique_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    json_order = models.JSONField(default=dict)
 
