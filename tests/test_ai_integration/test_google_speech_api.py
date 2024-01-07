@@ -13,9 +13,13 @@ def mock_google_cloud(mocker):
     return mocker.patch(script_path + '.speech.Recognizer')
 
 
-def test_get_transcription_with_none_passed_for_audio_file_path():
+@pytest.fixture
+def mock_speech(mocker):
+    return mocker.patch(script_path + '.speech.AudioFile')
+
+
+def test_get_transcription_with_none_passed_for_audio_file_path(mock_speech):
     # Arrange
-    audio_file_path = path.join(path.dirname(path.realpath(__file__)), "empty_audio.wav")
     expected_transcription = "None"
 
     # Act
@@ -26,13 +30,13 @@ def test_get_transcription_with_none_passed_for_audio_file_path():
 
 
 
-def test_get_transcription_with_empty_audio_file(mock_google_cloud):
+def test_get_transcription_with_empty_audio_file(mock_google_cloud, mock_speech):
     # Arrange
-    audio_file_path = path.join(path.dirname(path.realpath(__file__)), "empty_audio.wav")
-    expected = MagicMock()
-    mock_google_cloud.return_value = expected
-    expected_transcription = "N"
-    expected.recognize_google.side_effect = expected_transcription
+    audio_file_path = "test/file/path"
+    mock_recognizer_instance = MagicMock()
+    mock_google_cloud.return_value = mock_recognizer_instance
+    expected_transcription = "None"
+    mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
     # Act
     actual_transcription = get_transcription(audio_file_path)
@@ -41,13 +45,13 @@ def test_get_transcription_with_empty_audio_file(mock_google_cloud):
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
 
 
-def test_get_transcription_with_non_empty_audio_file(mock_google_cloud):
+def test_get_transcription_with_non_empty_audio_file(mock_google_cloud, mock_speech):
     # Arrange
-    audio_file_path = path.join(path.dirname(path.realpath(__file__)), "test_audio.wav")
-    expected = MagicMock()
-    mock_google_cloud.return_value = expected
-    expected_transcription = "t"
-    expected.recognize_google.side_effect = expected_transcription
+    audio_file_path = "test/file/path"
+    mock_recognizer_instance = MagicMock()
+    mock_google_cloud.return_value = mock_recognizer_instance
+    expected_transcription = "this is a test"
+    mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
     # Act
     actual_transcription = get_transcription(audio_file_path)
