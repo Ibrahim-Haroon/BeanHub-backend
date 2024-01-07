@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 
 class AudioResponseSerializer(serializers.Serializer):
-    file = serializers.CharField()
-    floating_point_number = serializers.FloatField()
+    file_path = serializers.CharField()
+    unique_id = serializers.CharField()
+    json_order = serializers.JSONField()
 
