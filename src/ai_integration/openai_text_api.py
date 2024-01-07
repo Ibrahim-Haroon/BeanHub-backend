@@ -10,7 +10,7 @@ def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None
 
     @rtype: str
     @param prompt: str = question
-    @param api_key: str = key to validate OpenAI api call
+    @param api_key: str = auth key for OpenAI
     @param model_behavior: str = needed if want model to imitate something specific (i.e. doctor)
     @return: response to question
     """
