@@ -30,7 +30,7 @@ def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file:
 
     cur = db_connection.cursor()
 
-    embedding = openai_embedding_api(str(formatted_thing), key)
+    embedding = openai_embedding_api(str(formatted_thing), key if key else None)
     register_vector(db_connection)
 
     cur.execute(f""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
