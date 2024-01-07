@@ -8,8 +8,8 @@ def connection_string(csv_file: StringIO = None) -> str:
     """
 
     @rtype: str
-    @param csv_file: can be passed if you want to pass in own database authentication and is used for unit tests
-    @return: connection string for PostgreSQL
+    @param csv_file: used for unit tests and if you want to pass in own database authentication
+    @return: connection string for AWS RDS
     """
     if csv_file is None:
         db_info_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "database-info.csv")
