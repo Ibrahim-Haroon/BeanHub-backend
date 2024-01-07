@@ -31,7 +31,7 @@ def test_get_transcription_with_empty_audio_file(mock_google_cloud):
     audio_file_path = path.join(path.dirname(path.realpath(__file__)), "empty_audio.wav")
     expected = MagicMock()
     mock_google_cloud.return_value = expected
-    expected_transcription = ""
+    expected_transcription = "N"
     expected.recognize_google.side_effect = expected_transcription
 
     # Act
