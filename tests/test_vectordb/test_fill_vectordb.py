@@ -33,7 +33,7 @@ def as_csv_file(data: [[str]]) -> StringIO:
 @patch('builtins.input', side_effect=["YES", "beanKnowsWhatBeanWants"])
 def test_fill_database_returns_true_if_pass_auth(mocker, mock_components, mock_boto3_session_client):
     # Arrange
-    data = [{"MenuItem": {"itemName": "TestItem", "item_quantity": "5", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
+    data = [{"MenuItem": {"item_name": "TestItem", "item_quantity": "5", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_api_key"
     database_info = [
         ["dbname", "user", "password", "host", "port"],
@@ -53,7 +53,7 @@ def test_fill_database_returns_true_if_pass_auth(mocker, mock_components, mock_b
 @patch('builtins.input', side_effect=["YES", "wrong_passkey"])
 def test_fill_database_exits_when_wrong_passkey_given(mock_components):
     # Arrange
-    data = [{"MenuItem": {"itemName": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
+    data = [{"MenuItem": {"item_name": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_key"
 
     # Act
@@ -67,7 +67,7 @@ def test_fill_database_exits_when_wrong_passkey_given(mock_components):
 @patch('builtins.input', return_value="NO")
 def test_fill_database_exits_when_no_entered(mock_components):
     # Arrange
-    data = [{"MenuItem": {"itemName": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
+    data = [{"MenuItem": {"item_name": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_key"
 
     # Act
