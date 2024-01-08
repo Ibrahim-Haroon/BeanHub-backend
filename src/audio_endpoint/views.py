@@ -6,9 +6,10 @@ import tempfile
 from rest_framework import status
 from rest_framework.views import APIView
 from src.vector_db.get_item import get_item
+from .serializers import MenuItemSerializer
 from rest_framework.response import Response
 from .serializers import AudioResponseSerializer
-from src.ai_integration.conversational_ai import convAI
+from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.nlp_bert import ner_transformer
 from src.ai_integration.google_speech_api import get_transcription
 from src.ai_integration.openai_tts_api import openai_text_to_speech_api
@@ -44,59 +45,65 @@ class AudioView(APIView):
         return unique_id
 
     @staticmethod
-    def coffee_order(order: dict) -> json:
-        order_details = get_item(order['coffee_type'])
+    def coffee_order(order_report, order):
+        db_order_details, _ = get_item(order_report[order]['coffee_type'])
         return {
             "MenuItem": {
-                "item_name": order[1],
-                "cart_action": order[2],
-                "common_allergin": order[3],
-                "num_calories": order[4],
-                "price": order[5]
+                "item_name": db_order_details[0][1],
+                "quantity": order_report[order]['quantity'],
+                "price": db_order_details[0][5],
+                "temp": order_report[order]['temp'],
+                "add_ons": order_report[order]['add_ons'],
+                "milk_type": order_report[order]['milk_type'],
+                "sweeteners": order_report[order]['sweetener'],
+                "num_calories": db_order_details[0][4],
+                "cart_action": order_report[order]['action']
             }
         }
 
     @staticmethod
-    def beverage_order(order: dict) -> json:
-        order_details = get_item(order['beverage_type'])
+    def beverage_order(order_report, order):
+        db_order_details, _ = get_item(order_report[order]['beverage_type'])
         return {
             "MenuItem": {
-                "item_name": order[1],
-                "cart_action": order[2],
-                "common_allergin": order[3],
-                "num_calories": order[4],
-                "price": order[5]
+                "item_name": db_order_details[0][1],
+                "quantity": order_report[order]['quantity'],
+                "price": db_order_details[0][5],
+                "temp": order_report[order]['temp'],
+                "add_ons": order_report[order]['add_ons'],
+                "sweeteners": order_report[order]['sweetener'],
+                "num_calories": db_order_details[0][4],
+                "cart_action": order_report[order]['action']
             }
         }
 
     @staticmethod
-    def food_order(order: dict) -> json:
-        order_details = get_item(order['food_item'])
+    def food_order(order_report, order):
+        db_order_details, _ = get_item(order_report[order]['food_item'])
         return {
             "MenuItem": {
-                "item_name": order[1],
-                "cart_action": order[2],
-                "common_allergin": order[3],
-                "num_calories": order[4],
-                "price": order[5]
+                "item_name": db_order_details[0][1],
+                "quantity": order_report[order]['quantity'],
+                "price": db_order_details[0][5],
+                "num_calories": db_order_details[0][4],
+                "cart_action": order_report[order]['action']
             }
         }
 
     @staticmethod
-    def bakery_order(order: dict) -> json:
-        order_details = get_item(order['bakery_item'])
+    def bakery_order(order_report, order):
+        db_order_details, _ = get_item(order_report[order]['bakery_item'])
         return {
             "MenuItem": {
-                "item_name": order[1],
-                "cart_action": order[2],
-                "common_allergin": order[3],
-                "num_calories": order[4],
-                "price": order[5]
+                "item_name": db_order_details[0][1],
+                "quantity": order_report[order]['quantity'],
+                "price": db_order_details[0][5],
+                "num_calories": db_order_details[0][4],
+                "cart_action": order_report[order]['action']
             }
         }
 
-    def get_order(self, order_report: json) -> [json]:
-        order_report = json.loads(order_report)
+    def get_order(self, order_report) -> []:
         orders = []
 
         order_type_mapping = {
@@ -106,12 +113,10 @@ class AudioView(APIView):
             'BAKERY_ORDER': self.bakery_order
         }
 
-        for order in order_report:
-            if order in order_type_mapping:
-                json_order = order_type_mapping[order](order)
+        for order, meta in order_report.items():
+            if order in order_type_mapping and meta != 'None':
+                json_order = order_type_mapping[order](order_report, order)
                 orders.append(json_order)
-            else:
-                return Response({'error': 'order not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return orders
 
@@ -124,11 +129,11 @@ class AudioView(APIView):
         transcription = self.get_transcription(s3, response.data['file_path'])
         tagged_sentence = ner_transformer(transcription)
 
-        order_report = convAI(transcription, tagged_sentence, conversation_history="")
-
+        order_report = json.loads(conv_ai(transcription, tagged_sentence, conversation_history=""))
         order_details = self.get_order(order_report)
 
-        unique_id = self.upload_file(s3, order_report['CUSTOMER_RESPONSE'])
+
+        unique_id = self.upload_file(s3, order_report['CUSTOMER_RESPONSE']['response'])
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
@@ -140,7 +145,7 @@ class AudioView(APIView):
         if serializer.is_valid():
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(f"{order_details} and {serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, response, format=None):
         if 'file_path' not in response.data or 'unique_id' not in response.data:
@@ -151,11 +156,10 @@ class AudioView(APIView):
         transcription = self.get_transcription(s3, response.data['file_path'])
         tagged_sentence = ner_transformer(transcription)
 
-        order = convAI(transcription, tagged_sentence, conversation_history="")
-
+        order = json.loads(conv_ai(transcription, tagged_sentence, conversation_history=""))
         order_details = self.get_order(order)
 
-        unique_id = self.upload_file(s3, order['CUSTOMER_RESPONSE'])
+        unique_id = self.upload_file(s3, order['CUSTOMER_RESPONSE']['response'])
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
