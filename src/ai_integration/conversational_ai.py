@@ -27,7 +27,7 @@ prompt = """provide a structured json object.
         """
 
 
-def convAI(transcription: str, tagged_sentence: list, conversation_history, api_key: str = None, print_token_usage: bool = False) -> json:
+def conv_ai(transcription: str, tagged_sentence: list, conversation_history, api_key: str = None, print_token_usage: bool = False) -> json:
     role = """
             You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription, 
             NER tags, and conversation history fill in json object. Also generate a customer-facing response. 
@@ -74,7 +74,7 @@ def main() -> int:
     print(ner_tags)
     conversation_history = ""
 
-    res = json.loads(convAI(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
+    res = json.loads(conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
 
     print(res)
 
