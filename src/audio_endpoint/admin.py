@@ -10,6 +10,6 @@ class AudioAdmin(admin.ModelAdmin):
     list_filter = ['file_path', 'unique_id']
 
     def short_json_order(self, obj):
-        return str(obj.json_order)[:50]  # Display the first 50 characters
+        return str(obj.json_order)[:50]  # Display the first 50 objects
 
     short_json_order.short_description = 'JSON Order (shortened)'
