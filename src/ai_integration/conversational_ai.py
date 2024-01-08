@@ -6,25 +6,28 @@ from src.ai_integration.nlp_bert import ner_transformer
 
 prompt = """provide a structured json object.
             Follow these formatting guidelines for internal response:
-            COFFEE_ORDER: “action" (insertion, deletion, modification),
+            COFFEE_ORDER: “action" (insertion, deletion, modification, question),
             "coffee_type" (black coffee, latte, cappuccino, etc.), 
             "coffee_flavor" (caramel, hazelnut, etc. (but different from pump of caramel),
             "size" (small, large, medium, venti, grande, etc.), "quantity" (integer), "temp" (iced, hot, warm, etc.),
             "add_ons" (pump of caramel, shot of x, whipped cream, etc.), 
             "milk_type" (soy milk, whole milk, skim milk, etc.), "sweetener" (honey, sugar, etc.)
-            BEVERAGE_ORDER: "action" (insertion, deletion, modification), 
+            BEVERAGE_ORDER: "action" (insertion, deletion, modification, question), 
             "beverage_type" (water, tea, soda, smoothie, etc.) "size" (small, large, medium, venti, grande, etc.),
             "quantity" (integer), "temp" (iced, hot, warm, etc.), "add_ons" (whipped cream, syrup, etc.) 
             "sweetener" (honey, sugar, etc.)
-            FOOD_ORDER: "action" (insertion, deletion, modification), "food_item" (egg and cheese, hash browns, etc.),
-            "quantity" (integer)            
-            BAKERY_ORDER: "action" (insertion, deletion, modification), "bakery_item" (donuts, cakes, etc.),
+            FOOD_ORDER: "action" (insertion, deletion, modification, question), 
+            "food_item" (egg and cheese, hash browns, etc.),"quantity" (integer)            
+            BAKERY_ORDER: "action" (insertion, deletion, modification, question), "bakery_item" (donuts, cakes, etc.),
             "quantity" (integer)
-            CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?" but make your own)
+            CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?" 
+                                                but make your own, however if it is a question then dont give a
+                                                definitive answer like "sorry we have no more" or "sorry we are out of
+                                                 stock", but rather "let me check" or "let me see if we have any more)
         """
 
 
-def convAI(transcription: str, tagged_sentence: list, conversation_history, api_key: str = None) -> json:
+def convAI(transcription: str, tagged_sentence: list, conversation_history, api_key: str = None, print_token_usage: bool = False) -> json:
     role = """
             You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription, 
             NER tags, and conversation history fill in json object. Also generate a customer-facing response. 
@@ -54,7 +57,10 @@ def convAI(transcription: str, tagged_sentence: list, conversation_history, api_
         ]
     )
 
-    print(response.usage.total_tokens)
+    if print_token_usage:
+        print(f"Prompt tokens ({response.usage.prompt_tokens}) + "
+              f"Completion tokens ({response.usage.completion_tokens}) = "
+              f"Total tokens ({response.usage.total_tokens})")
     return response.choices[0].message.content
 
 
@@ -63,16 +69,14 @@ def main() -> int:
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    transcription = "I'd like a large coffee with a pump of caramel and add a plain bagel"
+    transcription = "Do you guys have any more glazed donuts?"
     ner_tags = ner_transformer(transcription)
     print(ner_tags)
     conversation_history = ""
 
-    res = json.loads(convAI(transcription, ner_tags, conversation_history, api_key=key))
+    res = json.loads(convAI(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
 
     print(res)
-
-    print('COFFEE_ORDER' in res)
 
     return 0
 
