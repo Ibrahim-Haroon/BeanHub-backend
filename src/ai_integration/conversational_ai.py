@@ -69,10 +69,10 @@ def main() -> int:
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    transcription = "Do you guys have any more glazed donuts?"
+    transcription = "Hi can I get a black coffee and then also an egg and cheese croissant?"
     ner_tags = ner_transformer(transcription)
     print(ner_tags)
-    conversation_history = ""
+    conversation_history = "User: Add two lattes to my order. \nModel: Added two lattes to your order. "
 
     res = json.loads(conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
 
