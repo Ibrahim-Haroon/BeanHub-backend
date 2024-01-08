@@ -66,7 +66,7 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
         cur.execute("""
             INSERT INTO products (item_name, item_quantity, common_allergin, num_calories, price, embeddings)
             VALUES (%s, %s, %s, %s, %s, %s);
-        """, (item["MenuItem"]["itemName"],
+        """, (item["MenuItem"]["item_name"],
               item["MenuItem"]["item_quantity"],
               item["MenuItem"]["common_allergin"],
               num_calories,
