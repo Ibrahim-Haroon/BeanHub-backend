@@ -4,10 +4,12 @@ import uuid
 import boto3
 import tempfile
 from rest_framework import status
-from src.vector_db.get_item import get_item
 from rest_framework.views import APIView
+from src.vector_db.get_item import get_item
 from rest_framework.response import Response
 from .serializers import AudioResponseSerializer
+from src.ai_integration.conversational_ai import convAI
+from src.ai_integration.nlp_bert import ner_transformer
 from src.ai_integration.google_speech_api import get_transcription
 from src.ai_integration.openai_tts_api import openai_text_to_speech_api
 
@@ -42,20 +44,76 @@ class AudioView(APIView):
         return unique_id
 
     @staticmethod
-    def get_order(transcription: str) -> json:
-        order, _ = get_item(transcription)
-
-        json_order = {
+    def coffee_order(order: dict) -> json:
+        order_details = get_item(order['coffee_type'])
+        return {
             "MenuItem": {
-                "item_name": order[0][1],
-                "item_quantity": order[0][2],
-                "common_allergin": order[0][3],
-                "num_calories": order[0][4],
-                "price": order[0][5]
+                "item_name": order[1],
+                "cart_action": order[2],
+                "common_allergin": order[3],
+                "num_calories": order[4],
+                "price": order[5]
             }
         }
 
-        return json_order
+    @staticmethod
+    def beverage_order(order: dict) -> json:
+        order_details = get_item(order['beverage_type'])
+        return {
+            "MenuItem": {
+                "item_name": order[1],
+                "cart_action": order[2],
+                "common_allergin": order[3],
+                "num_calories": order[4],
+                "price": order[5]
+            }
+        }
+
+    @staticmethod
+    def food_order(order: dict) -> json:
+        order_details = get_item(order['food_item'])
+        return {
+            "MenuItem": {
+                "item_name": order[1],
+                "cart_action": order[2],
+                "common_allergin": order[3],
+                "num_calories": order[4],
+                "price": order[5]
+            }
+        }
+
+    @staticmethod
+    def bakery_order(order: dict) -> json:
+        order_details = get_item(order['bakery_item'])
+        return {
+            "MenuItem": {
+                "item_name": order[1],
+                "cart_action": order[2],
+                "common_allergin": order[3],
+                "num_calories": order[4],
+                "price": order[5]
+            }
+        }
+
+    def get_order(self, order_report: json) -> [json]:
+        order_report = json.loads(order_report)
+        orders = []
+
+        order_type_mapping = {
+            'COFFEE_ORDER': self.coffee_order,
+            'BEVERAGE_ORDER': self.beverage_order,
+            'FOOD_ORDER': self.food_order,
+            'BAKERY_ORDER': self.bakery_order
+        }
+
+        for order in order_report:
+            if order in order_type_mapping:
+                json_order = order_type_mapping[order](order)
+                orders.append(json_order)
+            else:
+                return Response({'error': 'order not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return orders
 
     def post(self, response, format=None):
         if 'file_path' not in response.data:
@@ -63,13 +121,14 @@ class AudioView(APIView):
 
         s3 = boto3.client('s3')
 
-        # transcription = self.get_transcription(s3, response.data['file_path'])
+        transcription = self.get_transcription(s3, response.data['file_path'])
+        tagged_sentence = ner_transformer(transcription)
 
-        temp_item = "cappuccino"
-        order_details = self.get_order(temp_item)
+        order_report = convAI(transcription, tagged_sentence, conversation_history="")
 
-        temp_transcription = f"The price of a cappuccino is {str(order_details['MenuItem']['price'])} dollars"
-        unique_id = self.upload_file(s3, temp_transcription)
+        order_details = self.get_order(order_report)
+
+        unique_id = self.upload_file(s3, order_report['CUSTOMER_RESPONSE'])
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
@@ -83,21 +142,20 @@ class AudioView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO: Implement PATCH method
-    def PATCH(self, response, format=None):
-        if 'unique_id' not in response.data:
-            return Response({'error': 'unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
+    def patch(self, response, format=None):
+        if 'file_path' not in response.data or 'unique_id' not in response.data:
+            return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         s3 = boto3.client('s3')
 
-        customer_order_file_path = "customer_order" + response.data['unique_id'] + ".wav"
-
         transcription = self.get_transcription(s3, response.data['file_path'])
+        tagged_sentence = ner_transformer(transcription)
 
-        order_details = self.get_order(transcription)
+        order = convAI(transcription, tagged_sentence, conversation_history="")
 
-        temp_transcription = f"The price of a {str(order_details['MenuItem']['item_name'])} is {str(order_details['MenuItem']['price'])} dollars"
-        unique_id = self.upload_file(s3, temp_transcription)
+        order_details = self.get_order(order)
+
+        unique_id = self.upload_file(s3, order['CUSTOMER_RESPONSE'])
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
