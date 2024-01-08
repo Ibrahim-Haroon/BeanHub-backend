@@ -70,7 +70,7 @@ def record_until_silence() -> bytes and str:
     return audio_data, transcribed_audio
 
 
-def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.mp3", print_completion: bool = False) -> None:
+def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", print_completion: bool = False) -> None:
     """
 
     @param print_completion: boolean for whether you want notification of completion
@@ -79,7 +79,7 @@ def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.mp3", 
     @return None
     """
     audio_segment = AudioSegment(audio_data, sample_width=2, frame_rate=44100, channels=1)
-    audio_segment.export(output_filename, format="mp3")
+    audio_segment.export(output_filename, format="wav")
     if print_completion:
         print(f"Audio saved as {output_filename}")
 
