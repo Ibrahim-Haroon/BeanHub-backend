@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while read -r line; do
+while IFS= read -r line || [ -n "$line" ]; do
    if [[ $line =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
       export "$line"
    fi
