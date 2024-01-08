@@ -1,3 +1,4 @@
+import os
 from os import path
 from openai import OpenAI
 
@@ -14,7 +15,7 @@ def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: s
     if api_key:
         client = OpenAI(api_key=api_key)
     else:
-        client = OpenAI()
+        client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     response = client.audio.speech.create(
         model="tts-1",

@@ -1,8 +1,8 @@
-from openai import OpenAI
+import os
 import sys
-from tqdm import tqdm
 from os import path
-
+from tqdm import tqdm
+from openai import OpenAI
 
 
 def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None) -> str:
@@ -18,7 +18,7 @@ def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None
     if api_key:
         client = OpenAI(api_key=api_key)
     else:
-        client = OpenAI()
+        client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     if model_behavior:
         response = client.chat.completions.create(

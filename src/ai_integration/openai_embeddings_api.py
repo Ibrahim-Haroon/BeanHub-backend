@@ -1,3 +1,4 @@
+import os
 from langchain.embeddings import OpenAIEmbeddings
 from os import path
 import pandas as pd
@@ -12,8 +13,10 @@ def openai_embedding_api(text: str, api_key: str = None) -> []:
     @param api_key: auth key for OpenAI
     @return: vector of menu item
     """
-
-    embeddings = OpenAIEmbeddings(api_key=api_key)
+    if api_key:
+        embeddings = OpenAIEmbeddings(api_key=api_key)
+    else:
+        embeddings = OpenAIEmbeddings(api_key=os.environ['OPENAI_API_KEY'])
 
     return embeddings.embed_query(text)
 
