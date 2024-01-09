@@ -6,7 +6,6 @@ import tempfile
 from rest_framework import status
 from rest_framework.views import APIView
 from src.vector_db.get_item import get_item
-from .serializers import MenuItemSerializer
 from rest_framework.response import Response
 from .serializers import AudioResponseSerializer
 from src.ai_integration.conversational_ai import conv_ai
