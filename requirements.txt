@@ -16,6 +16,7 @@ click==8.1.7
 coverage==7.3.4
 dataclasses-json==0.6.3
 datasets==2.16.0
+datetime==5.4
 dill==0.3.7
 distro==1.8.0
 docker-pycreds==0.4.0
