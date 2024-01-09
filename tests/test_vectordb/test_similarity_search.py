@@ -47,6 +47,7 @@ def test_similarity_search_returns_true_when_given_valid_params(mocker, mock_bot
 
     aws = as_csv_file(aws_info)
     db = as_csv_file(database_info)
+
     # Act
     _, res = similarity_search(data, key=key, aws_csv_file=aws, database_csv_file=db)
 
