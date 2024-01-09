@@ -15,10 +15,6 @@ from decouple import config
 import pandas as pd
 from os import path
 
-# Load environment variables from .env file
-#env_path = Path(__file__).resolve().parent / '.env'
-#config.read_env(str(env_path))
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
