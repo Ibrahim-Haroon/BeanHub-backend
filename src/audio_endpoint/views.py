@@ -13,7 +13,7 @@ from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.nlp_bert import ner_transformer
 from src.ai_integration.google_speech_api import get_transcription
 from src.ai_integration.openai_tts_api import openai_text_to_speech_api
-from datatime import timedelta
+
 
 class AudioView(APIView):
     def __init__(self, *args, **kwargs):
@@ -144,7 +144,7 @@ class AudioView(APIView):
         }
 
         self.r.setex(name=f"conversation_history_{unique_id}",
-                     time=timedelta(minutes=10),
+                     time=600, # 10 minutes
                      value=f"User: {transcription}\nModel: {model_response}\n")
 
         serializer = AudioResponseSerializer(data=response_data)
@@ -171,8 +171,8 @@ class AudioView(APIView):
         model_response = order_report['CUSTOMER_RESPONSE']['response']
         self.upload_file(s3, model_response if model_response else "Sorry, I didn't get that")
 
-        self.r.set(name=f"conversation_history_{unique_id}",
-                   value=f"User: {transcription}\nModel: {model_response}\n")
+        self.r.append(f"conversation_history_{unique_id}",
+                      f"User: \n{transcription}\nModel: {model_response}\n")
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
