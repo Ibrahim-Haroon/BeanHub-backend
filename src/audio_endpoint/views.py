@@ -13,7 +13,7 @@ from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.nlp_bert import ner_transformer
 from src.ai_integration.google_speech_api import get_transcription
 from src.ai_integration.openai_tts_api import openai_text_to_speech_api
-
+from src.vector_db.contain_item import contains_quantity
 
 class AudioView(APIView):
     def __init__(self, *args, **kwargs):
@@ -47,6 +47,10 @@ class AudioView(APIView):
 
     @staticmethod
     def coffee_order(order_report, order):
+        contains = contains_quantity(order_report[order]['coffee_type'],
+                                     order_report[order]['quantity'])
+        if not contains and order_report[order]['actions'] == 'question':
+            return "Sorry, we don't have that enough left."
         db_order_details, _ = get_item(order_report[order]['coffee_type'])
         return {
             "MenuItem": {
@@ -64,6 +68,10 @@ class AudioView(APIView):
 
     @staticmethod
     def beverage_order(order_report, order):
+        contains = contains_quantity(order_report[order]['beverage_type'],
+                                     order_report[order]['quantity'])
+        if not contains and order_report[order]['actions'] == 'question':
+            return "Sorry, we don't have that enough left."
         db_order_details, _ = get_item(order_report[order]['beverage_type'])
         return {
             "MenuItem": {
@@ -80,6 +88,10 @@ class AudioView(APIView):
 
     @staticmethod
     def food_order(order_report, order):
+        contains = contains_quantity(order_report[order]['food_item'],
+                                     order_report[order]['quantity'])
+        if not contains and order_report[order]['actions'] == 'question':
+            return "Sorry, we don't have that enough left."
         db_order_details, _ = get_item(order_report[order]['food_item'])
         return {
             "MenuItem": {
@@ -93,6 +105,10 @@ class AudioView(APIView):
 
     @staticmethod
     def bakery_order(order_report, order):
+        contains = contains_quantity(order_report[order]['bakery_item'],
+                                     order_report[order]['quantity'])
+        if not contains and order_report[order]['actions'] == 'question':
+            return "Sorry, we don't have that enough left."
         db_order_details, _ = get_item(order_report[order]['bakery_item'])
         return {
             "MenuItem": {
