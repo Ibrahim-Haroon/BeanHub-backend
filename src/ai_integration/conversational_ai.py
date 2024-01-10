@@ -121,7 +121,7 @@ def main() -> int:
     print(ner_tags)
     conversation_history = ""
 
-    res = (conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
+    res = (conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=False))
 
     print(res)
 
