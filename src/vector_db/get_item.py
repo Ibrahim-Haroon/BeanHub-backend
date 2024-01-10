@@ -7,7 +7,7 @@ from pgvector.psycopg2 import register_vector
 import numpy as np
 
 
-def get_item(order: str, quantity: int = 1, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> str and bool:
+def get_item(order: str, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> str and bool:
     """
 
     @rtype: str + bool
@@ -15,12 +15,11 @@ def get_item(order: str, quantity: int = 1, key: str = None, aws_csv_file: Strin
     @param key: OpenAI auth
     @param aws_csv_file: AWS SDK auth
     @param database_csv_file: AWS RDS and PostgreSQL auth
-    @return: Closest embedding along with a boolean flag to mark whether the closest embedding is in stock
+    @return: Closest embedding along with a boolean flag to mark successful retrieval
     """
     if not order:
         return None, False
 
-    closest_embedding_in_stock = True
     get_secret(aws_csv_file if not None else None)
     db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
     db_connection.set_session(autocommit=True)
@@ -37,21 +36,10 @@ def get_item(order: str, quantity: int = 1, key: str = None, aws_csv_file: Strin
 
     result = cur.fetchall()
 
-    if result[0][2] < quantity:
-        closest_embedding_in_stock = False
-
-    cur.execute(f""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
-                            FROM products
-                            WHERE item_quantity <= {quantity}
-                            ORDER BY embeddings <-> %s limit 1;""",
-                (np.array(embedding),))
-
-    result = cur.fetchall()
-
     cur.close()
     db_connection.close()
 
-    return result, closest_embedding_in_stock
+    return result, True
 
 
 def main() -> int:
