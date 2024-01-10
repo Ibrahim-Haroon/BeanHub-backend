@@ -26,12 +26,15 @@ prompt = """provide a structured json object.
             "sweetener" (honey, sugar, etc.)
             FOOD_ORDER: "action" (insertion, deletion, modification, question),
             "food_item" (egg and cheese, hash browns, etc.),"quantity" (integer)
-            BAKERY_ORDER: "action" (insertion, deletion, modification, question), "bakery_item" (donuts, cakes, etc.),
+            BAKERY_ORDER: "action" (insertion, deletion, modification, question),
+            bakery_item" (donut, muffin, cake, etc.),
             "quantity" (integer)
             CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?"
-                                                but make your own and somewhat personalize per order to sound normal,
-                                                however if it is a question then use contains_quantity function 
-                                                to check database and make sure there is a enough quantity, never guess.
+                                                but make your own and somewhat personalize per order to sound normal.
+                                                However if it is a question then use contains_quantity function 
+                                                to check database and make sure there is a enough quantity, if they want 
+                                                more than the quantity then tell them sorry we don't have enough.
+                                                Also the action would be 'question' then.
         """
 
 
@@ -87,15 +90,15 @@ def conv_ai(transcription: str, tagged_sentence: list, conversation_history, api
         if response.choices[0].message.function_call.name == "contains_quantity":
             argument_obj = response.choices[0].message.function_call.arguments
             argument_obj = json.loads(argument_obj)
-            print(f"arg obj = {argument_obj}")
+            print(argument_obj)
             content = contains_quantity(argument_obj["order"], argument_obj["quantity"])
             messages.append(response.choices[0].message)
             messages.append(
                 {
                     "role": "function",
                     "name": "contains_quantity",
-                    "content": content,
-                }
+                    "content": content
+                },
             )
 
     final_response = client.chat.completions.create(
@@ -116,12 +119,11 @@ def main() -> int:
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    transcription = "How many lattes do you have left also can I get a glazed donut"
+    transcription = "Do you have 15 more glazed donuts?"
     ner_tags = ner_transformer(transcription)
-    print(ner_tags)
     conversation_history = ""
 
-    res = (conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=False))
+    res = json.loads((conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True)))
 
     print(res)
 
