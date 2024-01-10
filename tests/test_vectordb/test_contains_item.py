@@ -1,19 +1,22 @@
 import json
 import pytest
-from mock import patch, MagicMock
+from mock import patch, mock_open, MagicMock
 from io import StringIO
 import csv
 from src.vector_db.contain_item import contains_quantity
+from src.vector_db.contain_item import get_openai_key
 
 
 @pytest.fixture
 def mock_components(mocker):
     mock_db_instance = mocker.patch('src.vector_db.contain_item.psycopg2.connect')
     mock_db_instance.return_value.cursor.return_value.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
+    key = "foo-key"
 
     return {
         'openai_embedding_api': mocker.patch('src.vector_db.contain_item.openai_embedding_api'),
         'connection_string': mocker.patch('src.vector_db.aws_database_auth.connection_string'),
+        'api_key': mocker.patch('src.vector_db.contain_item.get_openai_key', return_value=key)
     }
 
 
