@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 def root_view(request):
@@ -24,6 +26,7 @@ def root_view(request):
 
 
 urlpatterns = [
+    path("__debug__/", include("debug_toolbar.urls")),
     path("admin/", admin.site.urls),
     path("", root_view, name='root'),
     path('audio_endpoint/', include('src.audio_endpoint.urls')),
