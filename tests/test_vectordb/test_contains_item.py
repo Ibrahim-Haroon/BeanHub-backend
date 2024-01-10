@@ -1,3 +1,4 @@
+import json
 import pytest
 from mock import patch, MagicMock
 from io import StringIO
@@ -33,7 +34,7 @@ def as_csv_file(data: [[str]]) -> StringIO:
 def test_contains_quantity_returns_true_when_given_quantity_less_than_stock(mocker, mock_boto3_session_client, mock_components):
     # Arrange
     data = "test"
-    key = "mock_api_key"
+    expected_res = '[true, 6]'
     database_info = [
         ["dbname", "user", "password", "host", "port"],
         ["mydb", "myuser", "mypassword", "localhost", "port"]]
@@ -41,21 +42,18 @@ def test_contains_quantity_returns_true_when_given_quantity_less_than_stock(mock
         ["secret_name", "region_name", "aws_access_key_id", "aws_secret_access_key"],
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
-    aws = as_csv_file(aws_info)
-    db = as_csv_file(database_info)
-
     # Act
-    res = contains_quantity(data, key=key, aws_csv_file=aws, database_csv_file=db)
+    res = contains_quantity(data, aws_csv_file=as_csv_file(aws_info), database_csv_file=as_csv_file(database_info))
 
     # Assert
-    assert res is True, f"expected search to be successful but {res}"
+    assert res == expected_res, f"expected search to return {expected_res} but got {res}"
 
 
 def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(mocker, mock_boto3_session_client, mock_components):
     # Arrange
     data = "test"
     quantity = 1_000
-    key = "mock_api_key"
+    expected_res = '[false, 6]'
     database_info = [
         ["dbname", "user", "password", "host", "port"],
         ["mydb", "myuser", "mypassword", "localhost", "port"]]
@@ -67,18 +65,19 @@ def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(
     db = as_csv_file(database_info)
 
     # Act
-    res = contains_quantity(data, quantity=quantity, key=key, aws_csv_file=aws, database_csv_file=db)
+    res = contains_quantity(data, quantity=quantity, aws_csv_file=aws, database_csv_file=db)
 
     # Assert
-    assert res is False, f"expected search not to return most similar item but {res}"
+    assert res == expected_res, f"expected search to return {expected_res} but got {res}"
 
 
 def test_get_item_returns_false_when_given_invalid_params(mocker, mock_boto3_session_client, mock_components):
     # Arrange
+    expected_res = 'false'
     data = None
 
     # Act
-    _, res = contains_quantity(data)
+    res = contains_quantity(data)
 
     # Assert
-    assert res is False, f"expected search to be unsuccessful but {res}"
+    assert res == expected_res, f"expected {expected_res} but got {res}"
