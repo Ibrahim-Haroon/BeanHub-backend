@@ -2,39 +2,51 @@ import os
 import json
 from os import path
 from openai import OpenAI
+from src.vector_db.contain_item import contains_quantity
 from src.ai_integration.nlp_bert import ner_transformer
+
+role = """
+            You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription,
+            NER tags, and conversation history fill in json object. Also generate a customer-facing response.
+            Follow these templates for json object, if one is not found then put 'None'.
+            Be precise for internal response.
+           """
 
 prompt = """provide a structured json object.
             Follow these formatting guidelines for internal response:
             COFFEE_ORDER: “action" (insertion, deletion, modification, question),
-            "coffee_type" (black coffee, latte, cappuccino, etc.), 
+            "coffee_type" (black coffee, latte, cappuccino, etc.),
             "coffee_flavor" (caramel, hazelnut, etc. (but different from pump of caramel),
             "size" (small, large, medium, venti, grande, etc.), "quantity" (integer), "temp" (iced, hot, warm, etc.),
-            "add_ons" (pump of caramel, shot of x, whipped cream, etc.), 
+            "add_ons" (pump of caramel, shot of x, whipped cream, etc.),
             "milk_type" (soy milk, whole milk, skim milk, etc.), "sweetener" (honey, sugar, etc.)
-            BEVERAGE_ORDER: "action" (insertion, deletion, modification, question), 
+            BEVERAGE_ORDER: "action" (insertion, deletion, modification, question),
             "beverage_type" (water, tea, soda, smoothie, etc.) "size" (small, large, medium, venti, grande, etc.),
-            "quantity" (integer), "temp" (iced, hot, warm, etc.), "add_ons" (whipped cream, syrup, etc.) 
+            "quantity" (integer), "temp" (iced, hot, warm, etc.), "add_ons" (whipped cream, syrup, etc.)
             "sweetener" (honey, sugar, etc.)
-            FOOD_ORDER: "action" (insertion, deletion, modification, question), 
-            "food_item" (egg and cheese, hash browns, etc.),"quantity" (integer)            
+            FOOD_ORDER: "action" (insertion, deletion, modification, question),
+            "food_item" (egg and cheese, hash browns, etc.),"quantity" (integer)
             BAKERY_ORDER: "action" (insertion, deletion, modification, question), "bakery_item" (donuts, cakes, etc.),
             "quantity" (integer)
-            CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?" 
-                                                but make your own, however if it is a question then dont give a
-                                                definitive answer like "sorry we have no more" or "sorry we are out of
-                                                 stock", but rather "let me check" or "let me see if we have any more)
+            CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?"
+                                                but make your own and somewhat personalize per order to sound normal,
+                                                however if it is a question then use contains_quantity function 
+                                                to check database and make sure there is a enough quantity, never guess.
         """
 
 
 def conv_ai(transcription: str, tagged_sentence: list, conversation_history, api_key: str = None, print_token_usage: bool = False) -> json:
-    role = """
-            You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription, 
-            NER tags, and conversation history fill in json object. Also generate a customer-facing response. 
-            Follow these templates for json object, if one is not found then put 'None'. 
-            Be precise for internal response.
-           """
-
+    messages = [
+            {
+                "role": "system",
+                "content": f"{role} + conversation history: f{conversation_history} + "
+                           f"MUST GIVE CUSTOMER FACING RESPONSE EACH AND EVERY TIME."
+            },
+            {
+                "role": "user",
+                "content": f"{prompt} + \ntranscription: {transcription} + \ntagged sentences: {tagged_sentence}",
+            },
+        ]
 
     if api_key:
         client = OpenAI(api_key=api_key)
@@ -43,25 +55,60 @@ def conv_ai(transcription: str, tagged_sentence: list, conversation_history, api
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-1106",
+        messages=messages,
         response_format={"type": "json_object"},
-        messages=[
+        functions=[
             {
-                "role": "system",
-                "content": f"{role} + \nconversation history: f{conversation_history} + "
-                           f"\n\nMUST GIVE CUSTOMER FACING RESPONSE EACH AND EVERY TIME."
-            },
-            {
-                "role": "user",
-                "content": f"{prompt} + \ntranscription: {transcription} + \ntagged sentences: {tagged_sentence}",
-            },
-        ]
+                "name": "contains_quantity",
+                "description": "Get the quantity of an item from database for when user asks a questions"
+                               " such as \"Do you have any more XYZ\" or \"How many of XYZ do you have?\"",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "order": {
+                            "type": "string",
+                            "description": "The name of the item to get the quantity of such as \" glazed donut\"",
+                        },
+                        "quantity": {
+                            "type": "integer",
+                            "description": "The quantity of the item to get such as 1",
+                        },
+                    },
+                    "required": ["order", "quantity"],
+                },
+            }
+        ],
+        function_call="auto",
+    )
+
+    use_function = response.choices[0].finish_reason == "function_call"
+
+    if use_function:
+        if response.choices[0].message.function_call.name == "contains_quantity":
+            argument_obj = response.choices[0].message.function_call.arguments
+            argument_obj = json.loads(argument_obj)
+            print(f"arg obj = {argument_obj}")
+            content = contains_quantity(argument_obj["order"], argument_obj["quantity"])
+            messages.append(response.choices[0].message)
+            messages.append(
+                {
+                    "role": "function",
+                    "name": "contains_quantity",
+                    "content": content,
+                }
+            )
+
+    final_response = client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
+        messages=messages,
+        response_format={"type": "json_object"}
     )
 
     if print_token_usage:
-        print(f"Prompt tokens ({response.usage.prompt_tokens}) + "
-              f"Completion tokens ({response.usage.completion_tokens}) = "
-              f"Total tokens ({response.usage.total_tokens})")
-    return response.choices[0].message.content
+        print(f"Prompt tokens ({response.usage.prompt_tokens + final_response.usage.prompt_tokens}) + "
+              f"Completion tokens ({response.usage.completion_tokens + final_response.usage.completion_tokens}) = "
+              f"Total tokens ({response.usage.total_tokens + + final_response.usage.total_tokens})")
+    return final_response.choices[0].message.content
 
 
 def main() -> int:
@@ -69,12 +116,12 @@ def main() -> int:
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    transcription = "Hi can I get a black coffee and then also an egg and cheese croissant?"
+    transcription = "How many lattes do you have left also can I get a glazed donut"
     ner_tags = ner_transformer(transcription)
     print(ner_tags)
-    conversation_history = "User: Add two lattes to my order. \nModel: Added two lattes to your order. "
+    conversation_history = ""
 
-    res = json.loads(conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
+    res = (conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True))
 
     print(res)
 
