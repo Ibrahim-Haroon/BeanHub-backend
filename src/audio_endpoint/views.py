@@ -45,80 +45,6 @@ class AudioView(APIView):
 
         return unique_id
 
-    @staticmethod
-    def coffee_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['coffee_type'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "temp": order_report[order]['temp'] if action != 'question' else "None",
-                "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
-                "milk_type": order_report[order]['milk_type'] if action != 'question' else "None",
-                "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
-
-    @staticmethod
-    def beverage_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['beverage_type'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "temp": order_report[order]['temp'] if action != 'question' else "None",
-                "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
-                "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
-
-    @staticmethod
-    def food_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['food_item'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
-
-    @staticmethod
-    def bakery_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['bakery_item'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
 
     def get_order(self, order_report) -> []:
         orders = []
@@ -203,3 +129,78 @@ class AudioView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @staticmethod
+    def coffee_order(order_report, order):
+        db_order_details = None
+        action = order_report[order]['action']
+
+        if action != 'question':
+            db_order_details, _ = get_item(order_report[order]['coffee_type'])
+        return {
+            "MenuItem": {
+                "item_name": db_order_details[0][1] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
+                "temp": order_report[order]['temp'] if action != 'question' else "None",
+                "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
+                "milk_type": order_report[order]['milk_type'] if action != 'question' else "None",
+                "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
+                "num_calories": db_order_details[0][4] if action != 'question' else "None",
+                "cart_action": action
+            }
+        }
+
+    @staticmethod
+    def beverage_order(order_report, order):
+        db_order_details = None
+        action = order_report[order]['action']
+
+        if action != 'question':
+            db_order_details, _ = get_item(order_report[order]['beverage_type'])
+        return {
+            "MenuItem": {
+                "item_name": db_order_details[0][1] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
+                "temp": order_report[order]['temp'] if action != 'question' else "None",
+                "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
+                "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
+                "num_calories": db_order_details[0][4] if action != 'question' else "None",
+                "cart_action": action
+            }
+        }
+
+    @staticmethod
+    def food_order(order_report, order):
+        db_order_details = None
+        action = order_report[order]['action']
+
+        if action != 'question':
+            db_order_details, _ = get_item(order_report[order]['food_item'])
+        return {
+            "MenuItem": {
+                "item_name": db_order_details[0][1] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
+                "num_calories": db_order_details[0][4] if action != 'question' else "None",
+                "cart_action": action
+            }
+        }
+
+    @staticmethod
+    def bakery_order(order_report, order):
+        db_order_details = None
+        action = order_report[order]['action']
+
+        if action != 'question':
+            db_order_details, _ = get_item(order_report[order]['bakery_item'])
+        return {
+            "MenuItem": {
+                "item_name": db_order_details[0][1] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
+                "num_calories": db_order_details[0][4] if action != 'question' else "None",
+                "cart_action": action
+            }
+        }

@@ -12,7 +12,7 @@ role = """
             Be precise for internal response.
            """
 
-prompt = """provide a structured json object.
+prompt = """provide a structured json object, follow it strictly and don't add words on top of the key.
             Follow these formatting guidelines for internal response:
             COFFEE_ORDER: “action" (insertion, deletion, modification, question),
             "coffee_type" (black coffee, latte, cappuccino, etc.),
@@ -27,7 +27,7 @@ prompt = """provide a structured json object.
             FOOD_ORDER: "action" (insertion, deletion, modification, question),
             "food_item" (egg and cheese, hash browns, etc.),"quantity" (integer)
             BAKERY_ORDER: "action" (insertion, deletion, modification, question),
-            bakery_item" (donut, muffin, cake, etc.),
+            bakery_item" (glazed, strawberry, chocolate etc. donut, blueberry, chocolate, etc . muffin, etc.),
             "quantity" (integer)
             CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?"
                                                 but make your own and somewhat personalize per order to sound normal.
@@ -119,13 +119,14 @@ def main() -> int:
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    transcription = "Do you have 15 more glazed donuts?"
+    transcription = "Hi can I get a glazed donut"
     ner_tags = ner_transformer(transcription)
     conversation_history = ""
 
     res = json.loads((conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True)))
 
     print(res)
+    # print(f"\n{res['FOOD_ORDER']['food_item']}")
 
     return 0
 
