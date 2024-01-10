@@ -1,0 +1,6 @@
+INFO 2024-01-10 04:11:40,249 MainThread 4341220736 autoreload autoreload.py 668 django.utils.autoreload run_with_reloader 48218 Watching for file changes with StatReloader
+WARNING 2024-01-10 04:12:43,511 Thread-1 (process_request_thread) 11026952192 basehttp basehttp.py 212 django.server log_message 48218 "GET /audio_endpoint/ HTTP/1.1" 405 40
+WARNING 2024-01-10 04:13:22,611 Thread-2 (process_request_thread) 11026952192 basehttp basehttp.py 212 django.server log_message 48218 "GET /audio_endpoint/ HTTP/1.1" 405 40
+ERROR 2024-01-10 04:14:20,894 Thread-3 (process_request_thread) 11026952192 basehttp basehttp.py 212 django.server log_message 48218 "POST /audio_endpoint/ HTTP/1.1" 500 137377
+INFO 2024-01-10 04:16:13,834 MainThread 4378330496 autoreload autoreload.py 668 django.utils.autoreload run_with_reloader 48616 Watching for file changes with StatReloader
+INFO 2024-01-10 04:17:10,335 Thread-1 (process_request_thread) 10931892224 basehttp basehttp.py 212 django.server log_message 48616 "POST /audio_endpoint/ HTTP/1.1" 200 948
