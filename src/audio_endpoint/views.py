@@ -13,7 +13,15 @@ from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.nlp_bert import ner_transformer
 from src.ai_integration.google_speech_api import get_transcription
 from src.ai_integration.openai_tts_api import openai_text_to_speech_api
+import logging
 
+logger = logging.getLogger(__name__)
+
+from os import path
+import sys
+
+output_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "output.txt")
+sys.stdout = open(output_file_path, 'w')
 
 class AudioView(APIView):
     def __init__(self, *args, **kwargs):
@@ -49,13 +57,17 @@ class AudioView(APIView):
     def coffee_order(order_report, order):
         db_order_details = None
         action = order_report[order]['action']
+        ####
+        logger.debug(f"action: {action}")
+        print(f"coffee action: {action}")
+        ####
         if action != 'question':
             db_order_details, _ = get_item(order_report[order]['coffee_type'])
         return {
             "MenuItem": {
                 "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else "None",
-                "price": db_order_details[0][5] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
                 "temp": order_report[order]['temp'] if action != 'question' else "None",
                 "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
                 "milk_type": order_report[order]['milk_type'] if action != 'question' else "None",
@@ -69,13 +81,17 @@ class AudioView(APIView):
     def beverage_order(order_report, order):
         db_order_details = None
         action = order_report[order]['action']
+        ####
+        logger.debug(f"beverage action: {action}")
+        print(f"beverage action: {action}")
+        ####
         if action != 'question':
             db_order_details, _ = get_item(order_report[order]['beverage_type'])
         return {
             "MenuItem": {
                 "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else "None",
-                "price": db_order_details[0][5] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
                 "temp": order_report[order]['temp'] if action != 'question' else "None",
                 "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
                 "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
@@ -88,13 +104,17 @@ class AudioView(APIView):
     def food_order(order_report, order):
         db_order_details = None
         action = order_report[order]['action']
+        ####
+        logger.debug(f"food action: {action}")
+        print(f"food action: {action}")
+        ####
         if action != 'question':
             db_order_details, _ = get_item(order_report[order]['food_item'])
         return {
             "MenuItem": {
                 "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else "None",
-                "price": db_order_details[0][5] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
                 "num_calories": db_order_details[0][4] if action != 'question' else "None",
                 "cart_action": action
             }
@@ -104,13 +124,17 @@ class AudioView(APIView):
     def bakery_order(order_report, order):
         db_order_details = None
         action = order_report[order]['action']
+        ####
+        logger.debug(f" bakery action: {action}")
+        print(f"bakery action: {action}")
+        ####
         if action != 'question':
             db_order_details, _ = get_item(order_report[order]['bakery_item'])
         return {
             "MenuItem": {
                 "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else "None",
-                "price": db_order_details[0][5] if action != 'question' else "None",
+                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
+                "price": db_order_details[0][5] if action != 'question' else 0.0,
                 "num_calories": db_order_details[0][4] if action != 'question' else "None",
                 "cart_action": action
             }
@@ -140,13 +164,34 @@ class AudioView(APIView):
         s3 = boto3.client('s3')
 
 
-        transcription = self.get_transcription(s3, response.data['file_path'])
+        # transcription = self.get_transcription(s3, response.data['file_path'])
+        transcription = "Do you have 15 more glazed donuts?"
+        ####
+        logger.debug(f"transcription: {transcription}")
+        print(f"transcription: {transcription}")
+        ####
         tagged_sentence = ner_transformer(transcription)
+        ####
+        logger.debug(f"tagged_sentence: {tagged_sentence}")
+        print(f"tagged_sentence: {tagged_sentence}")
+        ####
 
         order_report = json.loads(conv_ai(transcription, tagged_sentence, conversation_history=""))
+        ####
+        logger.debug(f"order_report: {order_report}")
+        print(f"order_report: {order_report}")
+        ####
         order_details = self.get_order(order_report)
+        ####
+        logger.debug(f"order_details: {order_details}")
+        print(f"order_details: {order_details}")
+        ####
 
         model_response = order_report['CUSTOMER_RESPONSE']['response']
+        ####
+        logger.debug(f"model_response: {model_response}")
+        print(f"model_response: {model_response}")
+        ####
         unique_id = self.upload_file(s3, model_response if model_response else "Sorry, I didn't get that")
 
         response_data = {
