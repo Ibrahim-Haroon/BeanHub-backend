@@ -141,3 +141,4 @@ zipp==3.17.0
 Django==5.0
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
+django-debug-toolbar==4.2.0
