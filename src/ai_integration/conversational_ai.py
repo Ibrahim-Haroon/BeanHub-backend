@@ -15,7 +15,7 @@ prompt = """
         """
 
 
-def conv_ai(transcription: str, conversation_history: str, order_details: dict, api_key: str = None, print_token_usage: bool = False) -> str:
+def conv_ai(transcription: str, order_details: str, conversation_history: str, api_key: str = None, print_token_usage: bool = False) -> str:
     if api_key:
         client = OpenAI(api_key=api_key)
     else:
@@ -26,7 +26,7 @@ def conv_ai(transcription: str, conversation_history: str, order_details: dict, 
         messages=[
             {
                 "role": "user",
-                "content": f"{prompt}\ntranscription: {transcription} + order details: {str(order_details)}",
+                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_details}",
             },
             {
                 "role": "system",
@@ -38,7 +38,7 @@ def conv_ai(transcription: str, conversation_history: str, order_details: dict, 
     if print_token_usage:
         print(f"Prompt tokens ({response.usage.prompt_tokens}) + "
               f"Completion tokens ({response.usage.completion_tokens}) = "
-              f"Total tokens ({response.usage.total_tokens}")
+              f"Total tokens ({response.usage.total_tokens})")
     return response.choices[0].message.content
 
 
@@ -54,6 +54,7 @@ class Order:
         self.sweeteners: list[str] = []
         self.num_calories: list[str] = []
         self.cart_action: str = ""
+        self.size: str = ""
 
     def make_order(self) -> dict:
         order_type, order_details = self.get_order_type()
@@ -89,11 +90,12 @@ class Order:
         self.item_name = order_details['coffee']
         self.calculate_quantity(order_details['quantities'])
         self.price = None
-        self.temp = str(order_details['temperature'][0])
+        self.temp = "" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners.extend(order_details['sweeteners'])
         self.add_ons.extend(order_details['add_ons'])
-        self.milk_type = "" if not order_details['milk_type'] else ""
+        self.milk_type = "" if not order_details['milk_type'] else str(order_details['milk_type'])
         self.num_calories = None
+        self.size = "" if not order_details['sizes'] else str(order_details['sizes'][0])
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -104,6 +106,7 @@ class Order:
                 "milk_type": self.milk_type,
                 "sweeteners": self.sweeteners,
                 "num_calories": self.num_calories,
+                "size": self.size,
                 "cart_action": self.cart_action
             }
         }
@@ -113,10 +116,11 @@ class Order:
         self.item_name = order_details['beverage'][0]
         self.calculate_quantity(order_details['quantities'])
         self.price = None
-        self.temp = str(order_details['temperature'][0])
+        self.temp = "" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners = order_details['sweeteners']
         self.add_ons = order_details['add_ons']
         self.num_calories = None
+        self.size = "" if not order_details['sizes'] else str(order_details['sizes'][0])
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -126,6 +130,7 @@ class Order:
                 "add_ons": self.add_ons,
                 "sweeteners": self.sweeteners,
                 "num_calories": self.num_calories,
+                "size": self.size,
                 "cart_action": self.cart_action
             }
         }
@@ -198,7 +203,7 @@ class Order:
     def parse_order(self) -> dict:
 
         size_pattern = r'\b(small|medium|large|extra large)\b'
-        coffee_pattern = r'\b(coffees|cappuccino|latte|americano|macchiato|frappuccino|\b(?<!shot of )espresso)\b'
+        coffee_pattern = r'\b(coffee|coffees|cappuccino|latte|americano|macchiato|frappuccino|\b(?<!shot of )espresso)\b'
         quantity_pattern = r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen' \
                            r'|fifteen' \
                            r'|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|dozen|a lot|a|an)\b'
@@ -245,7 +250,7 @@ class Order:
 
 
 def split_order(order):
-    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump)\b)'
+    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese)\b)'
     split = re.split(split_pattern, order)
     remove_words = ['plus', 'get', 'and', 'also']
     remove_chars = '[^a-zA-Z0-9]'
@@ -255,11 +260,26 @@ def split_order(order):
     return filtered_order
 
 
+from os import path
+
+
 if __name__ == "__main__":
-    orders = "I'd like two hot large coffees with a pump of caramel and a shot of espresso and a glazed donut"
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
+    with open(key_file_path) as api_key:
+        key = api_key.readline().strip()
+
+    orders = "I'd like an egg and cheese and a small coffee and do you have anymore glazed donuts."
     details = split_order(orders)
 
     print(details)
+
+    res = ""
     for detail in details:
-        print(Order(detail).make_order())
+        res += str((Order(detail).make_order())) + "\n"
+
+
+    print(res)
+    print(conv_ai(orders, res, "", print_token_usage=True, api_key=key))
+
+
 
