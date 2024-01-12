@@ -89,12 +89,12 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['coffee']
         self.calculate_quantity(order_details['quantities'])
-        self.price = None
+        self.price.append(2.99)
         self.temp = "" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners.extend(order_details['sweeteners'])
         self.add_ons.extend(order_details['add_ons'])
         self.milk_type = "" if not order_details['milk_type'] else str(order_details['milk_type'])
-        self.num_calories = None
+        self.num_calories.append('(60, 120)')
         self.size = "" if not order_details['sizes'] else str(order_details['sizes'][0])
         return {
             "MenuItem": {
@@ -115,11 +115,11 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['beverage'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price = None
+        self.price.append(2.99)
         self.temp = "" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners = order_details['sweeteners']
         self.add_ons = order_details['add_ons']
-        self.num_calories = None
+        self.num_calories.append('(60, 120)')
         self.size = "" if not order_details['sizes'] else str(order_details['sizes'][0])
         return {
             "MenuItem": {
@@ -139,9 +139,9 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['food'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price = None
+        self.price.append(2.99)
         self.add_ons = order_details['add_ons']
-        self.num_calories = None
+        self.num_calories.append('(60, 120)')
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -156,9 +156,9 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['bakery'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price = None
+        self.price.append(2.99)
         self.add_ons = order_details['add_ons']
-        self.num_calories = None
+        self.num_calories.append('(60, 120)')
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -173,9 +173,7 @@ class Order:
     def calculate_quantity(self, quantities) -> None:
         for quantity in quantities:
             quantity = number_map(quantity)
-            if self.cart_action == "question":
-                self.quantity.append(-7)
-            elif self.cart_action == "modification":
+            if self.cart_action == "modification":
                 self.quantity.append(-1 * quantity)
             else:
                 self.quantity.append(quantity)
@@ -249,7 +247,7 @@ class Order:
         }
 
 
-def split_order(order):
+def split_order(order) -> list[str]:
     split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese)\b)'
     split = re.split(split_pattern, order)
     remove_words = ['plus', 'get', 'and', 'also']
@@ -258,6 +256,18 @@ def split_order(order):
     filtered_order = [order for order in split if order not in remove_words and order != remove_chars and order]
 
     return filtered_order
+
+
+def make_order_report(split_orders: list[str]) -> tuple[list[dict], str]:
+    order_details = ""
+    order_report = []
+
+    for order in split_orders:
+        order = ((Order(order).make_order()))
+        order_details += str(order) + "\n"
+        order_report.append(order)
+
+    return order_report, order_details
 
 
 from os import path
@@ -273,13 +283,10 @@ if __name__ == "__main__":
 
     print(details)
 
-    res = ""
-    for detail in details:
-        res += str((Order(detail).make_order())) + "\n"
+    report, details = make_order_report(details)
 
 
-    print(res)
-    print(conv_ai(orders, res, "", print_token_usage=True, api_key=key))
+    print(conv_ai(orders, details, "", print_token_usage=True, api_key=key))
 
 
 
