@@ -3,6 +3,7 @@
 *.DS_Store
 db.sqlite3
 .env
+dump.rdb
 
 other/api_key.txt
 other/aws-info.csv
