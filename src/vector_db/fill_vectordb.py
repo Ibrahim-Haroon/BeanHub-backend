@@ -75,8 +75,14 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
 
     cur.execute("""
             CREATE INDEX ON products
-            USING ivfflat (embeddings) WITH (lists = 8);
+            USING ivfflat (embeddings) 
+            WITH (lists = 8);
     """)
+
+    # cur.execute(f"""CREATE INDEX ON embeddings
+    #                 USING hnsw(embedding vector_cosine_ops)
+    #                 WITH (m=2, ef_construction=5);
+    # """)
 
     cur.execute("VACUUM ANALYZE products;")
 
