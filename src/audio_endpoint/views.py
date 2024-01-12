@@ -52,10 +52,10 @@ class AudioView(APIView):
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
 
-        order_report, order_report_str = make_order_report(formatted_transcription)
+        order_report = make_order_report(formatted_transcription)
 
         model_response = conv_ai(transcription,
-                                 order_report_str,
+                                 str(order_report),
                                  conversation_history="")
         unique_id = self.upload_file(model_response)
 
@@ -84,10 +84,10 @@ class AudioView(APIView):
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
 
-        order_report, order_report_str = make_order_report(formatted_transcription)
+        order_report = make_order_report(formatted_transcription)
 
         model_response = conv_ai(transcription,
-                                 order_report_str,
+                                 str(order_report),
                                  conversation_history=self.r.get(f"conversation_history_{unique_id}"))
         self.upload_file(model_response)
 
