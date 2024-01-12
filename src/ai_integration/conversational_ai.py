@@ -15,7 +15,7 @@ prompt = """
         """
 
 
-def conv_ai(transcription: str, order_details: str, conversation_history: str, api_key: str = None, print_token_usage: bool = False) -> str:
+def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, print_token_usage: bool = False) -> str:
     if api_key:
         client = OpenAI(api_key=api_key)
     else:
@@ -26,7 +26,7 @@ def conv_ai(transcription: str, order_details: str, conversation_history: str, a
         messages=[
             {
                 "role": "user",
-                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_details}",
+                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}",
             },
             {
                 "role": "system",
@@ -248,7 +248,7 @@ class Order:
 
 
 def split_order(order) -> list[str]:
-    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese)\b)'
+    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese|sugar)\b)'
     split = re.split(split_pattern, order)
     remove_words = ['plus', 'get', 'and', 'also']
     remove_chars = '[^a-zA-Z0-9]'
@@ -258,16 +258,15 @@ def split_order(order) -> list[str]:
     return filtered_order
 
 
-def make_order_report(split_orders: list[str]) -> tuple[list[dict], str]:
-    order_details = ""
-    order_report = []
+def make_order_report(split_orders: list[str]) -> [list[dict]]:
+    report = []
 
     for order in split_orders:
         order = ((Order(order).make_order()))
-        order_details += str(order) + "\n"
-        order_report.append(order)
+        if order:
+            report.append(order)
 
-    return order_report, order_details
+    return report
 
 
 from os import path
@@ -278,15 +277,17 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "I'd like an egg and cheese and a small coffee and do you have anymore glazed donuts."
+    orders = "Hi can I get a small coffee with cream and sugar and a glazed donut"
     details = split_order(orders)
 
     print(details)
 
-    report, details = make_order_report(details)
+    report = make_order_report(details)
 
+    # print(report)
+    print(str(report))
 
-    print(conv_ai(orders, details, "", print_token_usage=True, api_key=key))
+    print(conv_ai(orders, str(report), "", print_token_usage=True, api_key=key))
 
 
 
