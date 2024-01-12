@@ -9,8 +9,7 @@ from rest_framework.views import APIView
 from src.vector_db.get_item import get_item
 from rest_framework.response import Response
 from .serializers import AudioResponseSerializer
-from src.ai_integration.conversational_ai import conv_ai
-from src.ai_integration.nlp_bert import ner_transformer
+from src.ai_integration.conversational_ai import conv_ai, split_order, make_order_report
 from src.ai_integration.google_speech_api import get_transcription
 from src.ai_integration.openai_tts_api import openai_text_to_speech_api
 
@@ -46,23 +45,6 @@ class AudioView(APIView):
         return unique_id
 
 
-    def get_order(self, order_report) -> []:
-        orders = []
-
-        order_type_mapping = {
-            'COFFEE_ORDER': self.coffee_order,
-            'BEVERAGE_ORDER': self.beverage_order,
-            'FOOD_ORDER': self.food_order,
-            'BAKERY_ORDER': self.bakery_order
-        }
-
-        for order, meta in order_report.items():
-            if order in order_type_mapping and meta != 'None':
-                json_order = order_type_mapping[order](order_report, order)
-                orders.append(json_order)
-
-        return orders
-
     def post(self, response, format=None):
         if 'file_path' not in response.data:
             return Response({'error': 'file not provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -71,15 +53,14 @@ class AudioView(APIView):
 
 
         transcription = self.get_transcription(s3, response.data['file_path'])
-        tagged_sentence = ner_transformer(transcription)
+        formatted_transcription = split_order(transcription)
 
 
-        order_report = json.loads(conv_ai(transcription, tagged_sentence, conversation_history=""))
-        order_details = self.get_order(order_report)
 
+        order_details, order_report = make_order_report(formatted_transcription)
 
-        model_response = order_report['CUSTOMER_RESPONSE']['response']
-        unique_id = self.upload_file(s3, model_response if model_response else "Sorry, I didn't get that")
+        model_response = conv_ai(transcription, order_report, conversation_history="")
+        unique_id = self.upload_file(s3, model_response)
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
@@ -104,16 +85,14 @@ class AudioView(APIView):
         s3 = boto3.client('s3')
         unique_id = response.data['unique_id']
         transcription = self.get_transcription(s3, response.data['file_path'])
-        tagged_sentence = ner_transformer(transcription)
+        formatted_transcription = split_order(transcription)
 
+        order_details, order_report = make_order_report(formatted_transcription)
 
-        order_report = json.loads(conv_ai(transcription,
-                                   tagged_sentence,
-                                   conversation_history=self.r.get(f"conversation_history_{unique_id}")))
-        order_details = self.get_order(order_report)
-
-        model_response = order_report['CUSTOMER_RESPONSE']['response']
-        self.upload_file(s3, model_response if model_response else "Sorry, I didn't get that")
+        model_response = conv_ai(transcription,
+                                 order_report,
+                                 conversation_history=self.r.get(f"conversation_history_{unique_id}"))
+        self.upload_file(s3, model_response)
 
         self.r.append(f"conversation_history_{unique_id}",
                       f"User: \n{transcription}\nModel: {model_response}\n")
@@ -129,78 +108,3 @@ class AudioView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @staticmethod
-    def coffee_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['coffee_type'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "temp": order_report[order]['temp'] if action != 'question' else "None",
-                "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
-                "milk_type": order_report[order]['milk_type'] if action != 'question' else "None",
-                "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
-
-    @staticmethod
-    def beverage_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['beverage_type'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "temp": order_report[order]['temp'] if action != 'question' else "None",
-                "add_ons": order_report[order]['add_ons'] if action != 'question' else "None",
-                "sweeteners": order_report[order]['sweetener'] if action != 'question' else "None",
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
-
-    @staticmethod
-    def food_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['food_item'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
-
-    @staticmethod
-    def bakery_order(order_report, order):
-        db_order_details = None
-        action = order_report[order]['action']
-
-        if action != 'question':
-            db_order_details, _ = get_item(order_report[order]['bakery_item'])
-        return {
-            "MenuItem": {
-                "item_name": db_order_details[0][1] if action != 'question' else "None",
-                "quantity": order_report[order]['quantity'] if action != 'question' else 0,
-                "price": db_order_details[0][5] if action != 'question' else 0.0,
-                "num_calories": db_order_details[0][4] if action != 'question' else "None",
-                "cart_action": action
-            }
-        }
