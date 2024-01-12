@@ -1,7 +1,13 @@
 import re
 import os
+import threading
+from os import path
+import psycopg2.pool
 from openai import OpenAI
 from other.number_map import number_map
+from src.vector_db.get_item import get_item
+from src.vector_db.aws_database_auth import connection_string
+
 
 role = """
             You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription,
@@ -55,6 +61,11 @@ class Order:
         self.num_calories: list[str] = []
         self.cart_action: str = ""
         self.size: str = ""
+        self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
+        key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
+        with open(key_path) as KEY:
+            self.key = KEY.readline().strip()
+
 
     def make_order(self) -> dict:
         order_type, order_details = self.get_order_type()
@@ -87,15 +98,14 @@ class Order:
 
     def make_coffee_order(self, order_details) -> dict:
         self.cart_action = self.get_cart_action()
-        self.item_name = order_details['coffee']
+        self.item_name = order_details['coffee'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price.append(2.99)
         self.temp = "" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners.extend(order_details['sweeteners'])
         self.add_ons.extend(order_details['add_ons'])
         self.milk_type = "" if not order_details['milk_type'] else str(order_details['milk_type'])
-        self.num_calories.append('(60, 120)')
         self.size = "" if not order_details['sizes'] else str(order_details['sizes'][0])
+        self.get_price_and_num_calories()
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -115,12 +125,11 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['beverage'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price.append(2.99)
         self.temp = "" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners = order_details['sweeteners']
         self.add_ons = order_details['add_ons']
-        self.num_calories.append('(60, 120)')
         self.size = "" if not order_details['sizes'] else str(order_details['sizes'][0])
+        self.get_price_and_num_calories()
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -139,9 +148,8 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['food'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price.append(2.99)
         self.add_ons = order_details['add_ons']
-        self.num_calories.append('(60, 120)')
+        self.get_price_and_num_calories()
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -156,9 +164,8 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['bakery'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.price.append(2.99)
         self.add_ons = order_details['add_ons']
-        self.num_calories.append('(60, 120)')
+        self.get_price_and_num_calories()
         return {
             "MenuItem": {
                 "item_name": self.item_name,
@@ -168,7 +175,6 @@ class Order:
                 "cart_action": self.cart_action
             }
         }
-
 
     def calculate_quantity(self, quantities) -> None:
         for quantity in quantities:
@@ -198,10 +204,64 @@ class Order:
 
         return bool(re.search(pattern, self.order))
 
+    def get_price_and_num_calories(self) -> None:
+        # Create and start threads for each section
+        item_thread = threading.Thread(target=self.process_item)
+        add_ons_thread = threading.Thread(target=self.process_add_ons)
+        sweeteners_thread = threading.Thread(target=self.process_sweeteners)
+        milk_thread = threading.Thread(target=self.process_milk)
+
+        item_thread.start()
+        add_ons_thread.start()
+        sweeteners_thread.start()
+        milk_thread.start()
+
+        item_thread.join()
+        add_ons_thread.join()
+        sweeteners_thread.join()
+        milk_thread.join()
+
+        return
+
+    def process_item(self):
+        item_details, _ = get_item(self.item_name, connection_pool=self.connection_pool, api_key=self.key)
+
+        if self.cart_action == "question":
+            self.quantity = []
+            self.quantity.append(item_details[0][2])
+
+        self.price.append(item_details[0][5])
+        self.num_calories.append(item_details[0][4])
+
+    def process_add_ons(self):
+        for add_on in self.add_ons:
+            add_on_details, _ = get_item(add_on, connection_pool=self.connection_pool, api_key=self.key)
+            self.price.append(add_on_details[0][5])
+            self.num_calories.append(add_on_details[0][4])
+            if self.cart_action == "question":
+                self.quantity.append(add_on_details[0][2])
+
+    def process_sweeteners(self):
+        for sweetener in self.sweeteners:
+            sweetener_details, _ = get_item(sweetener, connection_pool=self.connection_pool, api_key=self.key)
+            self.price.append(sweetener_details[0][5])
+            self.num_calories.append(sweetener_details[0][4])
+            if self.cart_action == "question":
+                self.quantity.append(sweetener_details[0][2])
+
+    def process_milk(self):
+        if self.milk_type:
+            milk_details, _ = get_item(self.milk_type, connection_pool=self.connection_pool, api_key=self.key)
+            self.price.append(milk_details[0][5])
+            self.num_calories.append(milk_details[0][4])
+            if self.cart_action == "question":
+                self.quantity.append(milk_details[0][2])
+
     def parse_order(self) -> dict:
 
         size_pattern = r'\b(small|medium|large|extra large)\b'
-        coffee_pattern = r'\b(coffee|coffees|cappuccino|latte|americano|macchiato|frappuccino|\b(?<!shot of )espresso)\b'
+        coffee_pattern = r'\b(coffee|coffees|cappuccino|latte|americano|macchiato|frappuccino|\b(?<!shot of ' \
+                         r')espresso)\b'
         quantity_pattern = r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen' \
                            r'|fifteen' \
                            r'|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|dozen|a lot|a|an)\b'
@@ -219,7 +279,6 @@ class Order:
         milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
                        r'milk|coconut milk|half and half|heavy cream|cream)\b'
 
-        # Find matches in the order
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
         coffees = re.findall(coffee_pattern, self.order)
@@ -247,6 +306,7 @@ class Order:
         }
 
 
+
 def split_order(order) -> list[str]:
     split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese|sugar)\b)'
     split = re.split(split_pattern, order)
@@ -259,17 +319,28 @@ def split_order(order) -> list[str]:
 
 
 def make_order_report(split_orders: list[str]) -> [list[dict]]:
-    report = []
+    order_report = []
 
+    threads = []
     for order in split_orders:
-        order = ((Order(order).make_order()))
-        if order:
-            report.append(order)
+        order_thread = threading.Thread(target=process_order, args=(order, order_report))
+        threads.append(order_thread)
 
-    return report
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    return order_report
 
 
-from os import path
+def process_order(order, order_report):
+    order = ((Order(order).make_order()))
+
+    if order:
+        order_report.append(order)
+
 
 
 if __name__ == "__main__":
@@ -277,15 +348,15 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "Hi can I get a small coffee with cream and sugar and a glazed donut"
+    orders = "How many glazed donuts do you have left and let me get a cappuccino with a shot of espresso"
     details = split_order(orders)
 
     print(details)
 
     report = make_order_report(details)
 
-    # print(report)
-    print(str(report))
+    print(report)
+    # print(str(report))
 
     print(conv_ai(orders, str(report), "", print_token_usage=True, api_key=key))
 
