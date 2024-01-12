@@ -306,7 +306,6 @@ class Order:
         }
 
 
-
 def split_order(order) -> list[str]:
     split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese|sugar)\b)'
     split = re.split(split_pattern, order)
@@ -342,7 +341,6 @@ def process_order(order, order_report):
         order_report.append(order)
 
 
-
 if __name__ == "__main__":
     key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
     with open(key_file_path) as api_key:
@@ -356,9 +354,6 @@ if __name__ == "__main__":
     report = make_order_report(details)
 
     print(report)
-    # print(str(report))
+    print(str(report))
 
     print(conv_ai(orders, str(report), "", print_token_usage=True, api_key=key))
-
-
-
