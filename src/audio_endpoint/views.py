@@ -1,5 +1,4 @@
 import os
-import json
 import uuid
 import redis
 import boto3
@@ -19,20 +18,22 @@ class AudioView(APIView):
         super().__init__(**kwargs)
         self.bucket_name = os.environ['S3_BUCKET_NAME']
         self.r = redis.Redis()
+        self.s3 = boto3.client('s3')
 
-    def get_transcription(self, s3, file_path: str) -> str:
+    def get_transcription(self, file_path: str) -> str:
         temp_file = tempfile.NamedTemporaryFile(delete=False)
         try:
-            s3.download_file(self.bucket_name, file_path, temp_file.name)
+            self.s3.download_file(self.bucket_name, file_path, temp_file.name)
             temp_file.close()
 
             transcription = get_transcription(temp_file.name)
+
         finally:
             os.remove(temp_file.name)
 
         return transcription
 
-    def upload_file(self, s3, transcription: str, unique_id: uuid.UUID = None) -> uuid.UUID:
+    def upload_file(self, transcription: str, unique_id: uuid.UUID = None) -> uuid.UUID:
         res_audio = openai_text_to_speech_api(transcription)
         res_audio_path = '/tmp/res_audio.wav'
         with open(res_audio_path, 'wb') as f:
@@ -40,32 +41,28 @@ class AudioView(APIView):
 
         if not unique_id:
             unique_id = uuid.uuid4()
-        s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
+        self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
 
         return unique_id
-
 
     def post(self, response, format=None):
         if 'file_path' not in response.data:
             return Response({'error': 'file not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        s3 = boto3.client('s3')
-
-
-        transcription = self.get_transcription(s3, response.data['file_path'])
+        transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
 
+        order_report, order_report_str = make_order_report(formatted_transcription)
 
-
-        order_details, order_report = make_order_report(formatted_transcription)
-
-        model_response = conv_ai(transcription, order_report, conversation_history="")
-        unique_id = self.upload_file(s3, model_response)
+        model_response = conv_ai(transcription,
+                                 order_report_str,
+                                 conversation_history="")
+        unique_id = self.upload_file(model_response)
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
             'unique_id': str(unique_id),
-            'json_order': order_details
+            'json_order': order_report
         }
 
         self.r.setex(name=f"conversation_history_{unique_id}",
@@ -76,23 +73,23 @@ class AudioView(APIView):
         if serializer.is_valid():
             return Response(f"{serializer.data}", status=status.HTTP_200_OK)
         else:
-            return Response(f"{transcription}\n{order_details}\n{serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
+            return Response(f"{transcription}\n{order_report}\n{serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, response, format=None):
         if 'file_path' not in response.data or 'unique_id' not in response.data:
             return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        s3 = boto3.client('s3')
         unique_id = response.data['unique_id']
-        transcription = self.get_transcription(s3, response.data['file_path'])
+
+        transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
 
-        order_details, order_report = make_order_report(formatted_transcription)
+        order_report, order_report_str = make_order_report(formatted_transcription)
 
         model_response = conv_ai(transcription,
-                                 order_report,
+                                 order_report_str,
                                  conversation_history=self.r.get(f"conversation_history_{unique_id}"))
-        self.upload_file(s3, model_response)
+        self.upload_file(model_response)
 
         self.r.append(f"conversation_history_{unique_id}",
                       f"User: \n{transcription}\nModel: {model_response}\n")
@@ -100,7 +97,7 @@ class AudioView(APIView):
         response_data = {
             'file_path': f"result_{unique_id}.wav",
             'unique_id': str(unique_id),
-            'json_order': order_details
+            'json_order': order_report
         }
 
         serializer = AudioResponseSerializer(data=response_data)
