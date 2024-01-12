@@ -2,14 +2,14 @@ item_name,item_quantity,common_allergin,num_calories,price
 black coffee,20,None,2-10,2.00
 Espresso,2,None,2,5.00
 Double Espresso,4,None,4,5.00
-Latte,0,Lactose (if made with),120-180,5.00
+Latte,0,Lactose,120-180,5.00
 Americano,2,None,5-25,7.00
-Macchiato,9,Lactose (if added),15-30,8.00
-Flat White,1,Lactose (if added),120-160,9.00
-Cappuccino,6,Lactose (if added),60-120,10.00
-Hot chocolate,5,"Lactose, Soy, Nuts, Gluten, Cocoa, Additives",150-250,5.00
-Fruit Juice,11,N/A,300-800,5.00
-Smoothie,3,"Nuts, Dairy, Soy, Gluten, Fruits",150-300,5.00
+Macchiato,9,Lactose,15-30,8.00
+Flat White,1,Lactose,120-160,9.00
+Cappuccino,6,Lactose ,60-120,10.00
+Hot chocolate,5,"Lactose, Nuts, Gluten, Cocoa, Additives",150-250,5.00
+Fruit Juice,11,Fruits,300-800,5.00
+Smoothie,3,"Nuts, Dairy, Gluten, Fruits",150-300,5.00
 Lemonade,1,"Citrus, Sulfites, Fruits, Additives",100-120,7.00
 Vanilla milkshake,7,"Lactose, Vanilla, Nuts, (if added)",300-400,8.00
 Lemon tea,2,"Citrus, Tea,  Additives",2-50,5.00
@@ -23,6 +23,9 @@ Tea + Dessert (Combo 3),N/A,N/A,200-700,11.00
 Hazelnut,N/A,Nut,30,0.50
 Whipped Cream,N/A,None,50,0.50
 Caramel,N/A,None,60,0.50
+Cream,N/A,Lactose,20,0.00
+Sugar,N/A,N/A,40,0.00
+Shot of Espresso,N/A,None,2.00
 Vanilla,N/A,None,20,.50
 Egg and Cheese,7,Lactose,360,5.00
 Bacon Egg and Cheese,6,"Lactose, Gluten",420,6.00
