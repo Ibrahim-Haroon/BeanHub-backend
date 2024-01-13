@@ -1,9 +1,9 @@
-from src.ai_integration.openai_tts_api import openai_text_to_speech_api
+from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 import pytest
 from mock import MagicMock, patch
 from typing import Final
 
-script_path: Final[str] = 'src.ai_integration.openai_tts_api'
+script_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 
 @pytest.fixture

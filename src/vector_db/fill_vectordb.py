@@ -4,7 +4,7 @@ from tqdm import tqdm
 from other.red import inputRED
 from pgvector.psycopg2 import register_vector
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.openai_embeddings_api import *
+from src.ai_integration.embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 
 

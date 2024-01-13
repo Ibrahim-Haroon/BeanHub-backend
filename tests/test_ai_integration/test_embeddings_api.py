@@ -1,10 +1,10 @@
-from src.ai_integration.openai_embeddings_api import *
+from src.ai_integration.embeddings_api import *
 import pytest
 from mock import MagicMock, patch
 from typing import Final
 
 
-script_path: Final[str] = 'src.ai_integration.openai_embeddings_api'
+script_path: Final[str] = 'src.ai_integration.embeddings_api'
 
 
 @pytest.fixture
