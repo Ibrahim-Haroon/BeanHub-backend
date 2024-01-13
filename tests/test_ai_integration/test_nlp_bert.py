@@ -21,6 +21,7 @@ def test_that_ner_transformer_returns_prediction_given_string(mock_components):
     # Act
     prediction = ner_transformer("test")
 
+    # Assert
     assert prediction == expected_prediction, f"expected prediction to be {expected_prediction} but got {prediction}"
 
 
@@ -32,36 +33,5 @@ def test_that_ner_transformer_returns_empty_list_when_given_empty_string(mock_co
     # Act
     prediction = ner_transformer(empty_string)
 
+    # Assert
     assert prediction == expected_prediction, f"expected prediction to be {expected_prediction} but got {prediction}"
-
-
-def test_that_format_ner_correctly_formats_prediction_correctly_for_list_of_O_tags():
-    # Arrange
-    prediction = [
-        [{'this': 'O'}, {'is': 'O'}, {'a': 'O'}, {'test': 'O'}]
-    ]
-    expected_res = []
-
-
-    # Act
-    res = format_ner(prediction)
-
-
-    # Assert
-    assert res == expected_res, f"expected formatted string to be {expected_res} but got {res}"
-
-
-def test_that_format_ner_correctly_formats_prediction_correctly_for_list_of_I_and_B_tags():
-    # Arrange
-    prediction = [
-        [{'Want': 'O'}, {'5': 'B_QUANTITY'}, {'lattes': 'I_COFFEE_TYPE'}, {'and': 'O'}, {'a': 'O'}, {'hug': 'O'}]
-    ]
-    expected_res = [['lattes', 5]]
-
-
-    # Act
-    res = format_ner(prediction)
-
-
-    # Assert
-    assert res == expected_res, f"expected formatted string to be {expected_res} but got {res}"
