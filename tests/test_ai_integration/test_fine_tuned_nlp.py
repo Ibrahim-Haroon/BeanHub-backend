@@ -1,10 +1,10 @@
 import pytest
-from src.ai_integration.nlp_bert import *
+from src.ai_integration.fine_tuned_nlp import *
 
 
 @pytest.fixture
 def mock_components(mocker):
-    ner_model_mock = mocker.patch('src.ai_integration.nlp_bert.NERModel')
+    ner_model_mock = mocker.patch('src.ai_integration.fine_tuned_nlp.NERModel')
     mock_instance = ner_model_mock.return_value
 
     mock_instance.predict.return_value = ([{"entity": "example", "score": 0.99}], None)

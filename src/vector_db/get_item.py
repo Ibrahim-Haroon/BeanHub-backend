@@ -8,7 +8,7 @@ from io import StringIO
 from psycopg2 import pool
 from pgvector.psycopg2 import register_vector
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.openai_embeddings_api import *
+from src.ai_integration.embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')

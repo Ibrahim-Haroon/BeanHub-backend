@@ -14,9 +14,9 @@ from .serializers import AudioResponseSerializer
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.conversational_ai import conv_ai
-from src.ai_integration.nlp_bert import split_order, make_order_report
-from src.ai_integration.google_speech_api import get_transcription
-from src.ai_integration.openai_tts_api import openai_text_to_speech_api
+from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
+from src.ai_integration.speech_to_text_api import google_cloud_speech_api
+from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
@@ -39,7 +39,7 @@ class AudioView(APIView):
 
             temp_file.close()
 
-            transcription = get_transcription(temp_file.name)
+            transcription = google_cloud_speech_api(temp_file.name)
         finally:
             os.remove(temp_file.name)
 
