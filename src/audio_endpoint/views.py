@@ -17,6 +17,7 @@ from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
+import concurrent.futures
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
@@ -94,7 +95,6 @@ class AudioView(APIView):
         serializer = AudioResponseSerializer(data=response_data)
         logging.info(f"serialize time: {time.time() - serialize_time}")
         if serializer.is_valid():
-            upload_thread.join()
             return Response(f"total time:{time.time() - start_time}\n{serializer.data}", status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{order_report}\n{serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
@@ -128,7 +128,6 @@ class AudioView(APIView):
 
         serializer = AudioResponseSerializer(data=response_data)
         if serializer.is_valid():
-            upload_thread.join()
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{order_report}\n{serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
