@@ -1,5 +1,9 @@
+import time
+import logging
 import speech_recognition as speech
 from pydub import AudioSegment
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def get_transcription(source: str = None) -> str:
@@ -13,8 +17,8 @@ def get_transcription(source: str = None) -> str:
     if not source:
         return "None"
 
+    start_time = time.time()
     recognizer = speech.Recognizer()
-
     transcribed_audio = None
 
     with speech.AudioFile(source) as audio_source:
@@ -27,6 +31,8 @@ def get_transcription(source: str = None) -> str:
             return "None"
         except speech.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
+
+    logging.info(f"get_transcription time: {time.time() - start_time}")
 
     return transcribed_audio
 
