@@ -19,6 +19,12 @@ def google_cloud_speech_api(source: str = None) -> str:
 
     start_time = time.time()
     recognizer = speech.Recognizer()
+
+    recognizer.dynamic_energy_threshold = False
+    recognizer.pause_threshold = 0.8
+    recognizer.single_utterance = True
+    recognizer.interim_results = True
+
     transcribed_audio = None
 
     with speech.AudioFile(source) as audio_source:
@@ -47,6 +53,11 @@ def record_until_silence() -> bytes and str:
     recognizer = speech.Recognizer()
     audio_data = []
     transcribed_audio = None
+
+    recognizer.dynamic_energy_threshold = False  # Disable dynamic energy threshold adjustment
+    recognizer.pause_threshold = 0.8  # Set the pause threshold to optimize for short utterances
+    recognizer.single_utterance = True  # Treat each call as a single short utterance
+    recognizer.interim_results = True  # Get interim results for streaming
 
     with speech.Microphone() as audio_source:
         print("Recording... Speak until you want to stop.")
@@ -92,5 +103,4 @@ def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", 
 
 if __name__ == "__main__":
     recorded_audio, transcription = record_until_silence()
-    if recorded_audio is not None:
-        save_as_mp3(recorded_audio)
+    print(transcription)
