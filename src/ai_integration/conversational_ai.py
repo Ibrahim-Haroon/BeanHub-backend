@@ -45,9 +45,9 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
             api_key
         )
         if print_token_usage:
-            print(f"Prompt tokens ({response['usage']['prompt_tokens']) + "
-                  f"Completion tokens ({response['usage']['completion_tokens']) = "
-                  f"Total tokens ({response['usage']['total_tokens'])")
+            print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
+                  f"Completion tokens ({response['usage']['completion_tokens']}) = "
+                  f"Total tokens ({response['usage']['total_tokens']})")
         return response['choices'][0]['message']['content']
 
 
@@ -78,7 +78,8 @@ def main():
                     'cart_action': 'insertion'}}]
                             """,
                        conversation_history="",
-                       api_key=key)
+                       api_key=key,
+                       print_token_usage=False)
     print(f"conv_ai time: {time.time() - start_time}")
     print(type(response))
     return response
