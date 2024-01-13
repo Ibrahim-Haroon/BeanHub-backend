@@ -30,7 +30,7 @@ def as_csv_file(data: [[str]]) -> StringIO:
     return file_object
 
 
-def test_get_item_returns_true_when_given_quantity_less_than_stock(mocker, mock_boto3_session_client, mock_components):
+def test_get_item_returns_true_when_successfully_found_closest_item(mocker, mock_boto3_session_client, mock_components):
     # Arrange
     data = "test"
     key = "mock_api_key"
@@ -41,11 +41,10 @@ def test_get_item_returns_true_when_given_quantity_less_than_stock(mocker, mock_
         ["secret_name", "region_name", "aws_access_key_id", "aws_secret_access_key"],
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
-    aws = as_csv_file(aws_info)
     db = as_csv_file(database_info)
 
     # Act
-    _, res = get_item(data, key=key, aws_csv_file=aws, database_csv_file=db)
+    _, res = get_item(data, api_key=key, database_csv_file=db)
 
     # Assert
     assert res is True, f"expected search to be successful but {res}"
