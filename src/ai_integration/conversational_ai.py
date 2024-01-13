@@ -32,7 +32,7 @@ async def get_openai_response(client, model, messages, api_key):
         logging.error(f"*****TIME OUT*******\nError: {e}")
         return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
 
-async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None):
+async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None,  print_token_usage: bool = False):
     if api_key is None:
         api_key = os.environ['OPENAI_API_KEY']
 
@@ -44,15 +44,19 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
              {"role": "user", "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"}],
             api_key
         )
+        if print_token_usage:
+            print(f"Prompt tokens ({response['usage']['prompt_tokens']) + "
+                  f"Completion tokens ({response['usage']['completion_tokens']) = "
+                  f"Total tokens ({response['usage']['total_tokens'])")
         return response['choices'][0]['message']['content']
 
 
-def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None):
+def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, print_token_usage: bool = False):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     start_time = time.time()
-    response = loop.run_until_complete(conv_ai_async(transcription, order_report, conversation_history, api_key))
+    response = loop.run_until_complete(conv_ai_async(transcription, order_report, conversation_history, api_key, print_token_usage))
     logging.info(f"conv_ai time: {time.time() - start_time}")
 
     loop.close()
