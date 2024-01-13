@@ -1,7 +1,7 @@
 import psycopg2
 from io import StringIO
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.openai_embeddings_api import *
+from src.ai_integration.embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 
 
