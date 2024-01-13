@@ -79,11 +79,6 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
             WITH (lists = 8);
     """)
 
-    # cur.execute(f"""CREATE INDEX ON embeddings
-    #                 USING hnsw(embedding vector_cosine_ops)
-    #                 WITH (m=2, ef_construction=5);
-    # """)
-
     cur.execute("VACUUM ANALYZE products;")
 
     cur.close()
@@ -105,3 +100,12 @@ def main() -> int:
 
 if __name__ == "__main__":
     main()
+
+
+'''
+If ever want to use hnsw instead of ivfflat, use this code:
+    cur.execute(f"""CREATE INDEX ON embeddings
+                    USING hnsw(embedding vector_cosine_ops)
+                    WITH (m=2, ef_construction=5);
+    """)
+'''
