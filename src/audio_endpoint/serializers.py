@@ -14,12 +14,7 @@ class MenuItemSerializer(serializers.Serializer):
     size = serializers.CharField(max_length=50, required=False, default="")
 
 
-class NestedMenuItemSerializer(serializers.Serializer):
-    MenuItem = MenuItemSerializer()
-
-
 class AudioResponseSerializer(serializers.Serializer):
     file_path = serializers.CharField(max_length=200)
     unique_id = serializers.CharField(max_length=100)
-    json_order = serializers.ListField(child=NestedMenuItemSerializer())
-
+    json_order = MenuItemSerializer(many=True)
