@@ -1,7 +1,7 @@
 import os
 import uuid
-import redis
 import time
+import redis
 import boto3
 import logging
 import tempfile
@@ -10,13 +10,12 @@ import psycopg2.pool
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import AudioResponseSerializer
 from src.vector_db.aws_sdk_auth import get_secret
-from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.conversational_ai import conv_ai
-from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
+from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
+from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
@@ -65,13 +64,12 @@ class AudioView(APIView):
     def post(self, response, format=None):
         start_time = time.time()
         if 'file_path' not in response.data:
-            return Response({'error': 'file not provided'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'file_path not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         unique_id = uuid.uuid4()
 
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
-
         order_report = make_order_report(formatted_transcription, self.connection_pool, aws_connected=True)
 
         model_response = conv_ai(transcription,
@@ -90,16 +88,15 @@ class AudioView(APIView):
                      time=600,  # 10 minutes
                      value=f"User: {transcription}\nModel: {model_response}\n")
 
-        serialize_time = time.time()
-        serializer = AudioResponseSerializer(data=response_data)
-        logging.info(f"serialize time: {time.time() - serialize_time}")
-        if serializer.is_valid():
-            return Response(f"total time:{time.time() - start_time}\n{serializer.data}", status=status.HTTP_200_OK)
+        if response_data:
+            logging.info(f"total time: {time.time() - start_time}")
+            upload_thread.join()
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
-            return Response(f"{transcription}\n{order_report}\n{serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
+            return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, response, format=None):
-
+        start_time = time.time()
         if 'file_path' not in response.data or 'unique_id' not in response.data:
             return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -125,8 +122,9 @@ class AudioView(APIView):
             'json_order': order_report
         }
 
-        serializer = AudioResponseSerializer(data=response_data)
-        if serializer.is_valid():
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        if response_data:
+            logging.info(f"total time: {time.time() - start_time}")
+            upload_thread.join()
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
-            return Response(f"{transcription}\n{order_report}\n{serializer.errors}", status=status.HTTP_400_BAD_REQUEST)
+            return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
