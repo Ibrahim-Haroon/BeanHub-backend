@@ -27,6 +27,17 @@ def get_item(order: str, api_key: str = None, connection_pool=None, database_csv
     if not order:
         return None, False
 
+    return_queue = queue.Queue()
+
+    def get_embedding() -> None:
+        openai_embedding_time = time.time()
+        vector_embedding = openai_embedding_api(order, api_key if api_key else None)
+        logging.info(f"openai_embedding time: {time.time() - openai_embedding_time}")
+        return_queue.put(vector_embedding)
+
+    get_embedding_thread = threading.Thread(target=get_embedding)
+    get_embedding_thread.start()
+
     connection_time = time.time()
     if connection_pool:
         db_connection = connection_pool.getconn()
@@ -38,23 +49,12 @@ def get_item(order: str, api_key: str = None, connection_pool=None, database_csv
     db_connection.set_session(autocommit=True)
     logging.info(f"start new db session time: {time.time() - set_session_time}")
 
-    return_queue = queue.Queue()
-
-    def get_embedding() -> None:
-        openai_embedding_time = time.time()
-        vector_embedding = openai_embedding_api(order, api_key if api_key else None)
-        logging.info(f"openai_embedding time: {time.time() - openai_embedding_time}")
-        return_queue.put(vector_embedding)
-
     def pg_register_vector() -> None:
         register_vector_time = time.time()
         register_vector(db_connection)
         logging.info(f"register_vector time: {time.time() - register_vector_time}")
 
-    get_embedding_thread = threading.Thread(target=get_embedding)
     pg_register_vector_thread = threading.Thread(target=pg_register_vector)
-
-    get_embedding_thread.start()
     pg_register_vector_thread.start()
 
     cursor_time = time.time()
