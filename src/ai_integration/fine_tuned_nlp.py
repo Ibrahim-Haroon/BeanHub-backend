@@ -355,7 +355,7 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "let me get a latte with two pumps of caramel and sugar"
+    orders = "One black coffee and a glazed donut"
 
     split_order_time = time.time()
     details = split_order(orders)
