@@ -32,6 +32,7 @@ async def get_openai_response(client, model, messages, api_key):
         logging.error(f"*****TIME OUT*******\nError: {e}")
         return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
 
+
 async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None,  print_token_usage: bool = False):
     if api_key is None:
         api_key = os.environ['OPENAI_API_KEY']
@@ -48,6 +49,7 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
             print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
                   f"Completion tokens ({response['usage']['completion_tokens']}) = "
                   f"Total tokens ({response['usage']['total_tokens']})")
+
         return response['choices'][0]['message']['content']
 
 
