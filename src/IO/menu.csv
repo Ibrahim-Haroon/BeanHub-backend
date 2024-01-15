@@ -2,11 +2,11 @@ item_name,item_quantity,common_allergin,num_calories,price
 Black coffee,20,None,2-10,2.00
 Espresso,2,None,2,5.00
 Double Espresso,4,None,4,5.00
-Latte,0,Lactose (if made with),120-180,5.00
+Latte,0,Lactose,120-180,5.00
 Americano,2,None,5-25,7.00
-Macchiato,9,Lactose (if added),15-30,8.00
-Flat White,1,Lactose (if added),120-160,9.00
-Cappuccino,6,Lactose (if added),60-120,10.00
+Macchiato,9,Lactose,15-30,8.00
+Flat White,1,Lactose,120-160,9.00
+Cappuccino,6,Lactose,60-120,10.00
 Hot chocolate,5,"Lactose, Soy, Nuts, Gluten, Cocoa, Additives",150-250,5.00
 Apple Juice,4,N/A,200,2.00
 Orange Juice,0,N/A,200,2.00
