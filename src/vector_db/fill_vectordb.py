@@ -4,7 +4,7 @@ from tqdm import tqdm
 from other.red import inputRED
 from pgvector.psycopg2 import register_vector
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.openai_embeddings_api import *
+from src.ai_integration.embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 
 
@@ -75,7 +75,8 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
 
     cur.execute("""
             CREATE INDEX ON products
-            USING ivfflat (embeddings) WITH (lists = 8);
+            USING ivfflat (embeddings) 
+            WITH (lists = 8);
     """)
 
     cur.execute("VACUUM ANALYZE products;")
@@ -99,3 +100,12 @@ def main() -> int:
 
 if __name__ == "__main__":
     main()
+
+
+'''
+If ever want to use hnsw instead of ivfflat, use this code:
+    cur.execute(f"""CREATE INDEX ON embeddings
+                    USING hnsw(embedding vector_cosine_ops)
+                    WITH (m=2, ef_construction=5);
+    """)
+'''

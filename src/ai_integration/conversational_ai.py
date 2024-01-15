@@ -1,136 +1,91 @@
 import os
-import json
+import time
+import httpx
+import logging
+import asyncio
 from os import path
-from openai import OpenAI
-from src.vector_db.contain_item import contains_quantity
-from src.ai_integration.nlp_bert import ner_transformer
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 role = """
             You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription,
-            NER tags, and conversation history fill in json object. Also generate a customer-facing response.
-            Follow these templates for json object, if one is not found then put 'None'.
-            Be precise for internal response.
+            and conversation history fill provide a response to the customer.
            """
 
-prompt = """provide a structured json object, follow it strictly and don't add words on top of the key.
-            Follow these formatting guidelines for internal response:
-            COFFEE_ORDER: “action" (insertion, deletion, modification, question),
-            "coffee_type" (black coffee, latte, cappuccino, etc.),
-            "coffee_flavor" (caramel, hazelnut, etc. (but different from pump of caramel),
-            "size" (small, large, medium, venti, grande, etc.), "quantity" (integer), "temp" (iced, hot, warm, etc.),
-            "add_ons" (pump of caramel, shot of x, whipped cream, etc.),
-            "milk_type" (soy milk, whole milk, skim milk, etc.), "sweetener" (honey, sugar, etc.)
-            BEVERAGE_ORDER: "action" (insertion, deletion, modification, question),
-            "beverage_type" (water, tea, soda, smoothie, etc.) "size" (small, large, medium, venti, grande, etc.),
-            "quantity" (integer), "temp" (iced, hot, warm, etc.), "add_ons" (whipped cream, syrup, etc.)
-            "sweetener" (honey, sugar, etc.)
-            FOOD_ORDER: "action" (insertion, deletion, modification, question),
-            "food_item" (egg and cheese, hash browns, etc.),"quantity" (integer)
-            BAKERY_ORDER: "action" (insertion, deletion, modification, question),
-            bakery_item" (glazed, strawberry, chocolate etc. donut, blueberry, chocolate, etc . muffin, etc.),
-            "quantity" (integer)
-            CUSTOMER_RESPONSE: "response" (ex. "Added to your cart! Is there anything else you'd like to order today?"
-                                                but make your own and somewhat personalize per order to sound normal.
-                                                However if it is a question then use contains_quantity function 
-                                                to check database and make sure there is a enough quantity, if they want 
-                                                more than the quantity then tell them sorry we don't have enough.
-                                                Also the action would be 'question' then.
+prompt = """
+        Give a response (ex. "Added to your cart! Is there anything else you'd like to order today?"
+                        but make your own and somewhat personalize per order to sound normal) given transcription
+                        and order details gathered from the database:
         """
 
 
-def conv_ai(transcription: str, tagged_sentence: list, conversation_history, api_key: str = None, print_token_usage: bool = False) -> json:
-    messages = [
-            {
-                "role": "system",
-                "content": f"{role} + conversation history: f{conversation_history} + "
-                           f"MUST GIVE CUSTOMER FACING RESPONSE EACH AND EVERY TIME."
-            },
-            {
-                "role": "user",
-                "content": f"{prompt} + \ntranscription: {transcription} + \ntagged sentences: {tagged_sentence}",
-            },
-        ]
+async def get_openai_response(client, model, messages, api_key):
+    try:
+        response = await client.post(
+            "https://api.openai.com/v1/chat/completions",
+            json={"model": model, "messages": messages},
+            headers={"Authorization": f"Bearer {api_key}"}
+        )
 
-    if api_key:
-        client = OpenAI(api_key=api_key)
-    else:
-        client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-1106",
-        messages=messages,
-        response_format={"type": "json_object"},
-        functions=[
-            {
-                "name": "contains_quantity",
-                "description": "Get the quantity of an item from database for when user asks a questions"
-                               " such as \"Do you have any more XYZ\" or \"How many of XYZ do you have?\"",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "order": {
-                            "type": "string",
-                            "description": "The name of the item to get the quantity of such as \" glazed donut\"",
-                        },
-                        "quantity": {
-                            "type": "integer",
-                            "description": "The quantity of the item to get such as 1",
-                        },
-                    },
-                    "required": ["order", "quantity"],
-                },
-            }
-        ],
-        function_call="auto",
-    )
-
-    use_function = response.choices[0].finish_reason == "function_call"
-
-    if use_function:
-        if response.choices[0].message.function_call.name == "contains_quantity":
-            argument_obj = response.choices[0].message.function_call.arguments
-            argument_obj = json.loads(argument_obj)
-            print(argument_obj)
-            content = contains_quantity(argument_obj["order"], argument_obj["quantity"])
-            messages.append(response.choices[0].message)
-            messages.append(
-                {
-                    "role": "function",
-                    "name": "contains_quantity",
-                    "content": content
-                },
-            )
-
-    final_response = client.chat.completions.create(
-        model="gpt-3.5-turbo-1106",
-        messages=messages,
-        response_format={"type": "json_object"}
-    )
-
-    if print_token_usage:
-        print(f"Prompt tokens ({response.usage.prompt_tokens + final_response.usage.prompt_tokens}) + "
-              f"Completion tokens ({response.usage.completion_tokens + final_response.usage.completion_tokens}) = "
-              f"Total tokens ({response.usage.total_tokens + + final_response.usage.total_tokens})")
-    return final_response.choices[0].message.content
+        return response.json()
+    except Exception as e:
+        logging.error(f"*****TIME OUT*******\nError: {e}")
+        return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
 
 
-def main() -> int:
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
-    with open(key_file_path) as api_key:
+async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None,  print_token_usage: bool = False):
+    if api_key is None:
+        api_key = os.environ['OPENAI_API_KEY']
+
+    async with httpx.AsyncClient() as client:
+        response = await get_openai_response(
+            client,
+            "gpt-3.5-turbo-1106",
+            [{"role": "system", "content": f"{role} and all previous conversation history: {conversation_history}"},
+             {"role": "user", "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"}],
+            api_key
+        )
+        if print_token_usage:
+            print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
+                  f"Completion tokens ({response['usage']['completion_tokens']}) = "
+                  f"Total tokens ({response['usage']['total_tokens']})")
+
+        return response['choices'][0]['message']['content']
+
+
+def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, print_token_usage: bool = False):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    start_time = time.time()
+    response = loop.run_until_complete(conv_ai_async(transcription, order_report, conversation_history, api_key, print_token_usage))
+    logging.info(f"conv_ai time: {time.time() - start_time}")
+
+    loop.close()
+
+    return response
+
+
+def main():
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
+    with open(key_path) as api_key:
         key = api_key.readline().strip()
 
-    transcription = "Hi can I get a glazed donut"
-    ner_tags = ner_transformer(transcription)
-    conversation_history = ""
-
-    res = json.loads((conv_ai(transcription, ner_tags, conversation_history, api_key=key, print_token_usage=True)))
-
-    print(res)
-    # print(f"\n{res['FOOD_ORDER']['food_item']}")
-
-    return 0
+    start_time = time.time()
+    response = conv_ai(transcription="Let me get a latte with two pumps of caramel and sugar",
+                       order_report="""
+                    [{'MenuItem': {'item_name': 'latte', 'quantity': [1, 2], 'price': [5.0, 10.0, 2.0], 
+                    'temp': 'regular', 'add_ons': ['pumps of caramel'], 'milk_type': 'regular', 'sweeteners': [
+                    'sugar'], 'num_calories': ['(120,180)', '(60,120)', '(200,500)'], 'size': 'regular', 
+                    'cart_action': 'insertion'}}]
+                            """,
+                       conversation_history="",
+                       api_key=key,
+                       print_token_usage=False)
+    print(f"conv_ai time: {time.time() - start_time}")
+    print(type(response))
+    return response
 
 
 if __name__ == "__main__":
     main()
-

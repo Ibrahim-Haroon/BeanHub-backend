@@ -1,11 +1,11 @@
 import pytest
 from os import path
 from mock import MagicMock
-from src.ai_integration.google_speech_api import get_transcription
+from src.ai_integration.speech_to_text_api import google_cloud_speech_api
 from typing import Final
 
 
-script_path: Final[str] = 'src.ai_integration.google_speech_api'
+script_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def test_get_transcription_with_none_passed_for_audio_file_path(mock_speech):
     expected_transcription = "None"
 
     # Act
-    actual_transcription = get_transcription()
+    actual_transcription = google_cloud_speech_api()
 
     # Assert
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
@@ -39,7 +39,7 @@ def test_get_transcription_with_empty_audio_file(mock_google_cloud, mock_speech)
     mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
     # Act
-    actual_transcription = get_transcription(audio_file_path)
+    actual_transcription = google_cloud_speech_api(audio_file_path)
 
     # Assert
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
@@ -54,7 +54,7 @@ def test_get_transcription_with_non_empty_audio_file(mock_google_cloud, mock_spe
     mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
     # Act
-    actual_transcription = get_transcription(audio_file_path)
+    actual_transcription = google_cloud_speech_api(audio_file_path)
 
     # Assert
     assert expected_transcription == actual_transcription, f"expected transcription to be {expected_transcription} but {actual_transcription}"
