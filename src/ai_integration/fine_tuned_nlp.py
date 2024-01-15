@@ -99,11 +99,11 @@ class Order:
         self.temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
         self.sweeteners.extend(order_details['sweeteners'])
         self.add_ons.extend(order_details['add_ons'])
-        self.milk_type = "regular" if not order_details['milk_type'] else str(order_details['milk_type'])
+        self.milk_type = "regular" if not order_details['milk_type'] else str(order_details['milk_type'][0])
         self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
         self.get_price_and_num_calories()
         return {
-            "MenuItem": {
+            "CoffeeItem": {
                 "item_name": self.item_name,
                 "quantity": self.quantity,
                 "price": self.price,
@@ -127,7 +127,7 @@ class Order:
         self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
         self.get_price_and_num_calories()
         return {
-            "MenuItem": {
+            "BeverageItem": {
                 "item_name": self.item_name,
                 "quantity": self.quantity,
                 "price": self.price,
@@ -144,10 +144,9 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['food'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.add_ons = order_details['add_ons']
         self.get_price_and_num_calories()
         return {
-            "MenuItem": {
+            "FoodItem": {
                 "item_name": self.item_name,
                 "quantity": self.quantity,
                 "price": self.price,
@@ -160,10 +159,9 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['bakery'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.add_ons = order_details['add_ons']
         self.get_price_and_num_calories()
         return {
-            "MenuItem": {
+            "BakeryItem": {
                 "item_name": self.item_name,
                 "quantity": self.quantity,
                 "price": self.price,
@@ -196,7 +194,7 @@ class Order:
         return bool(re.search(pattern, self.order))
 
     def is_modification(self) -> bool:
-        pattern = r'\b(actually|dont want|remove|change|swap|adjust|modify)\b'
+        pattern = r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify)\b'
 
         return bool(re.search(pattern, self.order))
 
@@ -258,11 +256,10 @@ class Order:
     def parse_order(self) -> dict:
 
         size_pattern = r'\b(small|medium|large|extra large)\b'
-        coffee_pattern = r'\b(coffee|coffees|cappuccino|latte|americano|macchiato|frappuccino|\b(?<!shot of ' \
-                         r')espresso)\b'
+        coffee_pattern = r'\b(coffee|black coffee|coffees|cappuccino|latte|americano|macchiato|frappuccino|\b' \
+                         r'(?<!shot of)espresso)\b'
         quantity_pattern = r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen' \
-                           r'|fifteen' \
-                           r'|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|dozen|a lot|a|an)\b'
+                           r'|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|dozen|a lot|a|an)\b'
         temperature_pattern = r'\b(hot|cold|iced|warm|room temp|extra hot)\b'
         sweetener_pattern = r'\b(sugar|honey|liquid cane sugar|sweet n low|equal|butter pecan|pink velvet|sugar ' \
                             r'packets)\b'
@@ -277,7 +274,7 @@ class Order:
                          r'donut|glazed|glaze)\b'
         add_ons_pattern = r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel)\b'
         milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
-                       r'milk|coconut milk|half and half|heavy cream|cream)\b'
+                       r'milk|coconut milk|half and half|heavy cream|cream|creams)\b'
 
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
@@ -308,7 +305,7 @@ class Order:
 
 def split_order(order) -> list[str]:
     start_time = time.time()
-    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|cheese|sugar)\b)'
+    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|whipped|cheese|sugar|cream|one|two|three)\b)'
     split = re.split(split_pattern, order)
     remove_words = ['plus', 'get', 'and', 'also']
     remove_chars = '[^a-zA-Z0-9]'
@@ -355,7 +352,7 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "One black coffee and a glazed donut"
+    orders = "Actually I don't want the black coffee."
 
     split_order_time = time.time()
     details = split_order(orders)
