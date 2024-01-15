@@ -7,11 +7,16 @@ Americano,2,None,5-25,7.00
 Macchiato,9,Lactose,15-30,8.00
 Flat White,1,Lactose,120-160,9.00
 Cappuccino,6,Lactose,60-120,10.00
+Chai Latte,3,"Lactose, Tea Leaves",60-120,10.00
+Mocha,5,"Lactose, Cocoa",200-400,10.00
 Hot chocolate,5,"Lactose, Soy, Nuts, Gluten, Cocoa, Additives",150-250,5.00
 Apple Juice,4,N/A,200,2.00
 Orange Juice,0,N/A,200,2.00
+Cranberry Juice,0,N/A,200,2.00
 Stawberry Smoothie,3,"Nuts, Dairy, Soy, Gluten",200,5.00
 Mango Smoothie,3,"Nuts, Dairy, Soy, Gluten",300,5.00
+Pineapple Smoothie,3,"Nuts, Dairy, Soy, Gluten",300,5.00
+Pina Colada Smoothie,3,"Nuts, Dairy, Soy, Gluten",300,5.00
 Lemonade,1,"Citrus, Sulfites, Additives",100-120,7.00
 Vanilla milkshake,7,"Lactose, Vanilla, Nuts",300-400,8.00
 Lemon tea,2,"Citrus, Tea, Additives",2-50,5.00
@@ -22,26 +27,27 @@ Mint tea,6,"Pollen, Additives",2-50,10.00
 Non-Coffee + Dessert (Combo 1),N/A,None,500-1200,8.00
 Coffee + Dessert (Combo 2),N/A,None,250-700,9.00
 Tea + Dessert (Combo 3),N/A,None,200-700,11.00
-Hazelnut,N/A,Nut,30,0.50
-Whipped Cream,N/A,None,50,0.50
-Pump of Caramel,N/A,None,60,0.50
-Vanilla,N/A,None,20,.50
-Sugar,N/A,None,30,0.00
-Cream,N/A,Lactose,20,0.00
-Pump of Sugar,N/A,None,30,0.00
-Pump of Vanilla,N/A,None,20,.50
-Pump of Butter Pecan,N/A,None,20,.50
+Hazelnut,60,Nut,30,0.50
+Whipped Cream,60,None,50,0.50
+Pump of Caramel,60,None,60,0.50
+Vanilla,60,None,20,.50
+Sugar,60,None,30,0.00
+Cream,60,Lactose,20,0.00
+Pump of Sugar,60,None,30,0.00
+Pump of Vanilla,60,None,20,.50
+Pump of Butter Pecan,60,None,20,.50
 Cookie n cream,6,"Milk, Egg and Soy",80,1.50
 Cookie pieces,6,"Milk, Egg and Soy",80,1.50
 Twix,2,"Milk, Egg and Soy",70,1.50
 Snickers,7,"Nuts, Milk, Egg and Soy",70,1.50
-Egg and Cheese on a crossaint,7,"Lactose, Gluten",360,5.00
-Bacon Egg and Cheese on an english muffin,6,"Lactose, Gluten",420,6.00
-Vegan Egg and Cheese on an english muffin,2,Gluten,300,6.00
+Grilled Cheese,2,"Lactose, Gluten",300,3.00
+Egg and Cheese on a Croissant,7,"Lactose, Gluten",360,5.00
+Bacon Egg and Cheese on an English Muffin,6,"Lactose, Gluten",420,6.00
+Vegan Egg and Cheese on an English Muffin,2,Gluten,300,6.00
 Hashbrowns,22,Gluten,150,2.50
 Spinach and Feta Wrap,4,"Gluten, Lactose, Soy",250,600
-Hummus chicken salad wrap,0,"Gluten, Chicken, Soy",250,5.50
-Turkey classic wrap, 1,"Gluten, Turkey, Soy",290,6.50
+Hummus Chicken Salad Wrap,0,"Gluten, Chicken, Soy",250,5.50
+Turkey Classic Wrap, 1,"Gluten, Turkey, Soy",290,6.50
 Plain Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
 Everything Bagel w/ cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
 Sesame Bagel w/ cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
@@ -51,6 +57,9 @@ Strawberry Donut,9,"Lactose, Gluten, Eggs, Soy",200-500,2.00
 Chocolate Donut,4,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.00
 Boston Cream Donut,6,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.00
 Lemon Cake,8,"Dairy, Eggs, Wheat, Nuts, Soy, Lemons",300-400,2.50
-Bluebetty Muffin,2,"Gluten, Dairy, Eggs, Nuts, Soy",100-400,3.00
+Blueberry Muffin,2,"Gluten, Dairy, Eggs, Nuts, Soy",100-400,3.00
 Chocolate Chip Cookie,24,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.50
 Brownie,5,"Gluten, Dairy, Eggs, Nuts, Soy, Cocoa",100-400,4.50
+Chocolate Cannoli,5,"Gluten, Milk, Wheat, Egg, Soy",100-400,2.50
+Vanilla Cannoli,5,"Gluten, Milk, Wheat, Egg, Soy",100-400,2.50
+Chocolate Croissant,5,"Milk, Eggs, Soy, Nuts, Wheat, Cocoa",200-400,3.50
