@@ -48,6 +48,7 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
             print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
                   f"Completion tokens ({response['usage']['completion_tokens']}) = "
                   f"Total tokens ({response['usage']['total_tokens']})")
+
         return response['choices'][0]['message']['content']
 
 
