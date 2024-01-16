@@ -1,6 +1,7 @@
 import time
 import logging
 import whisper
+from deepgram import Deepgram
 from pydub import AudioSegment
 import speech_recognition as speech
 
@@ -8,7 +9,7 @@ import speech_recognition as speech
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
-def google_cloud_speech_api(source: str) -> str:
+def google_cloud_speech_api(source: str = None) -> str:
     """
 
     @rtype: str
@@ -43,6 +44,33 @@ def google_cloud_speech_api(source: str) -> str:
     logging.info(f"google_cloud_speech time: {time.time() - start_time}")
 
     return transcribed_audio
+
+
+def nova_speech_api(source: str) -> str:
+    """
+
+    @rtype: str
+    @param source: audio file path
+    @return: transcription
+    """
+    start_time = time.time()
+    key = 'e2e85809e7faf99189e6c7668f7ad979ca78c23a'
+    dg = Deepgram(key)
+
+    MIMETYPE = 'audio/wav'
+
+    options = {
+        'punctuate': False,
+        'model': 'general',
+        'tier': 'enhanced'
+    }
+
+    with open(source, 'rb') as f:
+        audio = {"buffer": f, "mimetype": MIMETYPE}
+        response = dg.transcription.sync_prerecorded(audio, options)
+
+    logging.info(f"nova_speech time: {time.time() - start_time}")
+    return response['results']['channels'][0]['alternatives'][0]['transcript']
 
 
 def whisper_speech_api(source: str) -> str:
@@ -157,7 +185,7 @@ def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", 
 
 
 if __name__ == "__main__":
-    recorded_audio, _ = record_until_silence()
+    _ = nova_speech_api('/Users/ibrahimharoon/Downloads/customer_order_1705338629783.wav')
     print(_)
 
 
