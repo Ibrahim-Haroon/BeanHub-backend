@@ -19,11 +19,11 @@ prompt = """
         """
 
 
-async def get_openai_response(client, model, messages, api_key):
+async def get_openai_response(client, model, messages, api_key, max_tokens: int = 400):
     try:
         response = await client.post(
             "https://api.openai.com/v1/chat/completions",
-            json={"model": model, "messages": messages},
+            json={"model": model, "messages": messages, "max_tokens": max_tokens, "n": 1},
             headers={"Authorization": f"Bearer {api_key}"}
         )
 
@@ -33,7 +33,7 @@ async def get_openai_response(client, model, messages, api_key):
         return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
 
 
-async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None,  print_token_usage: bool = False):
+async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False):
     if api_key is None:
         api_key = os.environ['OPENAI_API_KEY']
 
@@ -41,9 +41,18 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
         response = await get_openai_response(
             client,
             "gpt-3.5-turbo-1106",
-            [{"role": "system", "content": f"{role} and all previous conversation history: {conversation_history}"},
-             {"role": "user", "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"}],
-            api_key
+            [
+                {
+                    "role": "system",
+                    "content": f"{role} and all previous conversation history: {conversation_history}"
+                },
+                {
+                    "role": "user",
+                    "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"
+                }
+            ],
+            api_key,
+            max_tokens
         )
         if print_token_usage:
             print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
@@ -53,12 +62,13 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
         return response['choices'][0]['message']['content']
 
 
-def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, print_token_usage: bool = False):
+def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     start_time = time.time()
-    response = loop.run_until_complete(conv_ai_async(transcription, order_report, conversation_history, api_key, print_token_usage))
+    response = loop.run_until_complete(
+        conv_ai_async(transcription, order_report, conversation_history, api_key, max_tokens, print_token_usage))
     logging.info(f"conv_ai time: {time.time() - start_time}")
 
     loop.close()
@@ -67,7 +77,7 @@ def conv_ai(transcription: str, order_report: str, conversation_history: str, ap
 
 
 def main():
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
@@ -83,7 +93,7 @@ def main():
                        api_key=key,
                        print_token_usage=False)
     print(f"conv_ai time: {time.time() - start_time}")
-    print(type(response))
+    print((response))
     return response
 
 
