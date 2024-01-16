@@ -1,6 +1,7 @@
 import time
 import logging
 import whisper
+from os import path
 from deepgram import Deepgram
 from pydub import AudioSegment
 import speech_recognition as speech
@@ -53,8 +54,11 @@ def nova_speech_api(source: str) -> str:
     @param source: audio file path
     @return: transcription
     """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "deepgram_api_key.txt")
+    with open(key_path) as api_key:
+        key = api_key.readline().strip()
+
     start_time = time.time()
-    key = 'e2e85809e7faf99189e6c7668f7ad979ca78c23a'
     dg = Deepgram(key)
 
     MIMETYPE = 'audio/wav'
