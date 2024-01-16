@@ -1,12 +1,14 @@
 import time
 import logging
-import speech_recognition as speech
+import whisper
 from pydub import AudioSegment
+import speech_recognition as speech
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
-def google_cloud_speech_api(source: str = None) -> str:
+def google_cloud_speech_api(source: str) -> str:
     """
 
     @rtype: str
@@ -42,6 +44,59 @@ def google_cloud_speech_api(source: str = None) -> str:
 
     return transcribed_audio
 
+
+def whisper_speech_api(source: str) -> str:
+    """
+    @possible models:
+        size,params,english,VRAM,relative speed
+        tiny,39 M,tiny.en,1 GB,32x
+        base,74 M,base.en,1 GB,16x
+        small,244 M,small.en,2 GB,6x
+        medium,569 M,medium.en,5 GB,2x
+        large,1550 M,N/A,10 GB,1x
+    @rtype: str
+    @param source: audio file path
+    @return: transcription
+    """
+    start_time = time.time()
+    model = whisper.load_model("base.en")
+
+    transcription = model.transcribe(source)
+
+    logging.info(f"get_transcription time: {time.time() - start_time}")
+    return transcription['text']
+
+
+def whisper_multi_speech_api(source: str) -> str:
+    """
+
+    @possible models:
+        size,params,,multilingual,VRAM,relative speed
+        tiny,39 M,tiny,1 GB,32x
+        base,74 M,base,1 GB,16x
+        small,244 M,small,2 GB,6x
+        medium,569 M,medium,5 GB,2x
+        large,1550 M,N/A,large,10 GB,1x
+    @rtype: str
+    @param source: audio file path
+    @return: transcription in english
+    """
+    start_time = time.time()
+    model = whisper.load_model("base")
+
+    audio = whisper.load_audio(source)
+    audio = whisper.pad_or_trim(audio)
+
+    mel = whisper.log_mel_spectrogram(audio).to(model.device)
+
+    _, probs = model.detect_language(mel)
+    logging.info(f"Detected language: {max(probs, key=probs.get)}")
+
+    options = whisper.DecodingOptions()
+    result = whisper.decode(model, mel, options)
+
+    logging.info(f"get_transcription time: {time.time() - start_time}")
+    return result.text
 
 
 def record_until_silence() -> bytes and str:
@@ -102,5 +157,5 @@ def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", 
 
 
 if __name__ == "__main__":
-    recorded_audio, transcription = record_until_silence()
-    print(transcription)
+    recorded_audio, _ = record_until_silence()
+    print(_)
