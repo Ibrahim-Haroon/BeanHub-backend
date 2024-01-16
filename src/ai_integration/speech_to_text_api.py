@@ -27,7 +27,7 @@ def google_cloud_speech_api(source: str) -> str:
     recognizer.single_utterance = True
     recognizer.interim_results = True
 
-    transcribed_audio = None
+    transcribed_audio = ""
 
     with speech.AudioFile(source) as audio_source:
         audio = recognizer.record(audio_source)
@@ -40,7 +40,7 @@ def google_cloud_speech_api(source: str) -> str:
         except speech.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
-    logging.info(f"get_transcription time: {time.time() - start_time}")
+    logging.info(f"google_cloud_speech time: {time.time() - start_time}")
 
     return transcribed_audio
 
@@ -59,11 +59,11 @@ def whisper_speech_api(source: str) -> str:
     @return: transcription
     """
     start_time = time.time()
-    model = whisper.load_model("base.en")
+    model = whisper.load_model("small.en")
 
     transcription = model.transcribe(source)
 
-    logging.info(f"get_transcription time: {time.time() - start_time}")
+    logging.info(f"whisper_speech time: {time.time() - start_time}")
     return transcription['text']
 
 
@@ -82,7 +82,7 @@ def whisper_multi_speech_api(source: str) -> str:
     @return: transcription in english
     """
     start_time = time.time()
-    model = whisper.load_model("base")
+    model = whisper.load_model("small")
 
     audio = whisper.load_audio(source)
     audio = whisper.pad_or_trim(audio)
@@ -95,7 +95,7 @@ def whisper_multi_speech_api(source: str) -> str:
     options = whisper.DecodingOptions()
     result = whisper.decode(model, mel, options)
 
-    logging.info(f"get_transcription time: {time.time() - start_time}")
+    logging.info(f"whisper_multi_speech time: {time.time() - start_time}")
     return result.text
 
 
@@ -159,3 +159,5 @@ def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", 
 if __name__ == "__main__":
     recorded_audio, _ = record_until_silence()
     print(_)
+
+
