@@ -54,7 +54,7 @@ def main(prompts: list[str]) -> int:
     @param prompts: str = list of questions for gpt
     @return: 0 if successful
     """
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
