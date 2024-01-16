@@ -91,7 +91,7 @@ def get_item(order: str, api_key: str = None, connection_pool=None, database_csv
 
 
 def main() -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 

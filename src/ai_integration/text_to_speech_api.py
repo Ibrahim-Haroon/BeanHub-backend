@@ -31,7 +31,7 @@ def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: s
 
 
 def main(text: str) -> int:
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
