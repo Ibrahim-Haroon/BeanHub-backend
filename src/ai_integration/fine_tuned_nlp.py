@@ -50,7 +50,7 @@ class Order:
         self.num_calories: list[str] = []
         self.cart_action: str = ""
         self.size: str = ""
-        key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
+        key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
         with open(key_path) as KEY:
             self.key = KEY.readline().strip()
         if connection_pool:
@@ -348,7 +348,7 @@ def process_order(order, order_report, connection_pool, aws_connected) -> None:
 if __name__ == "__main__":
     total_time = time.time()
 
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "api_key.txt")
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 

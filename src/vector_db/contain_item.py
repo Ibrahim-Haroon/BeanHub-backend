@@ -43,7 +43,8 @@ def contains_quantity(order: str, quantity: int = 1, aws_csv_file: StringIO = No
     return json.dumps([result[0][2] >= quantity, result[0][2]])
 
 
-def get_openai_key(key_path: str = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")) -> str:
+def get_openai_key(key_path: str = path.join(path.dirname(path.realpath(__file__)), "../..", "other",
+                                             "openai_api_key.txt")) -> str:
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
@@ -51,7 +52,7 @@ def get_openai_key(key_path: str = path.join(path.dirname(path.realpath(__file__
 
 
 def main() -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key.txt")
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
