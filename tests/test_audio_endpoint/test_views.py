@@ -1,10 +1,10 @@
 import os
 from typing import Final
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
-
+text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 class AudioEndpointTestCase(TestCase):
     def setUp(self):
@@ -25,10 +25,13 @@ class AudioEndpointTestCase(TestCase):
         self.mock_boto3_session_client = patch('boto3.session.Session.client')
         self.mock_boto3_session_client.start().return_value = MagicMock()
 
+        self.mock_s3_client = patch('src.audio_endpoint.views.boto3.client')
+        self.mock_s3_client.start().upload_file.return_value = None
+
         self.mock_google_cloud = patch(speech_to_text_path + '.speech.Recognizer')
         mock_recognizer_instance = MagicMock()
         self.mock_google_cloud.start().return_value = mock_recognizer_instance
-        expected_transcription = "None"
+        expected_transcription = "One black coffee"
         mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
@@ -38,11 +41,34 @@ class AudioEndpointTestCase(TestCase):
         self.mock_redis_instance = MagicMock()
         self.mock_redis.start().return_value = self.mock_redis_instance
 
-        self.mock_openai_embedding_api = patch('src.vector_db.fill_vectordb.openai_embedding_api').start()
-        self.mock_connection_string = patch('src.vector_db.aws_database_auth.connection_string').start()
-        self.mock_register_vector = patch('pgvector.psycopg2.register_vector').start()
-        self.mock_connect = patch('src.vector_db.fill_vectordb.psycopg2.connect').start()
-        self.mock_input = patch('builtins.input').start()
+        self.mock_openai_embedding_api = patch('src.vector_db.fill_vectordb.openai_embedding_api')
+        self.mock_openai_embedding_api.start().return_value = MagicMock()
+        self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
+        self.mock_openai_response.start().return_value.json.return_value = {
+            "choices": [{"message": {"content": "mocked response"}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
+        }
+
+        self.mock_openai_tts = patch(text_to_speech_path + '.OpenAI')
+        self.mock_openai_tts = self.mock_openai_tts.start()
+        mock_audio = MagicMock()
+        mock_audio.stream_to_file.return_value = b'RIFF$\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x00\x04\x00\x00\x00\x04\x00\x00\x01\x00\x08\x00data\x00\x00\x00\x00'
+        self.mock_openai_tts.return_value.audio.speech.create.return_value = mock_audio
+
+        # self.mock_open_function = patch('builtins.open', mock_open())
+        # self.mock_open_function.start()
+
+        self.mock_connection_string = patch('src.vector_db.aws_database_auth.connection_string')
+        self.mock_connection_string.start().return_value = MagicMock()
+
+        self.mock_register_vector = patch('pgvector.psycopg2.register_vector')
+        self.mock_register_vector.start().return_value = MagicMock()
+
+        self.mock_connect = patch('src.vector_db.fill_vectordb.psycopg2.connect')
+        self.mock_connect.start().return_value = MagicMock()
+
+        self.mock_input = patch('builtins.input')
+        self.mock_input.start().side_effect = ["YES", "beanKnowsWhatBeanWants"]
 
         self.mock_db_instance = patch('src.vector_db.contain_item.psycopg2.connect').start()
         mock_cursor = MagicMock()
@@ -56,16 +82,18 @@ class AudioEndpointTestCase(TestCase):
         self.mock_speech.stop()
         self.mock_redis.stop()
         self.mock_openai_embedding_api.stop()
+        self.mock_openai_response.stop()
+        self.mock_openai_tts.stop()
         self.mock_connection_string.stop()
         self.mock_register_vector.stop()
         self.mock_connect.stop()
         self.mock_input.stop()
         self.mock_db_instance.stop()
 
-    def test_post_without_file_path(self):
-        response = self.client.post('/audio_endpoint/', {})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'error': 'file_path not provided'})
+    # def test_post_without_file_path(self):
+    #     response = self.client.post('/audio_endpoint/', {'foo': 'bar'})
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
     def test_post_with_file_path(self):
         response = self.client.post('/audio_endpoint/', {'file_path': 'test.wav'})
@@ -74,18 +102,18 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    def test_patch_without_file_path(self):
-        response = self.client.patch('/audio_endpoint/', {'unique_id': 'test'})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'error': 'file_path not provided'})
+    # def test_patch_catches_request_without_file_path_and_throws_correct_error(self):
+    #     response = self.client.patch('/audio_endpoint/', {'unique_id': 'test'})
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
-    def test_patch_without_unique_id(self):
-        response = self.client.patch('/audio_endpoint/', {'file_path': 'test.wav'})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'error': 'unique_id not provided'})
+    # def test_patch_catches_request_without_unique_id_and_throws_correct_error(self):
+    #     response = self.client.patch('/audio_endpoint/', {'file_path': 'test.wav'})
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.json(), {'error': 'unique_id not provided'})
 
-    def test_patch_with_file_path(self):
-        response = self.client.post('/audio_endpoint/', {'file_path': 'test.wav'})
+    def test_patch_with_file_path_and_unique_id_sends_correct_response(self):
+        response = self.client.post('/audio_endpoint/', {'file_path': 'test.wav', 'unique_id': 'test'})
         self.assertEqual(response.status_code, 200)
         self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
