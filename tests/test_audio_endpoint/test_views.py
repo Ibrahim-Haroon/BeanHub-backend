@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock, mock_open
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
+
 class AudioEndpointTestCase(TestCase):
     def setUp(self):
         self.mock_env = patch.dict(os.environ, {
@@ -75,7 +76,7 @@ class AudioEndpointTestCase(TestCase):
         patch.stopall()
 
     def test_post_without_file_path(self):
-        response = self.client.post('/audio_endpoint/', {'foo': 'bar'})
+        response = self.client.post('/audio_endpoint/', {})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
@@ -86,18 +87,28 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    # def test_patch_catches_request_without_file_path_and_throws_correct_error(self):
-    #     response = self.client.patch('/audio_endpoint/', {'unique_id': 'test'})
-    #     self.assertEqual(response.status_code, 400)
-    #     self.assertEqual(response.json(), {'error': 'file_path not provided'})
-    #
-    # def test_patch_catches_request_without_unique_id_and_throws_correct_error(self):
-    #     response = self.client.patch('/audio_endpoint/', {'file_path': 'test.wav'})
-    #     self.assertEqual(response.status_code, 400)
-    #     self.assertEqual(response.json(), {'error': 'unique_id not provided'})
+    def test_patch_catches_request_without_file_path_and_throws_correct_error(self):
+        data = {
+            "unique_id": "test"
+        }
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
+
+    def test_patch_catches_request_without_unique_id_and_throws_correct_error(self):
+        data = {
+            "file_path": "test.wav"
+        }
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
 
     def test_patch_with_file_path_and_unique_id_sends_correct_response(self):
-        response = self.client.post('/audio_endpoint/', {'file_path': 'test.wav', 'unique_id': 'test'})
+        data = {
+            "file_path": "test.wav",
+            "unique_id": "test"
+        }
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
