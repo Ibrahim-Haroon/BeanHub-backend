@@ -194,7 +194,7 @@ class Order:
         return bool(re.search(pattern, self.order))
 
     def is_modification(self) -> bool:
-        pattern = r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify)\b'
+        pattern = r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take away|replace)\b'
 
         return bool(re.search(pattern, self.order))
 
