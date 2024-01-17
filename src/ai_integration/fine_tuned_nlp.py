@@ -194,7 +194,8 @@ class Order:
         return bool(re.search(pattern, self.order))
 
     def is_modification(self) -> bool:
-        pattern = r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take away|replace)\b'
+        pattern = (r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
+                   r'away|replace)\b')
 
         return bool(re.search(pattern, self.order))
 
@@ -305,7 +306,7 @@ class Order:
 
 def split_order(order) -> list[str]:
     start_time = time.time()
-    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|whipped|cheese|sugar|cream|one|two|three)\b)'
+    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|whipped|cheese|sugar|cream|one|two|three|wait)\b)'
     split = re.split(split_pattern, order)
     remove_words = ['plus', 'get', 'and', 'also']
     remove_chars = '[^a-zA-Z0-9]'
