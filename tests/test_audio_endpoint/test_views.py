@@ -1,4 +1,5 @@
 import os
+import pytest
 from typing import Final
 from django.test import TestCase
 from src.audio_endpoint.views import AudioView
@@ -8,6 +9,7 @@ speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 
+@pytest.mark.skip(reason="Need to run with django test not pytest")
 class AudioEndpointTestCase(TestCase):
     def setUp(self):
         self.mock_env = patch.dict(os.environ, {
