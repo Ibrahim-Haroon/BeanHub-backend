@@ -1,9 +1,10 @@
+import os
 import pytest
-from mock import mock_open, mock, patch, MagicMock
+from os import path
+import pandas as pd
 from botocore.exceptions import ClientError
 from src.vector_db.aws_sdk_auth import get_secret
-import pandas as pd
-from os import path
+from mock import mock_open, mock, patch, MagicMock
 
 
 @pytest.fixture
@@ -28,9 +29,62 @@ def mock_boto3_session_client(mocker):
     return mocker.patch('boto3.session.Session.client', return_value=mock.MagicMock())
 
 
-def test_get_secret_returns_mock_object_is_expected_success(mock_pandas_read_csv, mock_boto3_session_client):
+def test_that_environment_variables_set_correctly(mocker):
+    # Arrange
+    expected_env_vars = {
+        "SECRET_NAME": "test_secret_name",
+        "AWS_DEFAULT_REGION": "test_aws_default_region",
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key"
+    }
+
+    mocker.patch.dict(os.environ, {
+        "SECRET_NAME": "test_secret_name",
+        "AWS_DEFAULT_REGION": "test_aws_default_region",
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key"
+    })
+
+    # Act & Assert
+    for key, expected_value in expected_env_vars.items():
+        assert os.environ.get(key) == expected_value, f"Env var {key} expected to be {expected_value} but got {os.environ.get(key)}"
+
+
+def test_get_secret_returns_expected_secret_when_environment_variables_used(mocker, mock_pandas_read_csv, mock_boto3_session_client):
     # Arrange
     expected_result = MagicMock
+
+    mocker.patch.dict(os.environ, {
+        "SECRET_NAME": "secretsmanager",
+        "AWS_DEFAULT_REGION": "region_name",
+        "AWS_ACCESS_KEY_ID": "aws_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "aws_secret_access_key"
+    })
+
+    # Act
+    result = get_secret()
+
+    # Assert
+    mock_boto3_session_client.assert_called_once_with(
+        service_name='secretsmanager',
+        region_name='region_name',
+        aws_access_key_id='aws_access_key_id',
+        aws_secret_access_key='aws_secret_access_key'
+    )
+    assert isinstance(result, expected_result), f"expected boto3 session client to return secret but got {result}"
+
+
+
+def test_get_secret_returns_expected_secret_when_csv_file_used(mocker, mock_pandas_read_csv, mock_boto3_session_client):
+    # Arrange
+    expected_result = MagicMock
+
+    mocker.patch.dict(os.environ, {
+        "SECRET_NAME": "",
+        "AWS_DEFAULT_REGION": "",
+        "AWS_ACCESS_KEY_ID": "",
+        "AWS_SECRET_ACCESS_KEY": ""
+    })
 
     # Act
     result = get_secret()
