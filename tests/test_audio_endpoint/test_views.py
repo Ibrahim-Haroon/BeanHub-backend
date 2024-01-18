@@ -115,4 +115,3 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
-
