@@ -104,7 +104,7 @@ class URLsTestCase(TestCase):
         }
 
         # Act
-        response = self.client.post('/audio_endpoint/', data)
+        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
@@ -117,7 +117,7 @@ class URLsTestCase(TestCase):
         url = reverse('audio-view')
 
         # Act
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
