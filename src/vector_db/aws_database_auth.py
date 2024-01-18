@@ -1,7 +1,10 @@
 import pandas as pd
 from os import path
 from io import StringIO
-import sys
+from os import getenv as env
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def connection_string(csv_file: StringIO = None) -> str:
@@ -11,11 +14,15 @@ def connection_string(csv_file: StringIO = None) -> str:
     @param csv_file: used for unit tests and if you want to pass in own database authentication
     @return: connection string for AWS RDS
     """
-    if csv_file is None:
-        db_info_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "database-info.csv")
-        df = pd.read_csv(db_info_file_path)
+    db_info_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "db_info.csv")
+
+    if csv_file is None and env('RDS_DB_NAME') and env('RDS_USERNAME') and env('RDS_PASSWORD') and env('RDS_HOSTNAME') and env('RDS_PORT'):
+        dsn = f"dbname={env('RDS_DB_NAME')} user={env('RDS_USERNAME')} password={env('RDS_PASSWORD')} host={env('RDS_HOSTNAME')} port={env('RDS_PORT')}"
+        return dsn
     elif isinstance(csv_file, StringIO):
         df = pd.read_csv(csv_file)
+    elif db_info_file_path:
+        df = pd.read_csv(db_info_file_path)
     else:
         raise SystemExit(f"Must either use default csv file path or pass in a csv file, got {type(csv_file)}.")
 
@@ -27,4 +34,4 @@ def connection_string(csv_file: StringIO = None) -> str:
 
 
 if __name__ == "__main__":
-    connection_string()
+    print(connection_string())

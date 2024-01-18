@@ -1,8 +1,12 @@
 import boto3
 import pandas as pd
 from os import path
-from botocore.exceptions import ClientError
 from io import StringIO
+from os import getenv as env
+from dotenv import load_dotenv
+from botocore.exceptions import ClientError
+
+load_dotenv()
 
 
 def get_secret(csv_file: StringIO = None) -> dict:
@@ -13,21 +17,28 @@ def get_secret(csv_file: StringIO = None) -> dict:
     @param csv_file: used for unit tests and if you want to pass in own AWS authentication
     @return: ex. {"username":"username","password":"pass","engine":"engine","host":"host","port":5432,"dbname":"name","dbInstanceIdentifier":"db-id"}
     """
+    secret_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "aws-info.csv")
 
-    if csv_file is None:
-        secret_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "aws-info.csv")
-        df = pd.read_csv(secret_file_path)
+    secret_name, region_name, aws_access_key_id, aws_secret_access_key = "", "", "", ""
+
+    if csv_file is None and env('AWS_ACCESS_KEY_ID') and env('AWS_SECRET_ACCESS_KEY') and env('AWS_DEFAULT_REGION') and env('SECRET_NAME'):
+        secret_name = env('SECRET_NAME')
+        region_name = env('AWS_DEFAULT_REGION')
+        aws_access_key_id = env('AWS_ACCESS_KEY_ID')
+        aws_secret_access_key = env('AWS_SECRET_ACCESS_KEY')
     elif isinstance(csv_file, StringIO):
         df = pd.read_csv(csv_file)
+    elif secret_file_path:
+        df = pd.read_csv(secret_file_path)
+        row = df.iloc[0]
+
+        secret_name = row['secret_name']
+        region_name = row['region_name']
+        aws_access_key_id = row['aws_access_key_id']
+        aws_secret_access_key = row['aws_secret_access_key']
     else:
         raise SystemExit(f"Must either use default csv file path or pass in a csv file, got {type(csv_file)}.")
 
-    row = df.iloc[0]
-
-    secret_name = row['secret_name']
-    region_name = row['region_name']
-    aws_access_key_id = row['aws_access_key_id']
-    aws_secret_access_key = row['aws_secret_access_key']
 
     session = boto3.session.Session()
     client = session.client(
