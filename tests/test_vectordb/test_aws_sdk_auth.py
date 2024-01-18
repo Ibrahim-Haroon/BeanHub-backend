@@ -3,9 +3,8 @@ import pytest
 from os import path
 import pandas as pd
 from botocore.exceptions import ClientError
+from mock import mock_open, patch, MagicMock
 from src.vector_db.aws_sdk_auth import get_secret
-from mock import mock_open, mock, patch, MagicMock
-
 
 @pytest.fixture
 def mock_pandas_read_csv(mocker):
@@ -26,7 +25,7 @@ def mock_pandas_read_csv(mocker):
 
 @pytest.fixture
 def mock_boto3_session_client(mocker):
-    return mocker.patch('boto3.session.Session.client', return_value=mock.MagicMock())
+    return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
 def test_that_environment_variables_set_correctly(mocker):
@@ -113,7 +112,7 @@ def test_get_secret_to_throw_exception_when_given_error(mock_pandas_read_csv, mo
 
 @patch('sys.stderr.write')
 @patch('sys.exit')
-def test_that_connection_string_exits_when_invalid_file_passed(mock_exit, mock_stderr_write):
+def test_that_get_secret_exits_when_invalid_file_passed(mock_exit, mock_stderr_write):
     # Arrange
     invalid_file = "invalid_file"
     expected_error_message = f"Must either use default csv file path or pass in a csv file, got {type(invalid_file)}."
