@@ -1,5 +1,7 @@
 import os
 import pytest
+from os import path
+import pandas as pd
 from typing import Final
 from django.test import TestCase
 from src.audio_endpoint.views import AudioView
@@ -26,13 +28,17 @@ class AudioEndpointTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.av = AudioView().__new__(AudioView)
-        self.av.r = patch('redis.Redis')
-        self.av.r.start().return_value = MagicMock()
-        self.av.s3 = patch('src.audio_endpoint.views.boto3.client')
-        self.av.s3.start().return_value = MagicMock()
-        self.av.connection_pool = patch('pgvector.psycopg2.register_vector')
-        self.av.connection_pool.start().return_value = MagicMock()
+        self.mock_redis = patch('redis.Redis')
+        self.mock_redis.start().return_value = MagicMock()
+
+        self.mock_s3 = patch('src.audio_endpoint.views.boto3.client')
+        self.mock_s3.start().return_value = MagicMock()
+
+        self.mock_connection_string = patch('src.audio_endpoint.views.connection_string')
+        self.mock_connection_string.start().return_value = MagicMock()
+
+        self.mock_connection_pool = patch('pgvector.psycopg2.register_vector')
+        self.mock_connection_pool.start().return_value = MagicMock()
 
         self.mock_boto3_session_client = patch('boto3.session.Session.client')
         self.mock_boto3_session_client.start().return_value = MagicMock()
