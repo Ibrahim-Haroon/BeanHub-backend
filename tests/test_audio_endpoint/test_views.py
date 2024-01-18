@@ -20,6 +20,7 @@ class AudioEndpointTestCase(TestCase):
             "AWS_ACCESS_KEY_ID": "test_access_key_id",
             "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
             "AWS_DEFAULT_REGION": "us-east-1",
+            "SECRET_NAME": "sneaky_bean",
             "RDS_DB_NAME": "test_db",
             "RDS_HOSTNAME": "test_host",
             "RDS_USERNAME": "test_user",
