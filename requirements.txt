@@ -147,3 +147,4 @@ deepgram-sdk==2.12.0
 python-dotenv==1.0.0
 asyncio==3.4.3
 pathlib==1.0.1
+

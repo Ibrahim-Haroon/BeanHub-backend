@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+
 def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: str = None) -> bytes:
     """
 

@@ -8,6 +8,7 @@ from langchain.embeddings import OpenAIEmbeddings
 load_dotenv()
 
 
+
 def openai_embedding_api(text: str, api_key: str = None) -> []:
     """
 

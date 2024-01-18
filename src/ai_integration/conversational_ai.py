@@ -22,7 +22,6 @@ prompt = """
                         and order details gathered from the database:
         """
 
-
 async def get_openai_response(client, model, messages, api_key, max_tokens: int = 400):
     try:
         response = await client.post(
@@ -72,6 +71,7 @@ def conv_ai(transcription: str, order_report: str, conversation_history: str, ap
 
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
+
 
     start_time = time.time()
     response = loop.run_until_complete(
