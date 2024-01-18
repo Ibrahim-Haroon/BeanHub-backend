@@ -1,8 +1,11 @@
-import os
 import sys
 from os import path
 from tqdm import tqdm
 from openai import OpenAI
+from os import getenv as env
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None) -> str:
@@ -18,7 +21,7 @@ def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None
     if api_key:
         client = OpenAI(api_key=api_key)
     else:
-        client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+        client = OpenAI(api_key=env('OPENAI_API_KEY'))
 
     if model_behavior:
         response = client.chat.completions.create(
@@ -61,7 +64,7 @@ def main(prompts: list[str]) -> int:
     for prompt in tqdm(prompts):
         prompt = prompt.strip()
 
-        response = openai_text_api(prompt, key)
+        response = openai_text_api(prompt)
 
         print("question: " + prompt + " response: " + response)
 
@@ -80,4 +83,4 @@ if __name__ == "__main__":
     for line in sys.stdin:
         istream.append(line)
 
-    main(istream)
+    main(["hi"])

@@ -1,8 +1,11 @@
-import os
-from langchain.embeddings import OpenAIEmbeddings
+import math
 from os import path
 import pandas as pd
-import math
+from os import getenv as env
+from dotenv import load_dotenv
+from langchain.embeddings import OpenAIEmbeddings
+
+load_dotenv()
 
 
 def openai_embedding_api(text: str, api_key: str = None) -> []:
@@ -16,7 +19,7 @@ def openai_embedding_api(text: str, api_key: str = None) -> []:
     if api_key:
         embeddings = OpenAIEmbeddings(api_key=api_key)
     else:
-        embeddings = OpenAIEmbeddings(api_key=os.environ['OPENAI_API_KEY'])
+        embeddings = OpenAIEmbeddings(api_key=env('OPENAI_API_KEY'))
 
     return embeddings.embed_query(text)
 

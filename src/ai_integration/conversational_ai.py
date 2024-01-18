@@ -4,6 +4,10 @@ import httpx
 import logging
 import asyncio
 from os import path
+from os import getenv as env
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
@@ -65,6 +69,9 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
 def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+    if api_key is None:
+        api_key = env('OPENAI_API_KEY')
 
     start_time = time.time()
     response = loop.run_until_complete(
