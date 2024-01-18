@@ -51,10 +51,10 @@ jobs:
         pylint src/ || true
 
     - name: Test with pytest
-      run: python -m coverage run --branch --source "src/ai_integration/*" "src/vector_db/*" -m pytest --ignore=tests/test_audio_endpoint ./tests/
+      run: python -m coverage run --branch --source=src -m pytest --ignore=tests/test_audio_endpoint ./tests/
 
     - name: Test with Django
-      run: python -m coverage run --branch --source==src/audio_endpoint -m manage.py test
+      run: python -m coverage run --branch --source==src -m manage.py test
 
     - name: Coverage report for pytest
       run: coverage report --skip-empty --omit "src/django_backend/*"
