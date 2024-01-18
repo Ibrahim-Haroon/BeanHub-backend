@@ -1,11 +1,8 @@
 import os
 import pytest
-from os import path
-import pandas as pd
 from typing import Final
 from django.test import TestCase
-from src.audio_endpoint.views import AudioView
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
@@ -73,9 +70,6 @@ class AudioEndpointTestCase(TestCase):
         self.mock_connect = patch('src.vector_db.fill_vectordb.psycopg2.connect')
         self.mock_connect.start().return_value = MagicMock()
 
-        self.mock_input = patch('builtins.input')
-        self.mock_input.start().side_effect = ["YES", "beanKnowsWhatBeanWants"]
-
         self.mock_db_instance = patch('src.vector_db.contain_item.psycopg2.connect').start()
         mock_cursor = MagicMock()
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
@@ -85,39 +79,70 @@ class AudioEndpointTestCase(TestCase):
         patch.stopall()
 
     def test_post_without_file_path(self):
-        response = self.client.post('/audio_endpoint/', {})
+        # Arrange
+        data = {
+            # EMPTY
+        }
+
+        # Act
+        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
     def test_post_with_file_path(self):
-        response = self.client.post('/audio_endpoint/', {'file_path': 'test.wav'})
+        # Arrange
+        data = {
+            "file_path": "test.wav"
+        }
+
+        # Act
+        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
         self.assertEqual(response.status_code, 200)
         self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
     def test_patch_catches_request_without_file_path_and_throws_correct_error(self):
+        # Arrange
         data = {
             "unique_id": "test"
         }
+
+        # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
 
     def test_patch_catches_request_without_unique_id_and_throws_correct_error(self):
+        # Arrange
         data = {
             "file_path": "test.wav"
         }
+
+        # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
 
     def test_patch_with_file_path_and_unique_id_sends_correct_response(self):
+        # Arrange
         data = {
             "file_path": "test.wav",
             "unique_id": "test"
         }
+
+        # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
         self.assertEqual(response.status_code, 200)
         self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
