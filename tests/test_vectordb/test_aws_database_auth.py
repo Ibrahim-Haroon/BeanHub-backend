@@ -1,10 +1,11 @@
+import os
+import csv
 import pytest
+from os import path
+import pandas as pd
+from io import StringIO
 from mock import mock_open, patch
 from src.vector_db.aws_database_auth import connection_string
-import pandas as pd
-from os import path
-from io import StringIO
-import csv
 
 
 @pytest.fixture
@@ -34,8 +35,39 @@ def as_csv_file(data: [[str]]) -> StringIO:
     return file_object
 
 
-def test_that_connection_string_returns_expected_dsn_when_0_params_passed(mock_pandas_read_csv):
+def test_that_environment_variables_set_correctly(mocker):
     # Arrange
+    expected_env_vars = {
+        "RDS_DB_NAME": "test_db",
+        "RDS_HOSTNAME": "test_host",
+        "RDS_USERNAME": "test_user",
+        "RDS_PASSWORD": "test_password",
+        "RDS_PORT": "1234"
+    }
+
+    mocker.patch.dict(os.environ, {
+        "RDS_DB_NAME": "test_db",
+        "RDS_HOSTNAME": "test_host",
+        "RDS_USERNAME": "test_user",
+        "RDS_PASSWORD": "test_password",
+        "RDS_PORT": "1234"
+    })
+
+    # Act & Assert
+    for key, expected_value in expected_env_vars.items():
+        assert os.environ.get(key) == expected_value, f"Env var {key} expected to be {expected_value} but got {os.environ.get(key)}"
+
+
+def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_environment_variables_used(mocker, mock_pandas_read_csv):
+    # Arrange
+    mocker.patch.dict(os.environ, {
+        "RDS_DB_NAME": "dbname",
+        "RDS_HOSTNAME": "host",
+        "RDS_USERNAME": "user",
+        "RDS_PASSWORD": "password",
+        "RDS_PORT": "port"
+    })
+
     expected_dsn = f"dbname={'dbname'} user={'user'} password={'password'} host={'host'} port={'port'}"
 
     # Act
@@ -45,13 +77,40 @@ def test_that_connection_string_returns_expected_dsn_when_0_params_passed(mock_p
     assert dsn == expected_dsn, f"expected dsn to be {expected_dsn} but got {dsn}"
 
 
-def test_that_connection_string_returns_expected_dsn_when_csv_passed():
+def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_file_path_used(mocker, mock_pandas_read_csv):
+    # Arrange
+    expected_dsn = f"dbname={'dbname'} user={'user'} password={'password'} host={'host'} port={'port'}"
+
+    mocker.patch.dict(os.environ, {
+        "RDS_DB_NAME": "",
+        "RDS_HOSTNAME": "",
+        "RDS_USERNAME": "",
+        "RDS_PASSWORD": "",
+        "RDS_PORT": ""
+    })
+
+    # Act
+    dsn = connection_string()
+
+    # Assert
+    assert dsn == expected_dsn, f"expected dsn to be {expected_dsn} but got {dsn}"
+
+
+def test_that_connection_string_returns_expected_dsn_when_csv_passed(mocker):
     # Arrange
     database_info = [
         ["dbname", "user", "password", "host", "port"],
         ["mydb", "myuser", "mypassword", "host", "port"]]
 
     expected_dsn =  f"dbname={'mydb'} user={'myuser'} password={'mypassword'} host={'host'} port={'port'}"
+
+    mocker.patch.dict(os.environ, {
+        "RDS_DB_NAME": "",
+        "RDS_HOSTNAME": "",
+        "RDS_USERNAME": "",
+        "RDS_PASSWORD": "",
+        "RDS_PORT": ""
+    })
 
     # Act
     dsn = connection_string(as_csv_file(database_info))
@@ -72,5 +131,3 @@ def test_that_connection_string_exits_when_invalid_file_passed(mock_exit, mock_s
         _ = connection_string(invalid_file)
 
     assert str(e.value) == expected_error_message, f"expected system to exit with {expected_error_message} but got {str(e.value)}"
-
-
