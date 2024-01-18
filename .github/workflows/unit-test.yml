@@ -53,13 +53,14 @@ jobs:
     - name: Test with pytest
       run: python -m coverage run --branch --source=src -m pytest --ignore=tests/test_audio_endpoint ./tests/
 
-    - name: Coverage report
-      run: coverage report --skip-empty
+    - name: Test with Django
+      run: python manage.py test
+
+    - name: Coverage report for pytest
+      run: coverage report --skip-empty --omit "src/django_backend/*"
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-    - name: Test with Django
-      run: python manage.py test
