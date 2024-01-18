@@ -33,18 +33,36 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Cache apt packages
+      uses: actions/cache@v2
+      with:
+        path: /var/cache/apt
+        key: apt-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+        restore-keys: apt-${{ runner.os }}-
+
+    - name: Update and install system packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y portaudio19-dev flac ffmpeg
+        echo "portaudio19-dev flac ffmpeg" > apt-packages.txt  # Store the package names for caching
+      if: steps.cache.outputs.cache-hit != 'true'
+
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: 3.11.0
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y portaudio19-dev flac ffmpeg
-        python -m pip install --upgrade pip
-        pip install pylint
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Lint with pylint
       run: |
@@ -63,4 +81,3 @@ jobs:
       uses: codecov/codecov-action@v3
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
