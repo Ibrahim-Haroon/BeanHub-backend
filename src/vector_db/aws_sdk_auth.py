@@ -21,7 +21,7 @@ def get_secret(csv_file: StringIO = None) -> dict:
     try:
         df = pd.read_csv(secret_file_path)
     except FileNotFoundError:
-        df = None
+        df = pd.DataFrame()
         pass
 
     if csv_file is None and env('AWS_ACCESS_KEY_ID') and env('AWS_SECRET_ACCESS_KEY') and env('AWS_DEFAULT_REGION') and env('SECRET_NAME'):

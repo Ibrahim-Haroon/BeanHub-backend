@@ -18,7 +18,7 @@ def connection_string(csv_file: StringIO = None) -> str:
     try:
         df = pd.read_csv(db_info_file_path)
     except FileNotFoundError:
-        df = None
+        df = pd.DataFrame()
         pass
 
     if csv_file is None and env('RDS_DB_NAME') and env('RDS_USERNAME') and env('RDS_PASSWORD') and env('RDS_HOSTNAME') and env('RDS_PORT'):
