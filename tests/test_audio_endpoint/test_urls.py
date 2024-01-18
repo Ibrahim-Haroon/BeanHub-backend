@@ -52,8 +52,9 @@ class URLsTestCase(TestCase):
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
 
-        self.mock_openai_embedding_api = patch('src.vector_db.fill_vectordb.openai_embedding_api')
+        self.mock_openai_embedding_api = patch('src.vector_db.get_item.openai_embedding_api')
         self.mock_openai_embedding_api.start().return_value = MagicMock()
+
         self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
         self.mock_openai_response.start().return_value.json.return_value = {
             "choices": [{"message": {"content": "mocked response"}}],
@@ -66,13 +67,10 @@ class URLsTestCase(TestCase):
         self.mock_openai_tts = self.mock_openai_tts.start()
         self.mock_openai_tts.return_value.audio.speech.create.return_value = mock_response
 
-        self.mock_connection_string = patch('src.vector_db.aws_database_auth.connection_string')
-        self.mock_connection_string.start().return_value = MagicMock()
-
-        self.mock_connect = patch('src.vector_db.fill_vectordb.psycopg2.connect')
+        self.mock_connect = patch('src.audio_endpoint.views.psycopg2.connect')
         self.mock_connect.start().return_value = MagicMock()
 
-        self.mock_db_instance = patch('src.vector_db.contain_item.psycopg2.connect').start()
+        self.mock_db_instance = patch('src.audio_endpoint.views.psycopg2.connect').start()
         mock_cursor = MagicMock()
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
         self.mock_db_instance.return_value.cursor.return_value = mock_cursor
