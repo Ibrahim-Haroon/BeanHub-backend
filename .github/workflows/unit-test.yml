@@ -38,7 +38,7 @@ jobs:
         pylint src/*.py
 
     - name: Test with pytest
-      run: python -m coverage run --branch --source=scripts -m -k pytest --ignore=tests/test_audio_endpoint ./tests/
+      run: python -m coverage run --branch --source=scripts -m pytest --ignore=tests/test_audio_endpoint ./tests/
 
     - name: Test with Djanngo
       run: python manage.py test
