@@ -37,6 +37,20 @@ jobs:
     #  run: |
     #    pylint src/
 
+    - name: Environment variables
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        SECRET_NAME: ${{ secrets.SECRET_NAME }}
+        RDS_DB_NAME: ${{ secrets.RDS_DB_NAME }}
+        RDS_HOSTNAME: ${{ secrets.RDS_HOSTNAME }}
+        RDS_PORT: ${{ secrets.RDS_PORT }}
+        RDS_USERNAME: ${{ secrets.RDS_USERNAME }}
+        RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+        S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+
     - name: Test with pytest
       run: python -m coverage run --branch --source=scripts -m pytest --ignore=tests/test_audio_endpoint ./tests/
 
