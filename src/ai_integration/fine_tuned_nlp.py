@@ -54,11 +54,11 @@ class Order:
         self.cart_action: str = ""
         self.size: str = ""
         key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
-        if path.exists(key_path):
-            with open(key_path) as KEY:
-                self.key = KEY.readline().strip()
-        else:
-            self.key = env('OPENAI_API_KEY')
+        # if path.exists(key_path):
+        with open(key_path) as KEY:
+            self.key = KEY.readline().strip()
+        # else:
+        #     self.key = env('OPENAI_API_KEY')
         if connection_pool:
             self.connection_pool = connection_pool
         else:
