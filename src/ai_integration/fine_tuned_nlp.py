@@ -4,12 +4,15 @@ import logging
 import threading
 from os import path
 import psycopg2.pool
+from os import getenv as env
+from dotenv import load_dotenv
 from other.number_map import number_map
 from src.vector_db.get_item import get_item
 from simpletransformers.ner import NERModel
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
 
+load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
@@ -51,8 +54,11 @@ class Order:
         self.cart_action: str = ""
         self.size: str = ""
         key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
-        with open(key_path) as KEY:
-            self.key = KEY.readline().strip()
+        if path.exists(key_path):
+            with open(key_path) as KEY:
+                self.key = KEY.readline().strip()
+        else:
+            self.key = env('OPENAI_API_KEY')
         if connection_pool:
             self.connection_pool = connection_pool
         else:
