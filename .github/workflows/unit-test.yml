@@ -54,9 +54,9 @@ jobs:
       run: python -m coverage run --branch --source=src -m pytest --ignore=tests/test_audio_endpoint ./tests/
 
     - name: Test with Django
-      run: python -m coverage run --branch --source=src -m manage.py test
+      run: python -m coverage run --branch --source=src manage.py test
 
-    - name: Coverage report for pytest
+    - name: Coverage report
       run: coverage report --skip-empty --omit "src/django_backend/*"
 
     - name: Upload coverage reports to Codecov
