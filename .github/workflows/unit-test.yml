@@ -51,7 +51,7 @@ jobs:
         pylint src/ || true
 
     - name: Test with pytest
-      run: python -m coverage run --branch --source=scripts -m pytest --ignore=tests/test_audio_endpoint ./tests/
+      run: python -m coverage run --branch --source=src -m pytest --ignore=tests/test_audio_endpoint ./tests/
 
     - name: Coverage report
       run: coverage report --skip-empty
