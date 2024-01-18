@@ -7,6 +7,8 @@ import logging
 import tempfile
 import threading
 import psycopg2.pool
+from os import getenv as env
+from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -17,13 +19,14 @@ from src.ai_integration.speech_to_text_api import google_cloud_speech_api
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
 
+load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 class AudioView(APIView):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
-        self.bucket_name = os.environ['S3_BUCKET_NAME']
+        self.bucket_name = env('S3_BUCKET_NAME')
         self.r = redis.Redis()
         self.s3 = boto3.client('s3')
         self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
