@@ -8,7 +8,10 @@ from src.ai_integration.fine_tuned_nlp import ner_transformer
 import numpy as np
 
 
-def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> list and bool:
+def similarity_search(
+        order: str, top_k: int = 3, key: str = None,
+        aws_csv_file: StringIO = None, database_csv_file: StringIO = None
+) -> list and bool:
     """
 
     @rtype: list[list[float]] + boolean
@@ -46,7 +49,9 @@ def similarity_search(order: str, top_k: int = 3, key: str = None, aws_csv_file:
     return results, True
 
 
-def main() -> int:
+def main(
+
+) -> int:
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
