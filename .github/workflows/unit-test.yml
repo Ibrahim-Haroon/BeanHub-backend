@@ -38,14 +38,6 @@ jobs:
       with:
         python-version: 3.11.0
 
-    - name: Cache apt packages
-      uses: actions/cache@v3
-      with:
-        path: "~/apt"
-        key: ${{ runner.os }}-apt-${{ hashFiles('**/apt-packages.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-apt-
-
     - name: Cache pip
       uses: actions/cache@v3
       with:
