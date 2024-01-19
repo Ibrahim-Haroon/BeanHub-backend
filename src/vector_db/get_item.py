@@ -1,9 +1,11 @@
 import time
+import json
 import queue
 import logging
 import psycopg2
 import threading
 import numpy as np
+from redis import Redis
 from io import StringIO
 from psycopg2 import pool
 from pgvector.psycopg2 import register_vector
@@ -14,13 +16,14 @@ from src.vector_db.aws_database_auth import connection_string
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
-def get_item(order: str, api_key: str = None, connection_pool=None, database_csv_file: StringIO = None) -> str and bool:
+def get_item(order: str, api_key: str = None, connection_pool=None, embedding_cache: Redis = None, database_csv_file: StringIO = None) -> str and bool:
     """
 
     @rtype: str + bool
     @param order: customers order ex. "Can I have a black coffee with 3 shots of cream."
     @param api_key: OpenAI auth
     @param connection_pool:
+    @param embedding_cache: cache to reduce number of calls to OpenAI API
     @param database_csv_file: AWS RDS and PostgreSQL auth
     @return: Closest embedding along with a boolean flag to mark successful retrieval
     """
@@ -31,9 +34,17 @@ def get_item(order: str, api_key: str = None, connection_pool=None, database_csv
 
     def get_embedding() -> None:
         openai_embedding_time = time.time()
-        vector_embedding = openai_embedding_api(order, api_key if api_key else None)
-        logging.info(f"openai_embedding time: {time.time() - openai_embedding_time}")
+        if embedding_cache.exists(order):
+            logging.info("cache hit")
+            vector_embedding = json.loads(embedding_cache.get(order))
+        else:
+            logging.info("cache miss")
+            vector_embedding = openai_embedding_api(order, api_key if api_key else None)
+            serialized_embedding = json.dumps(vector_embedding)
+            embedding_cache.set(order, serialized_embedding)
+
         return_queue.put(vector_embedding)
+        logging.info(f"openai_embedding time: {time.time() - openai_embedding_time}")
 
     get_embedding_thread = threading.Thread(target=get_embedding)
     get_embedding_thread.start()
