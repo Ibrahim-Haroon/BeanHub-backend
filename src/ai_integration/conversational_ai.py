@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 role = """
             You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription,
@@ -22,7 +23,10 @@ prompt = """
                         and order details gathered from the database:
         """
 
-async def get_openai_response(client, model, messages, api_key, max_tokens: int = 400):
+
+async def get_openai_response(
+        client, model, messages, api_key, max_tokens: int = 400
+) -> dict:
     try:
         response = await client.post(
             "https://api.openai.com/v1/chat/completions",
@@ -36,7 +40,10 @@ async def get_openai_response(client, model, messages, api_key, max_tokens: int 
         return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
 
 
-async def conv_ai_async(transcription: str, order_report: str, conversation_history: str, api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False):
+async def conv_ai_async(
+        transcription: str, order_report: str, conversation_history: str,
+        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
+) -> str:
     if api_key is None:
         api_key = os.environ['OPENAI_API_KEY']
 
@@ -65,7 +72,10 @@ async def conv_ai_async(transcription: str, order_report: str, conversation_hist
         return response['choices'][0]['message']['content']
 
 
-def conv_ai(transcription: str, order_report: str, conversation_history: str, api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False):
+def conv_ai(
+        transcription: str, order_report: str, conversation_history: str,
+        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
+) -> str:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
@@ -83,7 +93,9 @@ def conv_ai(transcription: str, order_report: str, conversation_history: str, ap
     return response
 
 
-def main():
+def main(
+
+) -> str:
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
