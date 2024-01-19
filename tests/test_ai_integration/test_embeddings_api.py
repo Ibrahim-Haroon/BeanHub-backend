@@ -8,11 +8,15 @@ script_path: Final[str] = 'src.ai_integration.embeddings_api'
 
 
 @pytest.fixture
-def mock_openai(mocker):
+def mock_openai(
+        mocker
+):
     return mocker.patch(script_path + '.OpenAIEmbeddings')
 
 
-def test_openai_embeddings_api(mock_openai):
+def test_openai_embeddings_api(
+        mock_openai
+):
     # Arrange
     expected_embeddings_instance = MagicMock()
     mock_openai.return_value = expected_embeddings_instance
@@ -28,7 +32,9 @@ def test_openai_embeddings_api(mock_openai):
 
 
 
-def test_parse_menu_csv(mocker):
+def test_parse_menu_csv(
+        mocker
+):
     # Arrange
     expected_output = [{"MenuItem": {
         "item_name": "item_name",
