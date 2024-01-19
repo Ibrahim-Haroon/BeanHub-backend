@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None) -> str:
+def openai_text_api(
+        prompt: str, api_key: str = None, model_behavior: str = None
+) -> str:
     """
 
     @rtype: str
@@ -51,7 +53,9 @@ def openai_text_api(prompt: str, api_key: str = None, model_behavior: str = None
     return response.choices[0].message.content
 
 
-def main(prompts: list[str]) -> int:
+def main(
+        prompts: list[str]
+) -> int:
     """
     @rtype: int
     @param prompts: str = list of questions for gpt
