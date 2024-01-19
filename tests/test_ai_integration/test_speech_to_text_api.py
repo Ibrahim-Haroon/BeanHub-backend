@@ -9,16 +9,22 @@ script_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 
 
 @pytest.fixture
-def mock_google_cloud(mocker):
+def mock_google_cloud(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.speech.Recognizer')
 
 
 @pytest.fixture
-def mock_speech(mocker):
+def mock_speech(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.speech.AudioFile')
 
 
-def test_get_transcription_with_none_passed_for_audio_file_path(mock_speech):
+def test_get_transcription_with_none_passed_for_audio_file_path(
+        mock_speech
+) -> None:
     # Arrange
     expected_transcription = "None"
 
@@ -30,7 +36,9 @@ def test_get_transcription_with_none_passed_for_audio_file_path(mock_speech):
 
 
 
-def test_get_transcription_with_empty_audio_file(mock_google_cloud, mock_speech):
+def test_get_transcription_with_empty_audio_file(
+        mock_google_cloud, mock_speech
+) -> None:
     # Arrange
     audio_file_path = "test/file/path"
     mock_recognizer_instance = MagicMock()
@@ -45,7 +53,9 @@ def test_get_transcription_with_empty_audio_file(mock_google_cloud, mock_speech)
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
 
 
-def test_get_transcription_with_non_empty_audio_file(mock_google_cloud, mock_speech):
+def test_get_transcription_with_non_empty_audio_file(
+        mock_google_cloud, mock_speech
+) -> None:
     # Arrange
     audio_file_path = "test/file/path"
     mock_recognizer_instance = MagicMock()
