@@ -6,11 +6,12 @@ from deepgram import Deepgram
 from pydub import AudioSegment
 import speech_recognition as speech
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
-def google_cloud_speech_api(source: str = None) -> str:
+def google_cloud_speech_api(
+        source: str = None
+) -> str:
     """
 
     @rtype: str
@@ -47,7 +48,9 @@ def google_cloud_speech_api(source: str = None) -> str:
     return transcribed_audio
 
 
-def nova_speech_api(source: str) -> str:
+def nova_speech_api(
+        source: str
+) -> str:
     """
 
     @rtype: str
@@ -77,7 +80,9 @@ def nova_speech_api(source: str) -> str:
     return response['results']['channels'][0]['alternatives'][0]['transcript']
 
 
-def whisper_speech_api(source: str) -> str:
+def whisper_speech_api(
+        source: str
+) -> str:
     """
     @possible models:
         size,params,english,VRAM,relative speed
@@ -99,7 +104,9 @@ def whisper_speech_api(source: str) -> str:
     return transcription['text']
 
 
-def whisper_multi_speech_api(source: str) -> str:
+def whisper_multi_speech_api(
+        source: str
+) -> str:
     """
 
     @possible models:
@@ -131,7 +138,9 @@ def whisper_multi_speech_api(source: str) -> str:
     return result.text
 
 
-def record_until_silence() -> bytes and str:
+def record_until_silence(
+
+) -> bytes and str:
     """
 
     @rtype: bytes and str
@@ -174,7 +183,10 @@ def record_until_silence() -> bytes and str:
     return audio_data, transcribed_audio
 
 
-def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", print_completion: bool = False) -> None:
+def save_as_mp3(
+        audio_data: bytes, output_filename: str = "recorded_audio.wav",
+        print_completion: bool = False
+) -> None:
     """
 
     @param print_completion: boolean for whether you want notification of completion
@@ -191,5 +203,3 @@ def save_as_mp3(audio_data: bytes, output_filename: str = "recorded_audio.wav", 
 if __name__ == "__main__":
     _ = nova_speech_api('/Users/ibrahimharoon/Downloads/customer_order_1705338629783.wav')
     print(_)
-
-
