@@ -1,4 +1,5 @@
 import os
+import json
 import pytest
 from typing import Final
 from django.test import TestCase
@@ -28,8 +29,16 @@ class URLsTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_redis = patch('redis.Redis')
-        self.mock_redis.start().return_value = MagicMock()
+        self.mock_redis_session = patch('src.audio_endpoint.views.redis.StrictRedis')
+        mock_redis_session_client = self.mock_redis_session.start().return_value
+        mock_redis_session_client.setex = MagicMock()
+        mock_redis_session_client.append = MagicMock()
+
+        self.mock_redis_embedding_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
+        mock_redis_embedding_client = self.mock_redis_embedding_cache.start().return_value
+        mock_redis_embedding_client.set = MagicMock()
+        mock_redis_embedding_client.exists = MagicMock(return_value=False)
+        mock_redis_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
 
         self.mock_s3 = patch('src.audio_endpoint.views.boto3.client')
         self.mock_s3.start().return_value = MagicMock()
@@ -53,7 +62,7 @@ class URLsTestCase(TestCase):
         self.mock_speech.start().return_value = MagicMock()
 
         self.mock_openai_embedding_api = patch('src.vector_db.get_item.openai_embedding_api')
-        self.mock_openai_embedding_api.start().return_value = MagicMock()
+        self.mock_openai_embedding_api.start().return_value = [0.1, 0.2, 0.3]
 
         self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
         self.mock_openai_response.start().return_value.json.return_value = {
