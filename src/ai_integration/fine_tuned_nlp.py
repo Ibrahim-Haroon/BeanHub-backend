@@ -4,6 +4,7 @@ import logging
 import threading
 from os import path
 import psycopg2.pool
+from redis import Redis
 from os import getenv as env
 from dotenv import load_dotenv
 from other.number_map import number_map
@@ -40,7 +41,7 @@ def ner_transformer(input_string: str = None, print_prediction: bool = False) ->
 
 
 class Order:
-    def __init__(self, formatted_order: str, connection_pool=None, aws_connected: bool = False):
+    def __init__(self, formatted_order: str, connection_pool=None, embedding_cache: Redis = None, aws_connected: bool = False):
         init_time = time.time()
         self.order: str = formatted_order.casefold().strip()
         self.item_name: str = ""
@@ -53,6 +54,10 @@ class Order:
         self.num_calories: list[str] = []
         self.cart_action: str = ""
         self.size: str = ""
+        if embedding_cache:
+            self.embedding_cache = embedding_cache
+        else:
+            self.embedding_cache = None
         key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
         if path.exists(key_path):
             with open(key_path) as KEY:
@@ -227,7 +232,10 @@ class Order:
         return
 
     def process_item(self):
-        item_details, _ = get_item(self.item_name, connection_pool=self.connection_pool, api_key=self.key)
+        item_details, _ = get_item(self.item_name,
+                                   connection_pool=self.connection_pool,
+                                   embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                   api_key=self.key)
 
         if self.cart_action == "question":
             self.quantity = []
@@ -238,7 +246,10 @@ class Order:
 
     def process_add_ons(self):
         for add_on in self.add_ons:
-            add_on_details, _ = get_item(add_on, connection_pool=self.connection_pool, api_key=self.key)
+            add_on_details, _ = get_item(add_on,
+                                         connection_pool=self.connection_pool,
+                                         embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                         api_key=self.key)
             self.price.append(add_on_details[0][5])
             self.num_calories.append(add_on_details[0][4])
             if self.cart_action == "question":
@@ -246,7 +257,10 @@ class Order:
 
     def process_sweeteners(self):
         for sweetener in self.sweeteners:
-            sweetener_details, _ = get_item(sweetener, connection_pool=self.connection_pool, api_key=self.key)
+            sweetener_details, _ = get_item(sweetener,
+                                            connection_pool=self.connection_pool,
+                                            embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                            api_key=self.key)
             self.price.append(sweetener_details[0][5])
             self.num_calories.append(sweetener_details[0][4])
             if self.cart_action == "question":
@@ -254,7 +268,10 @@ class Order:
 
     def process_milk(self):
         if self.milk_type and self.milk_type != "regular":
-            milk_details, _ = get_item(self.milk_type, connection_pool=self.connection_pool, api_key=self.key)
+            milk_details, _ = get_item(self.milk_type,
+                                       connection_pool=self.connection_pool,
+                                       embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                       api_key=self.key)
             self.price.append(milk_details[0][5])
             self.num_calories.append(milk_details[0][4])
             if self.cart_action == "question":
@@ -323,7 +340,7 @@ def split_order(order) -> list[str]:
     return filtered_order
 
 
-def make_order_report(split_orders: list[str], connection_pool=None, aws_connected: bool = False) -> [list[dict]]:
+def make_order_report(split_orders: list[str], connection_pool=None, embedding_cache: Redis = None, aws_connected: bool = False) -> [list[dict]]:
     start_time = time.time()
     order_report = []
 
@@ -332,6 +349,7 @@ def make_order_report(split_orders: list[str], connection_pool=None, aws_connect
         order_thread = threading.Thread(target=process_order, args=(order,
                                                                     order_report,
                                                                     connection_pool,
+                                                                    embedding_cache,
                                                                     aws_connected))
         threads.append(order_thread)
 
@@ -345,8 +363,8 @@ def make_order_report(split_orders: list[str], connection_pool=None, aws_connect
     return order_report
 
 
-def process_order(order, order_report, connection_pool, aws_connected) -> None:
-    final_order = ((Order(order, connection_pool, aws_connected).make_order()))
+def process_order(order, order_report, connection_pool, embedding_cache, aws_connected) -> None:
+    final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
 
     if final_order:
         order_report.append(final_order)
