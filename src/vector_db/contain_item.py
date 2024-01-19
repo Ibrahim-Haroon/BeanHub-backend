@@ -1,19 +1,24 @@
 import psycopg2
 import json
+from os import path
 from io import StringIO
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.embeddings_api import *
+from src.ai_integration.embeddings_api import openai_embedding_api
 from src.vector_db.aws_database_auth import connection_string
 from pgvector.psycopg2 import register_vector
 import numpy as np
 
 
-def contains_quantity(order: str, quantity: int = 1, aws_csv_file: StringIO = None, database_csv_file: StringIO = None):
+def contains_quantity(
+        order: str, quantity: int = 1, key: str = None,
+        aws_csv_file: StringIO = None, database_csv_file: StringIO = None
+) -> str:
     """
 
     @rtype: bool
     @param order: customers order ex. "Can I have a black coffee with 3 shots of cream."
     @param quantity:
+    @param key: auth key for OpenAI
     @param aws_csv_file: AWS SDK auth
     @param database_csv_file: AWS RDS and PostgreSQL auth
     @return: Boolean flag to show whether the item is in stock
@@ -21,7 +26,6 @@ def contains_quantity(order: str, quantity: int = 1, aws_csv_file: StringIO = No
     if not order:
         return json.dumps(False)
 
-    key = get_openai_key()
     get_secret(aws_csv_file if not None else None)
     db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
     db_connection.set_session(autocommit=True)
@@ -43,15 +47,9 @@ def contains_quantity(order: str, quantity: int = 1, aws_csv_file: StringIO = No
     return json.dumps([result[0][2] >= quantity, result[0][2]])
 
 
-def get_openai_key(key_path: str = path.join(path.dirname(path.realpath(__file__)), "../..", "other",
-                                             "openai_api_key.txt")) -> str:
-    with open(key_path) as api_key:
-        key = api_key.readline().strip()
+def main(
 
-    return key
-
-
-def main() -> int:
+) -> int:
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
@@ -65,4 +63,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     main()
-
