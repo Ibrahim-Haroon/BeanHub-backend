@@ -6,7 +6,9 @@ import csv
 
 
 @pytest.fixture
-def mock_components(mocker):
+def mock_components(
+        mocker
+) -> dict:
     return {
         'openai_embedding_api': mocker.patch('src.vector_db.fill_vectordb.openai_embedding_api'),
         'connection_string': mocker.patch('src.vector_db.aws_database_auth.connection_string'),
@@ -17,11 +19,15 @@ def mock_components(mocker):
 
 
 @pytest.fixture()
-def mock_boto3_session_client(mocker):
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def as_csv_file(data: [[str]]) -> StringIO:
+def as_csv_file(
+        data: [[str]]
+) -> StringIO:
     file_object = StringIO()
     writer = csv.writer(file_object)
     writer.writerows(data)
@@ -31,7 +37,9 @@ def as_csv_file(data: [[str]]) -> StringIO:
 
 
 @patch('builtins.input', side_effect=["YES", "beanKnowsWhatBeanWants"])
-def test_fill_database_returns_true_if_pass_auth(mocker, mock_components, mock_boto3_session_client):
+def test_fill_database_returns_true_if_pass_auth(
+        mocker, mock_components, mock_boto3_session_client
+) -> None:
     # Arrange
     data = [{"MenuItem": {"item_name": "TestItem", "item_quantity": "5", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_api_key"
@@ -51,7 +59,9 @@ def test_fill_database_returns_true_if_pass_auth(mocker, mock_components, mock_b
 
 
 @patch('builtins.input', side_effect=["YES", "wrong_passkey"])
-def test_fill_database_exits_when_wrong_passkey_given(mock_components):
+def test_fill_database_exits_when_wrong_passkey_given(
+        mock_components
+) -> None:
     # Arrange
     data = [{"MenuItem": {"item_name": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_key"
@@ -65,7 +75,9 @@ def test_fill_database_exits_when_wrong_passkey_given(mock_components):
 
 
 @patch('builtins.input', return_value="NO")
-def test_fill_database_exits_when_no_entered(mock_components):
+def test_fill_database_exits_when_no_entered(
+        mock_components
+) -> None:
     # Arrange
     data = [{"MenuItem": {"item_name": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_key"

@@ -6,7 +6,9 @@ import csv
 
 
 @pytest.fixture
-def mock_components(mocker):
+def mock_components(
+        mocker
+) -> dict:
     return {
         'openai_embedding_api': mocker.patch('src.vector_db.add_item.openai_embedding_api'),
         'connection_string': mocker.patch('src.vector_db.aws_database_auth.connection_string'),
@@ -17,11 +19,15 @@ def mock_components(mocker):
 
 
 @pytest.fixture()
-def mock_boto3_session_client(mocker):
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def as_csv_file(data: [[str]]) -> StringIO:
+def as_csv_file(
+        data: [[str]]
+) -> StringIO:
     file_object = StringIO()
     writer = csv.writer(file_object)
     writer.writerows(data)
@@ -30,7 +36,9 @@ def as_csv_file(data: [[str]]) -> StringIO:
     return file_object
 
 
-def test_add_item_returns_true_if_valid_item_given(mocker, mock_components, mock_boto3_session_client):
+def test_add_item_returns_true_if_valid_item_given(
+        mocker, mock_components, mock_boto3_session_client
+) -> None:
     # Arrange
     data = {"MenuItem": {"itemName": "TestItem", "item_quantity": "5", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}
     key = "mock_api_key"
@@ -49,7 +57,9 @@ def test_add_item_returns_true_if_valid_item_given(mocker, mock_components, mock
     assert result is True, f"expect True but got {result}"
 
 
-def test_add_item_returns_false_if_invalid_item_given(mocker, mock_components, mock_boto3_session_client):
+def test_add_item_returns_false_if_invalid_item_given(
+        mocker, mock_components, mock_boto3_session_client
+) -> None:
     # Arrange
     data = None
     key = "mock_api_key"

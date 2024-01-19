@@ -9,7 +9,9 @@ from src.vector_db.aws_database_auth import connection_string
 
 
 @pytest.fixture
-def mock_pandas_read_csv(mocker):
+def mock_pandas_read_csv(
+        mocker
+) -> str:
     db_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "database-info.csv")
     read_data = 'dbname,user,password,host,port\ndbname,user,password,host,port\n'
     with patch('builtins.open', new_callable=mock_open, read_data=read_data):
@@ -26,7 +28,9 @@ def mock_pandas_read_csv(mocker):
         yield db_file_path
 
 
-def as_csv_file(data: [[str]]) -> StringIO:
+def as_csv_file(
+        data: [[str]]
+) -> StringIO:
     file_object = StringIO()
     writer = csv.writer(file_object)
     writer.writerows(data)
@@ -35,7 +39,9 @@ def as_csv_file(data: [[str]]) -> StringIO:
     return file_object
 
 
-def test_that_environment_variables_set_correctly(mocker):
+def test_that_environment_variables_set_correctly(
+        mocker
+) -> None:
     # Arrange
     expected_env_vars = {
         "RDS_DB_NAME": "test_db",
@@ -58,7 +64,9 @@ def test_that_environment_variables_set_correctly(mocker):
         assert os.environ.get(key) == expected_value, f"Env var {key} expected to be {expected_value} but got {os.environ.get(key)}"
 
 
-def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_environment_variables_used(mocker, mock_pandas_read_csv):
+def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_environment_variables_used(
+        mocker, mock_pandas_read_csv
+) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
         "RDS_DB_NAME": "dbname",
@@ -77,7 +85,9 @@ def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_en
     assert dsn == expected_dsn, f"expected dsn to be {expected_dsn} but got {dsn}"
 
 
-def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_file_path_used(mocker, mock_pandas_read_csv):
+def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_file_path_used(
+        mocker, mock_pandas_read_csv
+) -> None:
     # Arrange
     expected_dsn = f"dbname={'dbname'} user={'user'} password={'password'} host={'host'} port={'port'}"
 
@@ -96,7 +106,9 @@ def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_fi
     assert dsn == expected_dsn, f"expected dsn to be {expected_dsn} but got {dsn}"
 
 
-def test_that_connection_string_returns_expected_dsn_when_csv_passed(mocker):
+def test_that_connection_string_returns_expected_dsn_when_csv_passed(
+        mocker
+) -> None:
     # Arrange
     database_info = [
         ["dbname", "user", "password", "host", "port"],
@@ -121,7 +133,9 @@ def test_that_connection_string_returns_expected_dsn_when_csv_passed(mocker):
 
 @patch('sys.stderr.write')
 @patch('sys.exit')
-def test_that_connection_string_exits_when_invalid_file_passed(mock_exit, mock_stderr_write):
+def test_that_connection_string_exits_when_invalid_file_passed(
+        mock_exit, mock_stderr_write
+) -> None:
     # Arrange
     invalid_file = "invalid_file"
     expected_error_message = f"Must either use default csv file path or pass in a csv file, got {type(invalid_file)}."

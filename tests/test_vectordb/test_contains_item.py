@@ -1,14 +1,15 @@
 import json
 import pytest
-from mock import patch, mock_open, MagicMock
+from mock import MagicMock
 from io import StringIO
 import csv
 from src.vector_db.contain_item import contains_quantity
-from src.vector_db.contain_item import get_openai_key
 
 
 @pytest.fixture
-def mock_components(mocker):
+def mock_components(
+        mocker
+) -> dict:
     mock_db_instance = mocker.patch('src.vector_db.contain_item.psycopg2.connect')
     mock_db_instance.return_value.cursor.return_value.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
     key = "foo-key"
@@ -21,11 +22,15 @@ def mock_components(mocker):
 
 
 @pytest.fixture()
-def mock_boto3_session_client(mocker):
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def as_csv_file(data: [[str]]) -> StringIO:
+def as_csv_file(
+        data: [[str]]
+) -> StringIO:
     file_object = StringIO()
     writer = csv.writer(file_object)
     writer.writerows(data)
@@ -34,7 +39,9 @@ def as_csv_file(data: [[str]]) -> StringIO:
     return file_object
 
 
-def test_contains_quantity_returns_true_when_given_quantity_less_than_stock(mocker, mock_boto3_session_client, mock_components):
+def test_contains_quantity_returns_true_when_given_quantity_less_than_stock(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
     # Arrange
     data = "test"
     expected_res = '[true, 6]'
@@ -52,7 +59,9 @@ def test_contains_quantity_returns_true_when_given_quantity_less_than_stock(mock
     assert res == expected_res, f"expected search to return {expected_res} but got {res}"
 
 
-def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(mocker, mock_boto3_session_client, mock_components):
+def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
     # Arrange
     data = "test"
     quantity = 1_000
@@ -74,7 +83,9 @@ def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(
     assert res == expected_res, f"expected search to return {expected_res} but got {res}"
 
 
-def test_get_item_returns_false_when_given_invalid_params(mocker, mock_boto3_session_client, mock_components):
+def test_get_item_returns_false_when_given_invalid_params(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
     # Arrange
     expected_res = 'false'
     data = None

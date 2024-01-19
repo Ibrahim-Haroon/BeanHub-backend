@@ -7,7 +7,9 @@ from mock import mock_open, patch, MagicMock
 from src.vector_db.aws_sdk_auth import get_secret
 
 @pytest.fixture
-def mock_pandas_read_csv(mocker):
+def mock_pandas_read_csv(
+        mocker
+) -> str:
     secret_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "aws-info.csv")
     read_data = 'secret_name,region_name,aws_access_key_id,aws_secret_access_key\ntest_secret,us-east-1,test_access_key,test_secret_key\n'
     with patch('builtins.open', new_callable=mock_open, read_data=read_data):
@@ -24,11 +26,15 @@ def mock_pandas_read_csv(mocker):
 
 
 @pytest.fixture
-def mock_boto3_session_client(mocker):
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def test_that_environment_variables_set_correctly(mocker):
+def test_that_environment_variables_set_correctly(
+        mocker
+) -> None:
     # Arrange
     expected_env_vars = {
         "SECRET_NAME": "test_secret_name",
@@ -49,7 +55,9 @@ def test_that_environment_variables_set_correctly(mocker):
         assert os.environ.get(key) == expected_value, f"Env var {key} expected to be {expected_value} but got {os.environ.get(key)}"
 
 
-def test_get_secret_returns_expected_secret_when_environment_variables_used(mocker, mock_pandas_read_csv, mock_boto3_session_client):
+def test_get_secret_returns_expected_secret_when_environment_variables_used(
+        mocker, mock_pandas_read_csv, mock_boto3_session_client
+) -> None:
     # Arrange
     expected_result = MagicMock
 
@@ -74,7 +82,9 @@ def test_get_secret_returns_expected_secret_when_environment_variables_used(mock
 
 
 
-def test_get_secret_returns_expected_secret_when_csv_file_used(mocker, mock_pandas_read_csv, mock_boto3_session_client):
+def test_get_secret_returns_expected_secret_when_csv_file_used(
+        mocker, mock_pandas_read_csv, mock_boto3_session_client
+) -> None:
     # Arrange
     expected_result = MagicMock
 
@@ -98,7 +108,9 @@ def test_get_secret_returns_expected_secret_when_csv_file_used(mocker, mock_pand
     assert isinstance(result, expected_result), f"expected boto3 session client to return secret but got {result}"
 
 
-def test_get_secret_to_throw_exception_when_given_error(mock_pandas_read_csv, mock_boto3_session_client):
+def test_get_secret_to_throw_exception_when_given_error(
+        mock_pandas_read_csv, mock_boto3_session_client
+) -> None:
     # Arrange
     mock_client = mock_boto3_session_client.return_value
     mock_client.get_secret_value.side_effect = ClientError({'Error': {}}, 'operation_name')
@@ -112,7 +124,9 @@ def test_get_secret_to_throw_exception_when_given_error(mock_pandas_read_csv, mo
 
 @patch('sys.stderr.write')
 @patch('sys.exit')
-def test_that_get_secret_exits_when_invalid_file_passed(mock_exit, mock_stderr_write):
+def test_that_get_secret_exits_when_invalid_file_passed(
+        mock_exit, mock_stderr_write
+) -> None:
     # Arrange
     invalid_file = "invalid_file"
     expected_error_message = f"Must either use default csv file path or pass in a csv file, got {type(invalid_file)}."
