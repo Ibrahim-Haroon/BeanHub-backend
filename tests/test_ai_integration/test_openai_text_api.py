@@ -7,11 +7,15 @@ script_path: Final[str] = 'src.ai_integration.openai_text_api'
 
 
 @pytest.fixture
-def mock_openai(mocker):
+def mock_openai(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.OpenAI')
 
 
-def test_openai_text_api(mock_openai):
+def test_openai_text_api(
+        mock_openai
+) -> None:
     # Arrange
     mock_completion = MagicMock()
     mock_completion.choices[0].message.content = "mocked_response"
