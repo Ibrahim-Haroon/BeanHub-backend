@@ -9,7 +9,10 @@ from src.vector_db.aws_database_auth import connection_string
 
 
 
-def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> bool:
+def fill_database(
+        data: list[dict], key: str = None,
+        aws_csv_file: StringIO = None, database_csv_file: StringIO = None
+) -> bool:
     """
 
     @rtype: bool
@@ -87,7 +90,9 @@ def fill_database(data: list[dict], key: str = None, aws_csv_file: StringIO = No
     return True
 
 
-def main() -> int:
+def main(
+
+) -> int:
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
