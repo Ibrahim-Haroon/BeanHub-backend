@@ -13,7 +13,9 @@ text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 @pytest.mark.skip(reason="Need to run with django test not pytest")
 class URLsTestCase(TestCase):
-    def setUp(self):
+    def setUp(
+            self
+    ) -> None:
         self.mock_env = patch.dict(os.environ, {
             "S3_BUCKET_NAME": "test_bucket_name",
             "OPENAI_API_KEY": "test_api_key",
@@ -84,10 +86,14 @@ class URLsTestCase(TestCase):
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
         self.mock_db_instance.return_value.cursor.return_value = mock_cursor
 
-    def tearDown(self):
+    def tearDown(
+            self
+    ) -> None:
         patch.stopall()
 
-    def test_audio_view_url_is_resolves_to_AudioView_class(self):
+    def test_audio_view_url_is_resolves_to_AudioView_class(
+            self
+    ) -> None:
         # Arrange
         url = reverse('audio-view')
 
@@ -96,7 +102,9 @@ class URLsTestCase(TestCase):
         # Assert
         self.assertEquals(resolve(url).func.view_class, AudioView)
 
-    def test_audio_view_url_path(self):
+    def test_audio_view_url_path(
+            self
+    ) -> None:
         # Arrange
 
         # Act
@@ -104,7 +112,9 @@ class URLsTestCase(TestCase):
         # Assert
         self.assertEquals(reverse('audio-view'), '/audio_endpoint/')
 
-    def test_audio_view_url_exists_at_desired_location_post_request(self):
+    def test_audio_view_url_exists_at_desired_location_post_request(
+            self
+    ) -> None:
         # Arrange
         data = {
             'file_path': 'test.wav'
@@ -116,7 +126,9 @@ class URLsTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 200)
 
-    def test_audio_view_url_accessible_by_name_post_request(self):
+    def test_audio_view_url_accessible_by_name_post_request(
+            self
+    ) -> None:
         # Arrange
         data = {
             'file_path': 'test.wav'
@@ -129,7 +141,9 @@ class URLsTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 200)
 
-    def test_audio_view_url_exists_at_desired_location_patch_request(self):
+    def test_audio_view_url_exists_at_desired_location_patch_request(
+            self
+    ) -> None:
         # Arrange
         data = {
             'file_path': 'test.wav',
@@ -142,7 +156,9 @@ class URLsTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 200)
 
-    def test_audio_view_url_accessible_by_name_patch_request(self):
+    def test_audio_view_url_accessible_by_name_patch_request(
+            self
+    ) -> None:
         # Arrange
         data = {
             'file_path': 'test.wav',

@@ -5,7 +5,9 @@ from src.audio_endpoint.apps import AudioEndpointConfig
 
 @pytest.mark.skip(reason="Need to run with django test not pytest")
 class AudioEndpointConfigTest(TestCase):
-    def test_app_name_is_correct(self):
+    def test_app_name_is_correct(
+            self
+    ) -> None:
         # Arrange
 
         # Act
@@ -13,7 +15,9 @@ class AudioEndpointConfigTest(TestCase):
         # Assert
         self.assertEqual(AudioEndpointConfig.name, 'src.audio_endpoint')
 
-    def test_default_auto_field_is_set_correctly(self):
+    def test_default_auto_field_is_set_correctly(
+            self
+    ) -> None:
         # Arrange
 
         # Act

@@ -11,7 +11,9 @@ text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 @pytest.mark.skip(reason="Need to run with django test not pytest")
 class AudioEndpointTestCase(TestCase):
-    def setUp(self):
+    def setUp(
+            self
+    ) -> None:
         self.mock_env = patch.dict(os.environ, {
             "S3_BUCKET_NAME": "test_bucket_name",
             "OPENAI_API_KEY": "test_api_key",
@@ -82,10 +84,14 @@ class AudioEndpointTestCase(TestCase):
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
         self.mock_db_instance.return_value.cursor.return_value = mock_cursor
 
-    def tearDown(self):
+    def tearDown(
+            self
+    ) -> None:
         patch.stopall()
 
-    def test_post_without_file_path(self):
+    def test_post_without_file_path(
+            self
+    ) -> None:
         # Arrange
         data = {
             # EMPTY
@@ -98,7 +104,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
-    def test_post_with_file_path(self):
+    def test_post_with_file_path(
+            self
+    ) -> None:
         # Arrange
         data = {
             "file_path": "test.wav"
@@ -113,7 +121,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    def test_patch_catches_request_without_file_path_and_throws_correct_error(self):
+    def test_patch_catches_request_without_file_path_and_throws_correct_error(
+            self
+    ) -> None:
         # Arrange
         data = {
             "unique_id": "test"
@@ -126,7 +136,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
 
-    def test_patch_catches_request_without_unique_id_and_throws_correct_error(self):
+    def test_patch_catches_request_without_unique_id_and_throws_correct_error(
+            self
+    ) -> None:
         # Arrange
         data = {
             "file_path": "test.wav"
@@ -139,7 +151,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
 
-    def test_patch_with_file_path_and_unique_id_sends_correct_response(self):
+    def test_patch_with_file_path_and_unique_id_sends_correct_response(
+            self
+    ) -> None:
         # Arrange
         data = {
             "file_path": "test.wav",
