@@ -24,7 +24,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(mess
 
 
 class AudioView(APIView):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+            self, *args, **kwargs
+    ):
         super().__init__(**kwargs)
         self.bucket_name = env('S3_BUCKET_NAME')
         self.r = self.connect_to_redis_conversation_history()
@@ -35,7 +37,9 @@ class AudioView(APIView):
         get_secret()
 
     @staticmethod
-    def connect_to_redis_conversation_history() -> redis.Redis:
+    def connect_to_redis_conversation_history(
+
+    ) -> redis.Redis:
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
@@ -46,7 +50,9 @@ class AudioView(APIView):
                 time.sleep(5)
 
     @staticmethod
-    def connect_to_redis_embedding_cache() -> redis.Redis:
+    def connect_to_redis_embedding_cache(
+
+    ) -> redis.Redis:
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=1)
@@ -56,7 +62,9 @@ class AudioView(APIView):
                 logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
-    def get_transcription(self, file_path: str) -> str:
+    def get_transcription(
+            self, file_path: str
+    ) -> str:
         temp_file = tempfile.NamedTemporaryFile(delete=False)
         try:
             start_time = time.time()
@@ -71,12 +79,16 @@ class AudioView(APIView):
 
         return transcription
 
-    def get_response_audio(self, transcription: str) -> None:
+    def get_response_audio(
+            self, transcription: str
+    ) -> None:
         tts_time = time.time()
         self.response_audio = openai_text_to_speech_api(transcription)
         logging.info(f"tts time: {time.time() - tts_time}")
 
-    def upload_file(self, unique_id: uuid.UUID = None) -> None:
+    def upload_file(
+            self, unique_id: uuid.UUID = None
+    ) -> None:
         res_audio_path = '/tmp/res_audio.wav'
         audio_write_time = time.time()
         with open(res_audio_path, 'wb') as f:
@@ -92,7 +104,9 @@ class AudioView(APIView):
 
         return
 
-    def post(self, response, format=None):
+    def post(
+            self, response, format=None
+    ):
         start_time = time.time()
         if 'file_path' not in response.data:
             return Response({'error': 'file_path not provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -127,7 +141,9 @@ class AudioView(APIView):
         else:
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, response, format=None):
+    def patch(
+            self, response, format=None
+    ):
         start_time = time.time()
         if 'file_path' not in response.data or 'unique_id' not in response.data:
             return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)

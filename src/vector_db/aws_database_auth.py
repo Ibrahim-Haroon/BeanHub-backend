@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def connection_string(csv_file: StringIO = None) -> str:
+def connection_string(
+        csv_file: StringIO = None
+) -> str:
     """
 
     @rtype: str
@@ -21,8 +23,18 @@ def connection_string(csv_file: StringIO = None) -> str:
         df = pd.DataFrame()
         pass
 
-    if csv_file is None and env('RDS_DB_NAME') and env('RDS_USERNAME') and env('RDS_PASSWORD') and env('RDS_HOSTNAME') and env('RDS_PORT'):
-        dsn = f"dbname={env('RDS_DB_NAME')} user={env('RDS_USERNAME')} password={env('RDS_PASSWORD')} host={env('RDS_HOSTNAME')} port={env('RDS_PORT')}"
+    if (csv_file is None and
+        env('RDS_DB_NAME') and
+        env('RDS_USERNAME') and
+        env('RDS_PASSWORD') and
+        env('RDS_HOSTNAME') and
+        env('RDS_PORT')
+    ):
+        dsn = (f"dbname={env('RDS_DB_NAME')}"
+               f"user={env('RDS_USERNAME')} "
+               f"password={env('RDS_PASSWORD')}"
+               f"host={env('RDS_HOSTNAME')}"
+               f"port={env('RDS_PORT')}")
     else:
         if csv_file is None and not df.empty:
             pass
@@ -33,7 +45,11 @@ def connection_string(csv_file: StringIO = None) -> str:
 
         row = df.iloc[0]
 
-        dsn = f"dbname={row['dbname']} user={row['user']} password={row['password']} host={row['host']} port={row['port']}"
+        dsn = (f"dbname={row['dbname']}"
+               f" user={row['user']} "
+               f"password={row['password']}"
+               f" host={row['host']}"
+               f" port={row['port']}")
 
     return dsn
 
