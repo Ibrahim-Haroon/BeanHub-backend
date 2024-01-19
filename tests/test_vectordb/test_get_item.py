@@ -7,7 +7,9 @@ from src.vector_db.get_item import get_item
 
 
 @pytest.fixture
-def mock_components(mocker):
+def mock_components(
+        mocker
+) -> dict:
     mock_db_instance = mocker.patch('src.vector_db.get_item.psycopg2.connect')
     mock_db_instance.return_value.cursor.return_value.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
 
@@ -21,11 +23,15 @@ def mock_components(mocker):
 
 
 @pytest.fixture()
-def mock_boto3_session_client(mocker):
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def as_csv_file(data: [[str]]) -> StringIO:
+def as_csv_file(
+        data: [[str]]
+) -> StringIO:
     file_object = StringIO()
     writer = csv.writer(file_object)
     writer.writerows(data)
@@ -36,7 +42,7 @@ def as_csv_file(data: [[str]]) -> StringIO:
 
 def test_get_item_returns_true_when_successfully_found_closest_item_and_adds_to_cache(
         mocker, mock_boto3_session_client, mock_components
-):
+) -> None:
     # Arrange
     mock_redis = mocker.Mock()
     mock_redis.set = MagicMock()
@@ -56,7 +62,7 @@ def test_get_item_returns_true_when_successfully_found_closest_item_and_adds_to_
 
 def test_get_item_returns_true_when_successfully_found_closest_item_without_being_passed_embedding_cache(
         mock_boto3_session_client, mock_components
-):
+) -> None:
     # Arrange
     database_info = [
         ["dbname", "user", "password", "host", "port"],
@@ -72,7 +78,7 @@ def test_get_item_returns_true_when_successfully_found_closest_item_without_bein
 
 def test_get_item_returns_false_when_given_invalid_params(
         mock_boto3_session_client, mock_components
-):
+) -> None:
     # Arrange
     data = None
 

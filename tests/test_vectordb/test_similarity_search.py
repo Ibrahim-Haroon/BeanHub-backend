@@ -6,7 +6,9 @@ from src.vector_db.similarity_search import similarity_search
 
 
 @pytest.fixture
-def mock_components(mocker):
+def mock_components(
+        mocker
+) -> dict:
     ner_model_mock = mocker.patch('src.ai_integration.fine_tuned_nlp.NERModel')
     mock_instance = ner_model_mock.return_value
 
@@ -21,11 +23,15 @@ def mock_components(mocker):
 
 
 @pytest.fixture()
-def mock_boto3_session_client(mocker):
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def as_csv_file(data: [[str]]) -> StringIO:
+def as_csv_file(
+        data: [[str]]
+) -> StringIO:
     file_object = StringIO()
     writer = csv.writer(file_object)
     writer.writerows(data)
@@ -34,7 +40,9 @@ def as_csv_file(data: [[str]]) -> StringIO:
     return file_object
 
 
-def test_similarity_search_returns_true_when_given_valid_params(mocker, mock_boto3_session_client, mock_components):
+def test_similarity_search_returns_true_when_given_valid_params(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
     # Arrange
     data = str({"input": {"Test"}})
     key = "mock_api_key"
@@ -55,7 +63,9 @@ def test_similarity_search_returns_true_when_given_valid_params(mocker, mock_bot
     assert res is True, f"expected search to be successful but {res}"
 
 
-def test_similarity_search_returns_valid_object_when_given_valid_params(mocker, mock_boto3_session_client, mock_components):
+def test_similarity_search_returns_valid_object_when_given_valid_params(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
     # Arrange
     expected_res = 'connect().cursor().fetchall()'
     data = str({"input": {"Test"}})
@@ -75,7 +85,9 @@ def test_similarity_search_returns_valid_object_when_given_valid_params(mocker, 
     assert res_name == expected_res, f"expected search to be successful and return valid menu objects but got {res}"
 
 
-def test_similarity_search_returns_false_when_given_invalid_params(mocker, mock_boto3_session_client, mock_components):
+def test_similarity_search_returns_false_when_given_invalid_params(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
     # Arrange
     data = None
 
