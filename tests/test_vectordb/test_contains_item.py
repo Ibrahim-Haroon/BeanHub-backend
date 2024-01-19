@@ -17,7 +17,9 @@ def mock_components(
     return {
         'openai_embedding_api': mocker.patch('src.vector_db.contain_item.openai_embedding_api'),
         'connection_string': mocker.patch('src.vector_db.aws_database_auth.connection_string'),
-        'api_key': mocker.patch('src.vector_db.contain_item.get_openai_key', return_value=key)
+        'api_key': mocker.patch('os.environ', dict({
+            'OPENAI_API_KEY': key
+        })),
     }
 
 
@@ -77,7 +79,7 @@ def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(
     db = as_csv_file(database_info)
 
     # Act
-    res = contains_quantity(data, quantity=quantity, aws_csv_file=aws, database_csv_file=db)
+    res = contains_quantity(data, key="foo_key", quantity=quantity, aws_csv_file=aws, database_csv_file=db)
 
     # Assert
     assert res == expected_res, f"expected search to return {expected_res} but got {res}"
