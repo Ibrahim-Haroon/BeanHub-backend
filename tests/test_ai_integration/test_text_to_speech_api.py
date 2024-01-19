@@ -7,11 +7,15 @@ script_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 
 @pytest.fixture
-def mock_openai(mocker):
+def mock_openai(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.OpenAI')
 
 
-def test_openai_text_to_speech_api(mock_openai):
+def test_openai_text_to_speech_api(
+        mock_openai
+) -> None:
     # Arrange
     mock_audio = MagicMock()
     mock_audio.stream_to_file.return_value = None
