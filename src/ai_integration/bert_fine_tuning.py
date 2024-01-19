@@ -8,7 +8,9 @@ from sklearn.model_selection import train_test_split
 from other.red import inputRED
 
 
-def load_data(csv_file: StringIO = None, display_data: bool = False) -> pd.core.frame.DataFrame:
+def load_data(
+        csv_file: StringIO = None, display_data: bool = False
+) -> pd.core.frame.DataFrame:
     """
 
     @rtype: pandas DataFrame
@@ -35,7 +37,9 @@ def load_data(csv_file: StringIO = None, display_data: bool = False) -> pd.core.
     return data
 
 
-def __labels__(data: pd.core.frame.DataFrame) -> []:
+def __labels__(
+        data: pd.core.frame.DataFrame
+) -> []:
     """
 
     @rtype: list(str)
@@ -45,7 +49,9 @@ def __labels__(data: pd.core.frame.DataFrame) -> []:
     return data["labels"].unique().tolist()
 
 
-def __args__() -> NERArgs:
+def __args__(
+
+) -> NERArgs:
     """
 
     @rtype: NERArgs
@@ -61,7 +67,9 @@ def __args__() -> NERArgs:
     return args
 
 
-def separate_into_test_and_train(data: pd.core.frame.DataFrame) -> tuple and tuple:
+def separate_into_test_and_train(
+        data: pd.core.frame.DataFrame
+) -> tuple and tuple:
     """
 
     @rtype: 2x tuple[DataFrame, DataFrame]
@@ -80,7 +88,9 @@ def separate_into_test_and_train(data: pd.core.frame.DataFrame) -> tuple and tup
     return train_data, test_data
 
 
-def fine_tune_ner_bert(model_save_path: str = None) -> bool:
+def fine_tune_ner_bert(
+        model_save_path: str = None
+) -> bool:
     """
 
     @param model_save_path: if you want to change default save path of `other/genai_models/`
@@ -120,7 +130,9 @@ def fine_tune_ner_bert(model_save_path: str = None) -> bool:
     return True
 
 
-def main() -> int:
+def main(
+
+) -> int:
     fine_tune_ner_bert()
 
     return 0
