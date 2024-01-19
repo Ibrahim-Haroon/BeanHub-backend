@@ -30,10 +30,10 @@ def connection_string(
         env('RDS_HOSTNAME') and
         env('RDS_PORT')
     ):
-        dsn = (f"dbname={env('RDS_DB_NAME')}"
+        dsn = (f"dbname={env('RDS_DB_NAME')} "
                f"user={env('RDS_USERNAME')} "
-               f"password={env('RDS_PASSWORD')}"
-               f"host={env('RDS_HOSTNAME')}"
+               f"password={env('RDS_PASSWORD')} "
+               f"host={env('RDS_HOSTNAME')} "
                f"port={env('RDS_PORT')}")
     else:
         if csv_file is None and not df.empty:
@@ -45,11 +45,11 @@ def connection_string(
 
         row = df.iloc[0]
 
-        dsn = (f"dbname={row['dbname']}"
-               f" user={row['user']} "
-               f"password={row['password']}"
-               f" host={row['host']}"
-               f" port={row['port']}")
+        dsn = (f"dbname={row['dbname']} "
+               f"user={row['user']} "
+               f"password={row['password']} "
+               f"host={row['host']} "
+               f"port={row['port']}")
 
     return dsn
 
