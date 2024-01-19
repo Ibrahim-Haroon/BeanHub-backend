@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-
-def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: str = None) -> bytes:
+def openai_text_to_speech_api(
+        text: str, api_key: str = None, audio_file_path: str = None
+) -> bytes:
     """
 
     @rtype: bytes
@@ -34,7 +35,9 @@ def openai_text_to_speech_api(text: str, api_key: str = None, audio_file_path: s
     return response.content
 
 
-def main(text: str) -> int:
+def main(
+        text: str
+) -> int:
     openai_text_to_speech_api(text)
 
     return 0
