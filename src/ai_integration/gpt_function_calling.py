@@ -1,7 +1,10 @@
 from openai import OpenAI
 import json
 
-def hello_world(append_string):
+
+def hello_world(
+        append_string
+) -> str:
     hello = "Hello World! " + append_string
     return hello
 
@@ -14,7 +17,9 @@ client = OpenAI(api_key=api_key)
 # Define your function
 
 # Define your ChatGPT function
-def call_chat_gpt_with_functions(append_string):
+def call_chat_gpt_with_functions(
+        append_string
+) -> None:
     messages = [
         {
             "role": "system",
