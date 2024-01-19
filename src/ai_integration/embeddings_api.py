@@ -9,7 +9,9 @@ load_dotenv()
 
 
 
-def openai_embedding_api(text: str, api_key: str = None) -> []:
+def openai_embedding_api(
+        text: str, api_key: str = None
+) -> []:
     """
 
     @rtype: list[list[float]] (embeddings vector)
@@ -25,7 +27,9 @@ def openai_embedding_api(text: str, api_key: str = None) -> []:
     return embeddings.embed_query(text)
 
 
-def get_item_quantity(row: pd.Series) -> int:
+def get_item_quantity(
+        row: pd.Series
+) -> int:
     """
 
     @rtype: int
@@ -40,7 +44,9 @@ def get_item_quantity(row: pd.Series) -> int:
 
 
 
-def get_common_allergin(row: pd.Series) -> str:
+def get_common_allergin(
+        row: pd.Series
+) -> str:
     """
 
     @rtype: str
@@ -54,7 +60,9 @@ def get_common_allergin(row: pd.Series) -> str:
         return str(common_allergin)
 
 
-def get_calorie_range(row: pd.Series) -> tuple[int, int]:
+def get_calorie_range(
+        row: pd.Series
+) -> tuple[int, int]:
     """
 
     @rtype: tuple[int, int]
@@ -70,7 +78,9 @@ def get_calorie_range(row: pd.Series) -> tuple[int, int]:
         return min_cal, max_cal
 
 
-def parse_menu_csv() -> list[dict]:
+def parse_menu_csv(
+
+) -> list[dict]:
     """
 
     @rtype: list[dict]
@@ -104,7 +114,9 @@ def parse_menu_csv() -> list[dict]:
     return menu_items
 
 
-def main(key_path: str) -> int:
+def main(
+        key_path: str
+) -> int:
     """
 
     @param key_path: api key for OpenAI
@@ -115,15 +127,10 @@ def main(key_path: str) -> int:
 
     menu = parse_menu_csv()
 
-    # print(menu)
-
     vectors = []
 
     for item in menu:
-        # vectors.append(openai_embedding_api(str(item), key))
-        num_calories = (int(item["MenuItem"]["num_calories"][0]), int(item["MenuItem"]["num_calories"][1]))
-        # print(type(item["MenuItem"]["num_calories"][0]))
-        print(num_calories)
+        vectors.append(openai_embedding_api(str(item), key))
 
     return 0
 
