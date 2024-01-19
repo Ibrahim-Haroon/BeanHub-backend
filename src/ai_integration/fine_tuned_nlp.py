@@ -17,7 +17,10 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
-def ner_transformer(input_string: str = None, print_prediction: bool = False) -> list:
+def ner_transformer(
+        input_string: str = None,
+        print_prediction: bool = False
+) -> list:
     """
 
     @rtype: list of dictionaries
@@ -41,7 +44,10 @@ def ner_transformer(input_string: str = None, print_prediction: bool = False) ->
 
 
 class Order:
-    def __init__(self, formatted_order: str, connection_pool=None, embedding_cache: Redis = None, aws_connected: bool = False):
+    def __init__(
+            self, formatted_order: str, connection_pool=None,
+            embedding_cache: Redis = None, aws_connected: bool = False
+    ):
         init_time = time.time()
         self.order: str = formatted_order.casefold().strip()
         self.item_name: str = ""
@@ -58,7 +64,8 @@ class Order:
             self.embedding_cache = embedding_cache
         else:
             self.embedding_cache = None
-        key_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
+        key_path = path.join(path.dirname(path.realpath(__file__)),
+                             "../../other/" + "openai_api_key.txt")
         if path.exists(key_path):
             with open(key_path) as KEY:
                 self.key = KEY.readline().strip()
@@ -68,14 +75,18 @@ class Order:
             self.connection_pool = connection_pool
         else:
             logging.info("creating new connection pool")
-            self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
+            self.connection_pool = psycopg2.pool.SimpleConnectionPool(1,
+                                                                      10,
+                                                                      connection_string())
 
         if not aws_connected:
             logging.info("getting aws secret")
             get_secret()
         logging.info(f"initialising order time: {time.time() - init_time}")
 
-    def make_order(self) -> dict:
+    def make_order(
+            self
+    ) -> dict:
         order_type, order_details = self.get_order_type()
 
         if order_type == "coffee":
@@ -89,7 +100,9 @@ class Order:
 
         return {}
 
-    def get_order_type(self) -> tuple[str, dict]:
+    def get_order_type(
+            self
+    ) -> tuple[str, dict]:
         order_details = self.parse_order()
 
         if order_details['coffee']:
@@ -103,7 +116,9 @@ class Order:
 
         return "", {}
 
-    def make_coffee_order(self, order_details) -> dict:
+    def make_coffee_order(
+            self, order_details
+    ) -> dict:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['coffee'][0]
         self.calculate_quantity(order_details['quantities'])
@@ -128,7 +143,9 @@ class Order:
             }
         }
 
-    def make_beverage_order(self, order_details) -> dict:
+    def make_beverage_order(
+            self, order_details
+    ) -> dict:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['beverage'][0]
         self.calculate_quantity(order_details['quantities'])
@@ -151,7 +168,10 @@ class Order:
             }
         }
 
-    def make_food_order(self, order_details) -> dict:
+    def make_food_order(
+            self,
+            order_details
+    ) -> dict:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['food'][0]
         self.calculate_quantity(order_details['quantities'])
@@ -166,7 +186,10 @@ class Order:
             }
         }
 
-    def make_bakery_order(self, order_details) -> dict:
+    def make_bakery_order(
+            self,
+            order_details
+    ) -> dict:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['bakery'][0]
         self.calculate_quantity(order_details['quantities'])
@@ -181,7 +204,10 @@ class Order:
             }
         }
 
-    def calculate_quantity(self, quantities) -> None:
+    def calculate_quantity(
+            self,
+            quantities
+    ) -> None:
         for quantity in quantities:
             quantity = number_map(quantity)
             if self.cart_action == "modification":
@@ -191,7 +217,9 @@ class Order:
 
         return
 
-    def get_cart_action(self) -> str:
+    def get_cart_action(
+            self
+    ) -> str:
         if self.is_question():
             return "question"
         elif self.is_modification():
@@ -199,18 +227,24 @@ class Order:
         else:
             return "insertion"
 
-    def is_question(self) -> bool:
+    def is_question(
+            self
+    ) -> bool:
         pattern = r'\b(do you|how many|how much)\b'
 
         return bool(re.search(pattern, self.order))
 
-    def is_modification(self) -> bool:
+    def is_modification(
+            self
+    ) -> bool:
         pattern = (r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
                    r'away|replace)\b')
 
         return bool(re.search(pattern, self.order))
 
-    def get_price_and_num_calories(self) -> None:
+    def get_price_and_num_calories(
+            self
+    ) -> None:
         db_time = time.time()
 
         item_thread = threading.Thread(target=self.process_item)
@@ -231,7 +265,9 @@ class Order:
         logging.info(f"querying db for price and num of calories time: {time.time() - db_time}")
         return
 
-    def process_item(self):
+    def process_item(
+            self
+    ):
         item_details, _ = get_item(self.item_name,
                                    connection_pool=self.connection_pool,
                                    embedding_cache=self.embedding_cache if self.embedding_cache else None,
@@ -244,7 +280,9 @@ class Order:
         self.price.append(item_details[0][5])
         self.num_calories.append(item_details[0][4])
 
-    def process_add_ons(self):
+    def process_add_ons(
+            self
+    ):
         for add_on in self.add_ons:
             add_on_details, _ = get_item(add_on,
                                          connection_pool=self.connection_pool,
@@ -255,7 +293,9 @@ class Order:
             if self.cart_action == "question":
                 self.quantity.append(add_on_details[0][2])
 
-    def process_sweeteners(self):
+    def process_sweeteners(
+            self
+    ):
         for sweetener in self.sweeteners:
             sweetener_details, _ = get_item(sweetener,
                                             connection_pool=self.connection_pool,
@@ -266,7 +306,9 @@ class Order:
             if self.cart_action == "question":
                 self.quantity.append(sweetener_details[0][2])
 
-    def process_milk(self):
+    def process_milk(
+            self
+    ):
         if self.milk_type and self.milk_type != "regular":
             milk_details, _ = get_item(self.milk_type,
                                        connection_pool=self.connection_pool,
@@ -277,7 +319,9 @@ class Order:
             if self.cart_action == "question":
                 self.quantity.append(milk_details[0][2])
 
-    def parse_order(self) -> dict:
+    def parse_order(
+            self
+    ) -> dict:
 
         size_pattern = r'\b(small|medium|large|extra large)\b'
         coffee_pattern = r'\b(coffee|black coffee|coffees|cappuccino|latte|americano|macchiato|frappuccino|\b' \
@@ -327,7 +371,9 @@ class Order:
         }
 
 
-def split_order(order) -> list[str]:
+def split_order(
+        order
+) -> list[str]:
     start_time = time.time()
     split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|whipped|cheese|sugar|cream|one|two|three|wait)\b)'
     split = re.split(split_pattern, order)
@@ -340,7 +386,10 @@ def split_order(order) -> list[str]:
     return filtered_order
 
 
-def make_order_report(split_orders: list[str], connection_pool=None, embedding_cache: Redis = None, aws_connected: bool = False) -> [list[dict]]:
+def make_order_report(
+        split_orders: list[str], connection_pool=None, embedding_cache: Redis = None,
+        aws_connected: bool = False
+) -> [list[dict]]:
     start_time = time.time()
     order_report = []
 
@@ -363,7 +412,10 @@ def make_order_report(split_orders: list[str], connection_pool=None, embedding_c
     return order_report
 
 
-def process_order(order, order_report, connection_pool, embedding_cache, aws_connected) -> None:
+def process_order(
+        order, order_report, connection_pool,
+        embedding_cache, aws_connected
+) -> None:
     final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
 
     if final_order:
@@ -389,9 +441,7 @@ if __name__ == "__main__":
     print(f"Make order report time: {time.time() - make_order_report_time} seconds")
 
     print(report)
-    # print(str(report))
 
     end_time = time.time()
     execution_time = end_time - total_time
     print(f"Execution time: {execution_time} seconds")
-
