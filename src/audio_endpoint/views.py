@@ -27,11 +27,34 @@ class AudioView(APIView):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         self.bucket_name = env('S3_BUCKET_NAME')
-        self.r = redis.Redis()
+        self.r = self.connect_to_redis_conversation_history()
+        self.embedding_cache = self.connect_to_redis_embedding_cache()
         self.s3 = boto3.client('s3')
         self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
         self.response_audio = None
         get_secret()
+
+    @staticmethod
+    def connect_to_redis_conversation_history() -> redis.Redis:
+        while True:
+            try:
+                redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+                logging.info("Connected to conversation history")
+                return redis_client
+            except redis.exceptions.ConnectionError:
+                logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
+                time.sleep(5)
+
+    @staticmethod
+    def connect_to_redis_embedding_cache() -> redis.Redis:
+        while True:
+            try:
+                redis_client = redis.StrictRedis(host='localhost', port=6379, db=1)
+                logging.info("Connected to embedding cache")
+                return redis_client
+            except redis.exceptions.ConnectionError:
+                logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
+                time.sleep(5)
 
     def get_transcription(self, file_path: str) -> str:
         temp_file = tempfile.NamedTemporaryFile(delete=False)
@@ -78,7 +101,7 @@ class AudioView(APIView):
 
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
-        order_report = make_order_report(formatted_transcription, self.connection_pool, aws_connected=True)
+        order_report = make_order_report(formatted_transcription, self.connection_pool, self.embedding_cache, aws_connected=True)
 
         model_response = conv_ai(transcription,
                                  str(order_report),
