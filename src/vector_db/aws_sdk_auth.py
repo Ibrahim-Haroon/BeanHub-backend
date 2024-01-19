@@ -9,7 +9,9 @@ from botocore.exceptions import ClientError
 load_dotenv()
 
 
-def get_secret(csv_file: StringIO = None) -> dict:
+def get_secret(
+        csv_file: StringIO = None
+) -> dict:
     """
 
     @purpose: SDK for AWS
@@ -24,7 +26,12 @@ def get_secret(csv_file: StringIO = None) -> dict:
         df = pd.DataFrame()
         pass
 
-    if csv_file is None and env('AWS_ACCESS_KEY_ID') and env('AWS_SECRET_ACCESS_KEY') and env('AWS_DEFAULT_REGION') and env('SECRET_NAME'):
+    if (csv_file is None and
+        env('AWS_ACCESS_KEY_ID') and
+        env('AWS_SECRET_ACCESS_KEY') and
+        env('AWS_DEFAULT_REGION') and
+        env('SECRET_NAME')
+    ):
         secret_name = env('SECRET_NAME')
         region_name = env('AWS_DEFAULT_REGION')
         aws_access_key_id = env('AWS_ACCESS_KEY_ID')

@@ -5,7 +5,10 @@ from src.ai_integration.embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 
 
-def add_item(item: dict, key: str = None, aws_csv_file: StringIO = None, database_csv_file: StringIO = None) -> bool:
+def add_item(
+        item: dict, key: str = None, aws_csv_file: StringIO = None,
+        database_csv_file: StringIO = None
+) -> bool:
     """
 
     @rtype: boolean
@@ -40,7 +43,9 @@ def add_item(item: dict, key: str = None, aws_csv_file: StringIO = None, databas
     return True
 
 
-def main() -> int:
+def main(
+
+) -> int:
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
