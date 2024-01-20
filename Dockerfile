@@ -41,6 +41,6 @@ COPY README.md /BeanHub-backend/README.md
 COPY redis.conf /BeanHub-backend/redis.conf
 COPY requirements.txt /BeanHub-backend/requirements.txt
 
-RUN pytest test
+RUN pip install -r requirements.txt
 
 CMD ["/bin/bash"]
