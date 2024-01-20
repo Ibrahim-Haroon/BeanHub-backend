@@ -43,5 +43,3 @@ COPY requirements.txt /BeanHub-backend/requirements.txt
 
 CMD ["/bin/bash"]
 
-
-
