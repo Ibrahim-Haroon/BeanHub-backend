@@ -51,12 +51,16 @@ COPY redis.conf /BeanHub-backend/redis.conf
 COPY requirements.txt /BeanHub-backend/requirements.txt
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 CMD ["/bin/bash"]
 
 
 
 =======
 RUN pytest test
+=======
+RUN pip install -r requirements.txt
+>>>>>>> a79aefb (added pip install command.)
 
 CMD ["/bin/bash"]
 >>>>>>> 382e786 (initial commit.)
