@@ -13,12 +13,21 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     software-properties-common
 # Install Python
+<<<<<<< HEAD
 RUN apt-get update
 RUN apt-get install -y python3.11-distutils curl
 RUN apt-get install -y portaudio19-dev flac ffmpeg
 RUN apt-get install -y python3.11-venv
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 RUN python3.11 get-pip.py
+=======
+RUN apt-get update && \
+    apt-get install -y python3.11-distutils curl && \
+    apt-get install -y portaudio19-dev flac ffmpeg && \
+    apt-get install -y  python3.11-venv && \
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.11 get-pip.py \
+>>>>>>> 382e786 (initial commit.)
 
 # Source Python
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
@@ -41,7 +50,13 @@ COPY README.md /BeanHub-backend/README.md
 COPY redis.conf /BeanHub-backend/redis.conf
 COPY requirements.txt /BeanHub-backend/requirements.txt
 
+<<<<<<< HEAD
 CMD ["/bin/bash"]
 
 
 
+=======
+RUN pytest test
+
+CMD ["/bin/bash"]
+>>>>>>> 382e786 (initial commit.)
