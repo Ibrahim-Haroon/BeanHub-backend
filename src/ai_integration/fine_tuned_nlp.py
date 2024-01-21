@@ -402,7 +402,7 @@ def make_order_report(
         aws_connected: bool = False
 ) -> [list[dict]]:
     start_time = time.time()
-    order_report, model_report = [], []
+    order_report , model_report = [], ""
 
     threads = []
     for order in split_orders:
@@ -432,7 +432,7 @@ def process_order(
     final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
 
     if final_order:
-        model_report.append(final_order)
+        model_report += str(final_order)
         final_order.pop('allergies', None)
         order_report.append(final_order)
 
