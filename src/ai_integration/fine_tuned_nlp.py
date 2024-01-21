@@ -50,6 +50,7 @@ class Order:
     ):
         init_time = time.time()
         self.order: str = formatted_order.casefold().strip()
+        self.allergies: list[str] = []
         self.item_name: str = ""
         self.quantity: list[int] = []
         self.price: list[float] = []
@@ -127,7 +128,7 @@ class Order:
         self.add_ons.extend(order_details['add_ons'])
         self.milk_type = "regular" if not order_details['milk_type'] else str(order_details['milk_type'][0])
         self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
-        self.get_price_and_num_calories()
+        self.get_price_and_allergies_and_num_calories()
         return {
             "CoffeeItem": {
                 "item_name": self.item_name,
@@ -139,7 +140,8 @@ class Order:
                 "sweeteners": self.sweeteners,
                 "num_calories": self.num_calories,
                 "size": self.size,
-                "cart_action": self.cart_action
+                "cart_action": self.cart_action,
+                "allergies": self.allergies
             }
         }
 
@@ -153,7 +155,7 @@ class Order:
         self.sweeteners = order_details['sweeteners']
         self.add_ons = order_details['add_ons']
         self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
-        self.get_price_and_num_calories()
+        self.get_price_and_allergies_and_num_calories()
         return {
             "BeverageItem": {
                 "item_name": self.item_name,
@@ -164,7 +166,8 @@ class Order:
                 "sweeteners": self.sweeteners,
                 "num_calories": self.num_calories,
                 "size": self.size,
-                "cart_action": self.cart_action
+                "cart_action": self.cart_action,
+                "allergies": self.allergies
             }
         }
 
@@ -175,14 +178,15 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['food'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.get_price_and_num_calories()
+        self.get_price_and_allergies_and_num_calories()
         return {
             "FoodItem": {
                 "item_name": self.item_name,
                 "quantity": self.quantity,
                 "price": self.price,
                 "num_calories": self.num_calories,
-                "cart_action": self.cart_action
+                "cart_action": self.cart_action,
+                "allergies": self.allergies
             }
         }
 
@@ -193,14 +197,15 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['bakery'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.get_price_and_num_calories()
+        self.get_price_and_allergies_and_num_calories()
         return {
             "BakeryItem": {
                 "item_name": self.item_name,
                 "quantity": self.quantity,
                 "price": self.price,
                 "num_calories": self.num_calories,
-                "cart_action": self.cart_action
+                "cart_action": self.cart_action,
+                "allergies": self.allergies
             }
         }
 
@@ -230,7 +235,7 @@ class Order:
     def is_question(
             self
     ) -> bool:
-        pattern = r'\b(do you|how many|how much)\b'
+        pattern = r'\b(do you|how many|how much|does)\b'
 
         return bool(re.search(pattern, self.order))
 
@@ -242,12 +247,12 @@ class Order:
 
         return bool(re.search(pattern, self.order))
 
-    def get_price_and_num_calories(
+    def get_price_and_allergies_and_num_calories(
             self
     ) -> None:
         db_time = time.time()
 
-        item_thread = threading.Thread(target=self.process_item)
+        item_thread = threading.Thread(target=self.process_item_and_allergies)
         add_ons_thread = threading.Thread(target=self.process_add_ons)
         sweeteners_thread = threading.Thread(target=self.process_sweeteners)
         milk_thread = threading.Thread(target=self.process_milk)
@@ -262,10 +267,10 @@ class Order:
         sweeteners_thread.join()
         milk_thread.join()
 
-        logging.info(f"querying db for price and num of calories time: {time.time() - db_time}")
+        logging.info(f"querying db for price, allergies, and num of calories time: {time.time() - db_time}")
         return
 
-    def process_item(
+    def process_item_and_allergies(
             self
     ):
         item_details, _ = get_item(self.item_name,
@@ -276,6 +281,8 @@ class Order:
         if self.cart_action == "question":
             self.quantity = []
             self.quantity.append(item_details[0][2])
+            self.allergies = []
+            self.allergies.append(item_details[0][3])
 
         self.price.append(item_details[0][5])
         self.num_calories.append(item_details[0][4])
@@ -319,6 +326,7 @@ class Order:
             if self.cart_action == "question":
                 self.quantity.append(milk_details[0][2])
 
+
     def parse_order(
             self
     ) -> dict:
@@ -343,6 +351,7 @@ class Order:
         add_ons_pattern = r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel)\b'
         milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
                        r'milk|coconut milk|half and half|heavy cream|cream|creams)\b'
+        common_allergies = r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose|sesame|mustard|sulfites)\b'
 
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
@@ -355,6 +364,7 @@ class Order:
         bakeries = re.findall(bakery_pattern, self.order)
         add_ons = re.findall(add_ons_pattern, self.order)
         milk_types = re.findall(milk_pattern, self.order)
+        allergies = re.findall(common_allergies, self.order)
 
         return {
             "sizes": sizes,
@@ -367,7 +377,8 @@ class Order:
             "food": foods,
             "bakery": bakeries,
             "add_ons": add_ons,
-            "milk_type": milk_types
+            "milk_type": milk_types,
+            "allergies": allergies
         }
 
 
@@ -429,7 +440,7 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "Actually I don't want the black coffee."
+    orders = "Does your smoothie contain nuts"
 
     split_order_time = time.time()
     details = split_order(orders)
