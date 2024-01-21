@@ -235,7 +235,7 @@ class Order:
     def is_question(
             self
     ) -> bool:
-        pattern = r'\b(do you|how many|how much|does)\b'
+        pattern = r'\b(do you|how many|how much|does|what are)\b'
 
         return bool(re.search(pattern, self.order))
 
@@ -402,12 +402,13 @@ def make_order_report(
         aws_connected: bool = False
 ) -> [list[dict]]:
     start_time = time.time()
-    order_report = []
+    order_report, model_report = [], []
 
     threads = []
     for order in split_orders:
         order_thread = threading.Thread(target=process_order, args=(order,
                                                                     order_report,
+                                                                    model_report,
                                                                     connection_pool,
                                                                     embedding_cache,
                                                                     aws_connected))
@@ -421,18 +422,20 @@ def make_order_report(
 
     logging.info(f"make order report time: {time.time() - start_time}")
 
-    return order_report
+    return order_report, model_report
 
 
 def process_order(
-        order, order_report, connection_pool,
+        order, order_report, model_report, connection_pool,
         embedding_cache, aws_connected
 ) -> None:
     final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
 
     if final_order:
+        model_report.append(final_order)
         final_order.pop('allergies', None)
         order_report.append(final_order)
+
 
 
 if __name__ == "__main__":
