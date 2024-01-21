@@ -14,12 +14,16 @@ RUN apt-get update && apt-get install -y \
     software-properties-common
 # Install Python
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e47004b (workig version.)
 RUN apt-get update
 RUN apt-get install -y python3.11-distutils curl
 RUN apt-get install -y portaudio19-dev flac ffmpeg
 RUN apt-get install -y python3.11-venv
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 RUN python3.11 get-pip.py
+<<<<<<< HEAD
 =======
 RUN apt-get update && \
     apt-get install -y python3.11-distutils curl && \
@@ -28,6 +32,8 @@ RUN apt-get update && \
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python3.11 get-pip.py \
 >>>>>>> 382e786 (initial commit.)
+=======
+>>>>>>> e47004b (workig version.)
 
 # Source Python
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
@@ -52,6 +58,7 @@ COPY requirements.txt /BeanHub-backend/requirements.txt
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 CMD ["/bin/bash"]
 
 
@@ -64,3 +71,9 @@ RUN pip install -r requirements.txt
 
 CMD ["/bin/bash"]
 >>>>>>> 382e786 (initial commit.)
+=======
+CMD ["/bin/bash"]
+
+
+
+>>>>>>> e47004b (workig version.)
