@@ -420,6 +420,7 @@ def make_order_report(
         thread.join()
 
     logging.info(f"make order report time: {time.time() - start_time}")
+
     return order_report
 
 
@@ -430,6 +431,7 @@ def process_order(
     final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
 
     if final_order:
+        final_order.pop('allergies', None)
         order_report.append(final_order)
 
 
