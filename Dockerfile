@@ -11,36 +11,24 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     python-is-python3 \
     net-tools \
-    software-properties-common
+    software-properties-common \
+
 # Install Python
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e47004b (workig version.)
 RUN apt-get update
 RUN apt-get install -y python3.11-distutils curl
 RUN apt-get install -y portaudio19-dev flac ffmpeg
 RUN apt-get install -y python3.11-venv
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 RUN python3.11 get-pip.py
-<<<<<<< HEAD
-=======
-RUN apt-get update && \
-    apt-get install -y python3.11-distutils curl && \
-    apt-get install -y portaudio19-dev flac ffmpeg && \
-    apt-get install -y  python3.11-venv && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python3.11 get-pip.py \
->>>>>>> 382e786 (initial commit.)
-=======
->>>>>>> e47004b (workig version.)
 
 # Source Python
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 
+# Create folder in container and cd into it
 RUN mkdir /BeanHub-backend
 WORKDIR /BeanHub-backend
 
+# Copy files from local to container
 COPY .github /BeanHub-backend/.github
 COPY appendonlydir /BeanHub-backend/appendonlydir
 COPY other /BeanHub-backend/other
@@ -56,24 +44,6 @@ COPY README.md /BeanHub-backend/README.md
 COPY redis.conf /BeanHub-backend/redis.conf
 COPY requirements.txt /BeanHub-backend/requirements.txt
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 CMD ["/bin/bash"]
 
 
-
-=======
-RUN pytest test
-=======
-RUN pip install -r requirements.txt
->>>>>>> a79aefb (added pip install command.)
-
-CMD ["/bin/bash"]
->>>>>>> 382e786 (initial commit.)
-=======
-CMD ["/bin/bash"]
-
-
-
->>>>>>> e47004b (workig version.)
