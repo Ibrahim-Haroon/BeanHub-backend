@@ -115,10 +115,10 @@ class AudioView(APIView):
 
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
-        order_report = make_order_report(formatted_transcription, self.connection_pool, self.embedding_cache, aws_connected=True)
+        order_report, model_report = make_order_report(formatted_transcription, self.connection_pool, self.embedding_cache, aws_connected=True)
 
         model_response = conv_ai(transcription,
-                                 str(order_report),
+                                 model_report,
                                  conversation_history="")
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
@@ -153,10 +153,10 @@ class AudioView(APIView):
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
 
-        order_report = make_order_report(formatted_transcription, self.connection_pool, aws_connected=True)
+        order_report, model_report = make_order_report(formatted_transcription, self.connection_pool, aws_connected=True)
 
         model_response = conv_ai(transcription,
-                                 str(order_report),
+                                 model_report,
                                  conversation_history=self.r.get(f"conversation_history_{unique_id}"))
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
