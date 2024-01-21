@@ -351,7 +351,8 @@ class Order:
         add_ons_pattern = r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel)\b'
         milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
                        r'milk|coconut milk|half and half|heavy cream|cream|creams)\b'
-        common_allergies = r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose|sesame|mustard|sulfites)\b'
+        common_allergies = (r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose'
+                            r'|sesame|mustard|sulfates)\b')
 
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
