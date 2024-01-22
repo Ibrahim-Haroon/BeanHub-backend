@@ -22,7 +22,9 @@ def mock_components(
 def mock_boto3_session_client(
         mocker
 ) -> MagicMock:
-    return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
+    return mocker.patch(
+        'boto3.session.Session.client',
+        return_value=MagicMock())
 
 
 def as_csv_file(
@@ -40,7 +42,13 @@ def test_add_item_returns_true_if_valid_item_given(
         mocker, mock_components, mock_boto3_session_client
 ) -> None:
     # Arrange
-    data = {"MenuItem": {"itemName": "TestItem", "item_quantity": "5", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}
+    data = {
+        "MenuItem": {
+            "itemName": "TestItem",
+            "item_quantity": "5",
+            "common_allergin": "peanuts",
+            "num_calories": "500",
+            "price": 10.0}}
     key = "mock_api_key"
     database_info = [
         ["dbname", "user", "password", "host", "port"],
@@ -49,9 +57,9 @@ def test_add_item_returns_true_if_valid_item_given(
         ["secret_name", "region_name", "aws_access_key_id", "aws_secret_access_key"],
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
-
     # Act
-    result = add_item(data, key, as_csv_file(aws_info), as_csv_file(database_info))
+    result = add_item(data, key, as_csv_file(
+        aws_info), as_csv_file(database_info))
 
     # Assert
     assert result is True, f"expect True but got {result}"
@@ -70,9 +78,9 @@ def test_add_item_returns_false_if_invalid_item_given(
         ["secret_name", "region_name", "aws_access_key_id", "aws_secret_access_key"],
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
-
     # Act
-    result = add_item(data, key, as_csv_file(aws_info), as_csv_file(database_info))
+    result = add_item(data, key, as_csv_file(
+        aws_info), as_csv_file(database_info))
 
     # Assert
     assert result is False, f"expect False but got {result}"

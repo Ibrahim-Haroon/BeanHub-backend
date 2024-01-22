@@ -31,21 +31,25 @@ class URLsTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_redis_session = patch('src.audio_endpoint.views.redis.StrictRedis')
+        self.mock_redis_session = patch(
+            'src.audio_endpoint.views.redis.StrictRedis')
         mock_redis_session_client = self.mock_redis_session.start().return_value
         mock_redis_session_client.setex = MagicMock()
         mock_redis_session_client.append = MagicMock()
 
-        self.mock_redis_embedding_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
+        self.mock_redis_embedding_cache = patch(
+            'src.audio_endpoint.views.redis.StrictRedis')
         mock_redis_embedding_client = self.mock_redis_embedding_cache.start().return_value
         mock_redis_embedding_client.set = MagicMock()
         mock_redis_embedding_client.exists = MagicMock(return_value=False)
-        mock_redis_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
+        mock_redis_embedding_client.get = MagicMock(
+            return_value=json.dumps([0.1, 0.2, 0.3]))
 
         self.mock_s3 = patch('src.audio_endpoint.views.boto3.client')
         self.mock_s3.start().return_value = MagicMock()
 
-        self.mock_connection_string = patch('src.audio_endpoint.views.connection_string')
+        self.mock_connection_string = patch(
+            'src.audio_endpoint.views.connection_string')
         self.mock_connection_string.start().return_value = MagicMock()
 
         self.mock_connection_pool = patch('pgvector.psycopg2.register_vector')
@@ -54,7 +58,8 @@ class URLsTestCase(TestCase):
         self.mock_boto3_session_client = patch('boto3.session.Session.client')
         self.mock_boto3_session_client.start().return_value = MagicMock()
 
-        self.mock_google_cloud = patch(speech_to_text_path + '.speech.Recognizer')
+        self.mock_google_cloud = patch(
+            speech_to_text_path + '.speech.Recognizer')
         mock_recognizer_instance = MagicMock()
         self.mock_google_cloud.start().return_value = mock_recognizer_instance
         expected_transcription = "One black coffee"
@@ -63,10 +68,12 @@ class URLsTestCase(TestCase):
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
 
-        self.mock_openai_embedding_api = patch('src.vector_db.get_item.openai_embedding_api')
+        self.mock_openai_embedding_api = patch(
+            'src.vector_db.get_item.openai_embedding_api')
         self.mock_openai_embedding_api.start().return_value = [0.1, 0.2, 0.3]
 
-        self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
+        self.mock_openai_response = patch(
+            'src.ai_integration.conversational_ai.get_openai_response')
         self.mock_openai_response.start().return_value.json.return_value = {
             "choices": [{"message": {"content": "mocked response"}}],
             "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
@@ -81,9 +88,11 @@ class URLsTestCase(TestCase):
         self.mock_connect = patch('src.audio_endpoint.views.psycopg2.connect')
         self.mock_connect.start().return_value = MagicMock()
 
-        self.mock_db_instance = patch('src.audio_endpoint.views.psycopg2.connect').start()
+        self.mock_db_instance = patch(
+            'src.audio_endpoint.views.psycopg2.connect').start()
         mock_cursor = MagicMock()
-        mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
+        mock_cursor.fetchall.return_value = [
+            (7, 'test', 6, 'test', '(60,120)', 10.0)]
         self.mock_db_instance.return_value.cursor.return_value = mock_cursor
 
     def tearDown(
@@ -121,7 +130,10 @@ class URLsTestCase(TestCase):
         }
 
         # Act
-        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+        response = self.client.post(
+            '/audio_endpoint/',
+            data,
+            content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
@@ -151,7 +163,8 @@ class URLsTestCase(TestCase):
         }
 
         # Act
-        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+        response = self.client.patch(
+            '/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
@@ -167,7 +180,8 @@ class URLsTestCase(TestCase):
         url = reverse('audio-view')
 
         # Act
-        response = self.client.patch(url, data, content_type='application/json')
+        response = self.client.patch(
+            url, data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)

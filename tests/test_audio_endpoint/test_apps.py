@@ -23,5 +23,6 @@ class AudioEndpointConfigTest(TestCase):
         # Act
 
         # Assert
-        self.assertEqual(AudioEndpointConfig.default_auto_field, 'django.db.models.BigAutoField')
-
+        self.assertEqual(
+            AudioEndpointConfig.default_auto_field,
+            'django.db.models.BigAutoField')

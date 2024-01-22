@@ -37,7 +37,8 @@ async def get_openai_response(
         return response.json()
     except Exception as e:
         logging.error(f"*****TIME OUT*******\nError: {e}")
-        return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
+        return {"choices": [
+            {"message": {"content": "Added to your order! Anything else?"}}]}
 
 
 async def conv_ai_async(
@@ -65,27 +66,36 @@ async def conv_ai_async(
             max_tokens
         )
         if print_token_usage:
-            print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
-                  f"Completion tokens ({response['usage']['completion_tokens']}) = "
-                  f"Total tokens ({response['usage']['total_tokens']})")
+            print(
+                f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
+                f"Completion tokens ({response['usage']['completion_tokens']}) = "
+                f"Total tokens ({response['usage']['total_tokens']})")
 
         return response['choices'][0]['message']['content']
 
 
 def conv_ai(
-        transcription: str, order_report: str, conversation_history: str,
-        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
-) -> str:
+        transcription: str,
+        order_report: str,
+        conversation_history: str,
+        api_key: str = None,
+        max_tokens: int = 400,
+        print_token_usage: bool = False) -> str:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
 
-
     start_time = time.time()
     response = loop.run_until_complete(
-        conv_ai_async(transcription, order_report, conversation_history, api_key, max_tokens, print_token_usage))
+        conv_ai_async(
+            transcription,
+            order_report,
+            conversation_history,
+            api_key,
+            max_tokens,
+            print_token_usage))
     logging.info(f"conv_ai time: {time.time() - start_time}")
 
     loop.close()
@@ -96,21 +106,23 @@ def conv_ai(
 def main(
 
 ) -> str:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
+    key_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
     start_time = time.time()
-    response = conv_ai(transcription="Let me get a latte with two pumps of caramel and sugar",
-                       order_report="""
-                    [{'MenuItem': {'item_name': 'latte', 'quantity': [1, 2], 'price': [5.0, 10.0, 2.0], 
+    response = conv_ai(
+        transcription="Let me get a latte with two pumps of caramel and sugar", order_report="""
+                    [{'MenuItem': {'item_name': 'latte', 'quantity': [1, 2], 'price': [5.0, 10.0, 2.0],
                     'temp': 'regular', 'add_ons': ['pumps of caramel'], 'milk_type': 'regular', 'sweeteners': [
-                    'sugar'], 'num_calories': ['(120,180)', '(60,120)', '(200,500)'], 'size': 'regular', 
+                    'sugar'], 'num_calories': ['(120,180)', '(60,120)', '(200,500)'], 'size': 'regular',
                     'cart_action': 'insertion'}}]
-                            """,
-                       conversation_history="",
-                       api_key=key,
-                       print_token_usage=False)
+                            """, conversation_history="", api_key=key, print_token_usage=False)
     print(f"conv_ai time: {time.time() - start_time}")
     print((response))
     return response

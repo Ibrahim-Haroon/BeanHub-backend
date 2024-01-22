@@ -35,7 +35,6 @@ def test_get_transcription_with_none_passed_for_audio_file_path(
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
 
 
-
 def test_get_transcription_with_empty_audio_file(
         mock_google_cloud, mock_speech
 ) -> None:
@@ -68,4 +67,3 @@ def test_get_transcription_with_non_empty_audio_file(
 
     # Assert
     assert expected_transcription == actual_transcription, f"expected transcription to be {expected_transcription} but {actual_transcription}"
-

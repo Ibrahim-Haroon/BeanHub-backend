@@ -27,7 +27,9 @@ def contains_quantity(
         return json.dumps(False)
 
     get_secret(aws_csv_file if not None else None)
-    db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
+    db_connection = psycopg2.connect(
+        connection_string(
+            database_csv_file if not None else None))
     db_connection.set_session(autocommit=True)
 
     cur = db_connection.cursor()
@@ -35,10 +37,10 @@ def contains_quantity(
     embedding = openai_embedding_api(order, key if key else None)
     register_vector(db_connection)
 
-    cur.execute(f""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
+    cur.execute(
+        f""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
                             FROM products
-                            ORDER BY embeddings <-> %s limit 1;""",
-                (np.array(embedding),))
+                            ORDER BY embeddings <-> %s limit 1;""", (np.array(embedding),))
 
     result = cur.fetchall()
     cur.close()
@@ -50,7 +52,12 @@ def contains_quantity(
 def main(
 
 ) -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
+    key_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 

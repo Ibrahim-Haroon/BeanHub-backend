@@ -12,7 +12,12 @@ from src.vector_db.aws_database_auth import connection_string
 def mock_pandas_read_csv(
         mocker
 ) -> str:
-    db_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "database-info.csv")
+    db_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "database-info.csv")
     read_data = 'dbname,user,password,host,port\ndbname,user,password,host,port\n'
     with patch('builtins.open', new_callable=mock_open, read_data=read_data):
         mocker.patch('pandas.read_csv', return_value=pd.DataFrame({
@@ -61,12 +66,12 @@ def test_that_environment_variables_set_correctly(
 
     # Act & Assert
     for key, expected_value in expected_env_vars.items():
-        assert os.environ.get(key) == expected_value, f"Env var {key} expected to be {expected_value} but got {os.environ.get(key)}"
+        assert os.environ.get(
+            key) == expected_value, f"Env var {key} expected to be {expected_value} but got {os.environ.get(key)}"
 
 
 def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_environment_variables_used(
-        mocker, mock_pandas_read_csv
-) -> None:
+        mocker, mock_pandas_read_csv) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
         "RDS_DB_NAME": "dbname",
@@ -86,8 +91,7 @@ def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_en
 
 
 def test_that_connection_string_returns_expected_dsn_when_0_params_passed_and_file_path_used(
-        mocker, mock_pandas_read_csv
-) -> None:
+        mocker, mock_pandas_read_csv) -> None:
     # Arrange
     expected_dsn = f"dbname={'dbname'} user={'user'} password={'password'} host={'host'} port={'port'}"
 
@@ -114,7 +118,7 @@ def test_that_connection_string_returns_expected_dsn_when_csv_passed(
         ["dbname", "user", "password", "host", "port"],
         ["mydb", "myuser", "mypassword", "host", "port"]]
 
-    expected_dsn =  f"dbname={'mydb'} user={'myuser'} password={'mypassword'} host={'host'} port={'port'}"
+    expected_dsn = f"dbname={'mydb'} user={'myuser'} password={'mypassword'} host={'host'} port={'port'}"
 
     mocker.patch.dict(os.environ, {
         "RDS_DB_NAME": "",
@@ -144,4 +148,5 @@ def test_that_connection_string_exits_when_invalid_file_passed(
     with pytest.raises(SystemExit) as e:
         _ = connection_string(invalid_file)
 
-    assert str(e.value) == expected_error_message, f"expected system to exit with {expected_error_message} but got {str(e.value)}"
+    assert str(
+        e.value) == expected_error_message, f"expected system to exit with {expected_error_message} but got {str(e.value)}"

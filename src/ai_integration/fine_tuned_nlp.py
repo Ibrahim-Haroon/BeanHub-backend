@@ -14,7 +14,9 @@ from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def ner_transformer(
@@ -31,7 +33,11 @@ def ner_transformer(
     if not input_string or not isinstance(input_string, str):
         return []
 
-    transformer_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other/genai_models/")
+    transformer_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other/genai_models/")
 
     model = NERModel('bert', transformer_file_path, use_cuda=False)
 
@@ -76,9 +82,8 @@ class Order:
             self.connection_pool = connection_pool
         else:
             logging.info("creating new connection pool")
-            self.connection_pool = psycopg2.pool.SimpleConnectionPool(1,
-                                                                      10,
-                                                                      connection_string())
+            self.connection_pool = psycopg2.pool.SimpleConnectionPool(
+                1, 10, connection_string())
 
         if not aws_connected:
             logging.info("getting aws secret")
@@ -123,11 +128,14 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['coffee'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
+        self.temp = "regular" if not order_details['temperature'] else str(
+            order_details['temperature'][0])
         self.sweeteners.extend(order_details['sweeteners'])
         self.add_ons.extend(order_details['add_ons'])
-        self.milk_type = "regular" if not order_details['milk_type'] else str(order_details['milk_type'][0])
-        self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
+        self.milk_type = "regular" if not order_details['milk_type'] else str(
+            order_details['milk_type'][0])
+        self.size = "regular" if not order_details['sizes'] else str(
+            order_details['sizes'][0])
         self.get_price_and_allergies_and_num_calories()
         return {
             "CoffeeItem": {
@@ -151,10 +159,12 @@ class Order:
         self.cart_action = self.get_cart_action()
         self.item_name = order_details['beverage'][0]
         self.calculate_quantity(order_details['quantities'])
-        self.temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
+        self.temp = "regular" if not order_details['temperature'] else str(
+            order_details['temperature'][0])
         self.sweeteners = order_details['sweeteners']
         self.add_ons = order_details['add_ons']
-        self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
+        self.size = "regular" if not order_details['sizes'] else str(
+            order_details['sizes'][0])
         self.get_price_and_allergies_and_num_calories()
         return {
             "BeverageItem": {
@@ -242,8 +252,9 @@ class Order:
     def is_modification(
             self
     ) -> bool:
-        pattern = (r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
-                   r'away|replace)\b')
+        pattern = (
+            r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
+            r'away|replace)\b')
 
         return bool(re.search(pattern, self.order))
 
@@ -267,7 +278,8 @@ class Order:
         sweeteners_thread.join()
         milk_thread.join()
 
-        logging.info(f"querying db for price, allergies, and num of calories time: {time.time() - db_time}")
+        logging.info(
+            f"querying db for price, allergies, and num of calories time: {time.time() - db_time}")
         return
 
     def process_item_and_allergies(
@@ -326,7 +338,6 @@ class Order:
             if self.cart_action == "question":
                 self.quantity.append(milk_details[0][2])
 
-
     def parse_order(
             self
     ) -> dict:
@@ -351,8 +362,9 @@ class Order:
         add_ons_pattern = r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel)\b'
         milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
                        r'milk|coconut milk|half and half|heavy cream|cream|creams)\b'
-        common_allergies = (r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose'
-                            r'|sesame|mustard|sulfates)\b')
+        common_allergies = (
+            r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose'
+            r'|sesame|mustard|sulfates)\b')
 
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
@@ -392,7 +404,8 @@ def split_order(
     remove_words = ['plus', 'get', 'and', 'also']
     remove_chars = '[^a-zA-Z0-9]'
 
-    filtered_order = [order for order in split if order not in remove_words and order != remove_chars and order]
+    filtered_order = [
+        order for order in split if order not in remove_words and order != remove_chars and order]
 
     logging.info(f"split order time: {time.time() - start_time}")
     return filtered_order
@@ -403,16 +416,19 @@ def make_order_report(
         aws_connected: bool = False
 ) -> [list[dict]]:
     start_time = time.time()
-    order_report , model_report = [], ""
+    order_report, model_report = [], ""
 
     threads = []
     for order in split_orders:
-        order_thread = threading.Thread(target=process_order, args=(order,
-                                                                    order_report,
-                                                                    model_report,
-                                                                    connection_pool,
-                                                                    embedding_cache,
-                                                                    aws_connected))
+        order_thread = threading.Thread(
+            target=process_order,
+            args=(
+                order,
+                order_report,
+                model_report,
+                connection_pool,
+                embedding_cache,
+                aws_connected))
         threads.append(order_thread)
 
     for thread in threads:
@@ -430,7 +446,12 @@ def process_order(
         order, order_report, model_report, connection_pool,
         embedding_cache, aws_connected
 ) -> None:
-    final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
+    final_order = (
+        (Order(
+            order,
+            connection_pool,
+            embedding_cache,
+            aws_connected).make_order()))
 
     if final_order:
         model_report += str(final_order)
@@ -438,11 +459,14 @@ def process_order(
         order_report.append(final_order)
 
 
-
 if __name__ == "__main__":
     total_time = time.time()
 
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
+    key_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../../other/" +
+        "openai_api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
@@ -455,7 +479,8 @@ if __name__ == "__main__":
 
     make_order_report_time = time.time()
     report = make_order_report(details)
-    print(f"Make order report time: {time.time() - make_order_report_time} seconds")
+    print(
+        f"Make order report time: {time.time() - make_order_report_time} seconds")
 
     print(report)
 

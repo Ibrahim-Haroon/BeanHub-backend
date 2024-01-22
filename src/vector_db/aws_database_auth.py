@@ -16,7 +16,11 @@ def connection_string(
     @param csv_file: used for unit tests and if you want to pass in own database authentication
     @return: connection string for AWS RDS
     """
-    db_info_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "db_info.csv")
+    db_info_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../../other/" +
+        "db_info.csv")
     try:
         df = pd.read_csv(db_info_file_path)
     except FileNotFoundError:
@@ -24,12 +28,12 @@ def connection_string(
         pass
 
     if (csv_file is None and
-        env('RDS_DB_NAME') and
-        env('RDS_USERNAME') and
-        env('RDS_PASSWORD') and
-        env('RDS_HOSTNAME') and
-        env('RDS_PORT')
-    ):
+            env('RDS_DB_NAME') and
+            env('RDS_USERNAME') and
+            env('RDS_PASSWORD') and
+            env('RDS_HOSTNAME') and
+            env('RDS_PORT')
+        ):
         dsn = (f"dbname={env('RDS_DB_NAME')} "
                f"user={env('RDS_USERNAME')} "
                f"password={env('RDS_PASSWORD')} "
@@ -41,7 +45,8 @@ def connection_string(
         elif isinstance(csv_file, StringIO):
             df = pd.read_csv(csv_file)
         else:
-            raise SystemExit(f"Must either use default csv file path or pass in a csv file, got {type(csv_file)}.")
+            raise SystemExit(
+                f"Must either use default csv file path or pass in a csv file, got {type(csv_file)}.")
 
         row = df.iloc[0]
 

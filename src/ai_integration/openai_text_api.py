@@ -61,7 +61,11 @@ def main(
     @param prompts: str = list of questions for gpt
     @return: 0 if successful
     """
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
+    key_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../../other/" +
+        "openai_api_key.txt")
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
@@ -76,8 +80,16 @@ def main(
 
 
 if __name__ == "__main__":
-    input_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "input.txt")
-    output_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "output.txt")
+    input_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../IO",
+        "input.txt")
+    output_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../IO",
+        "output.txt")
 
     sys.stdin = open(input_file_path, 'r')
     sys.stdout = open(output_file_path, 'w')

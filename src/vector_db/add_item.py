@@ -22,7 +22,9 @@ def add_item(
         return False
 
     get_secret(aws_csv_file if not None else None)
-    db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
+    db_connection = psycopg2.connect(
+        connection_string(
+            database_csv_file if not None else None))
     db_connection.set_session(autocommit=True)
 
     cur = db_connection.cursor()
@@ -46,7 +48,12 @@ def add_item(
 def main(
 
 ) -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
+    key_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "api_key")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 

@@ -27,9 +27,9 @@ def test_openai_embeddings_api(
     result_vector = openai_embedding_api(text="test", api_key="foo_key")
 
     # Assert
-    assert result_vector == expected_vector[0], f"expected resulting vector to be {expected_vector} but {result_vector}"
+    assert result_vector == expected_vector[
+        0], f"expected resulting vector to be {expected_vector} but {result_vector}"
     mock_openai.assert_called_once_with(api_key="foo_key")
-
 
 
 def test_parse_menu_csv(

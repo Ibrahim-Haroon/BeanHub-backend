@@ -141,4 +141,3 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 
 INTERNAL_IPS = ['127.0.0.1']
-

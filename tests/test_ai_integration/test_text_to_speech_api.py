@@ -23,7 +23,10 @@ def test_openai_text_to_speech_api(
 
     # Act
     with patch(script_path + '.OpenAI', return_value=mock_openai.return_value):
-        openai_text_to_speech_api(text="Test text", api_key="foo_key", audio_file_path="test_audio.mp3")
+        openai_text_to_speech_api(
+            text="Test text",
+            api_key="foo_key",
+            audio_file_path="test_audio.mp3")
 
     # Assert
     mock_openai.return_value.audio.speech.create.assert_called_once_with(

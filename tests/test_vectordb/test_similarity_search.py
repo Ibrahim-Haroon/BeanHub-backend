@@ -12,7 +12,8 @@ def mock_components(
     ner_model_mock = mocker.patch('src.ai_integration.fine_tuned_nlp.NERModel')
     mock_instance = ner_model_mock.return_value
 
-    mock_instance.predict.return_value = ([{"entity": "example", "score": 0.99}], None)
+    mock_instance.predict.return_value = (
+        [{"entity": "example", "score": 0.99}], None)
 
     return {
         'ner_model_mock': ner_model_mock,
@@ -26,7 +27,9 @@ def mock_components(
 def mock_boto3_session_client(
         mocker
 ) -> MagicMock:
-    return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
+    return mocker.patch(
+        'boto3.session.Session.client',
+        return_value=MagicMock())
 
 
 def as_csv_file(
@@ -57,7 +60,8 @@ def test_similarity_search_returns_true_when_given_valid_params(
     db = as_csv_file(database_info)
 
     # Act
-    _, res = similarity_search(data, key=key, aws_csv_file=aws, database_csv_file=db)
+    _, res = similarity_search(
+        data, key=key, aws_csv_file=aws, database_csv_file=db)
 
     # Assert
     assert res is True, f"expected search to be successful but {res}"
@@ -78,7 +82,8 @@ def test_similarity_search_returns_valid_object_when_given_valid_params(
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
     # Act
-    res, _ = similarity_search(data, key=key, aws_csv_file=as_csv_file(aws_info), database_csv_file=as_csv_file(database_info))
+    res, _ = similarity_search(data, key=key, aws_csv_file=as_csv_file(
+        aws_info), database_csv_file=as_csv_file(database_info))
     res_name = str(res).split(" name='")[1].split("' id")[0]
 
     # Assert

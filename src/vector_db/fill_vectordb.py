@@ -8,7 +8,6 @@ from src.ai_integration.embeddings_api import *
 from src.vector_db.aws_database_auth import connection_string
 
 
-
 def fill_database(
         data: list[dict], key: str = None,
         aws_csv_file: StringIO = None, database_csv_file: StringIO = None
@@ -26,11 +25,14 @@ def fill_database(
     if (inputRED() != "YES"):
         return False
     else:
-        if (str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants"):
+        if (str(input("Enter the passkey to confirm: "))
+                != "beanKnowsWhatBeanWants"):
             return False
 
     get_secret(aws_csv_file if not None else None)
-    db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
+    db_connection = psycopg2.connect(
+        connection_string(
+            database_csv_file if not None else None))
     db_connection.set_session(autocommit=True)
 
     cur = db_connection.cursor()
@@ -45,7 +47,6 @@ def fill_database(
             END IF;
         END $$;
     """)
-
 
     cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
     register_vector(db_connection)
@@ -64,7 +65,8 @@ def fill_database(
     """)
 
     for item in tqdm(data):
-        num_calories = (int(item["MenuItem"]["num_calories"][0]), int(item["MenuItem"]["num_calories"][1]))
+        num_calories = (int(item["MenuItem"]["num_calories"][0]), int(
+            item["MenuItem"]["num_calories"][1]))
 
         cur.execute("""
             INSERT INTO products (item_name, item_quantity, common_allergin, num_calories, price, embeddings)
@@ -78,7 +80,7 @@ def fill_database(
 
     cur.execute("""
             CREATE INDEX ON products
-            USING ivfflat (embeddings) 
+            USING ivfflat (embeddings)
             WITH (lists = 8);
     """)
 
@@ -93,7 +95,12 @@ def fill_database(
 def main(
 
 ) -> int:
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
+    key_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 

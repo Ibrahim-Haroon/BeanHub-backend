@@ -12,17 +12,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="AudioFile",
             fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("file", models.FileField(upload_to="audios/")),
-                ("floating_point_number", models.FloatField(blank=True, null=True)),
+                ("id",
+                 models.BigAutoField(
+                     auto_created=True,
+                     primary_key=True,
+                     serialize=False,
+                     verbose_name="ID",
+                 ),
+                 ),
+                ("file",
+                 models.FileField(
+                     upload_to="audios/")),
+                ("floating_point_number",
+                 models.FloatField(
+                     blank=True,
+                     null=True)),
             ],
         ),
     ]

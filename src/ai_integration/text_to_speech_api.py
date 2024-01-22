@@ -44,7 +44,11 @@ def main(
 
 
 if __name__ == "__main__":
-    input_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "input")
+    input_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../IO",
+        "input")
 
     with open(input_file_path, 'r') as in_file:
         istream = " ".join(in_file.readlines())

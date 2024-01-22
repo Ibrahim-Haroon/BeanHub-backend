@@ -6,7 +6,9 @@ from deepgram import Deepgram
 from pydub import AudioSegment
 import speech_recognition as speech
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def google_cloud_speech_api(
@@ -41,7 +43,8 @@ def google_cloud_speech_api(
             print("Google Speech Recognition could not understand audio")
             return "None"
         except speech.RequestError as e:
-            print("Could not request results from Google Speech Recognition service; {0}".format(e))
+            print(
+                "Could not request results from Google Speech Recognition service; {0}".format(e))
 
     logging.info(f"google_cloud_speech time: {time.time() - start_time}")
 
@@ -57,7 +60,12 @@ def nova_speech_api(
     @param source: audio file path
     @return: transcription
     """
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "deepgram_api_key.txt")
+    key_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "deepgram_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
@@ -150,8 +158,10 @@ def record_until_silence(
     audio_data = []
     transcribed_audio = None
 
-    recognizer.dynamic_energy_threshold = False  # Disable dynamic energy threshold adjustment
-    recognizer.pause_threshold = 0.8  # Set the pause threshold to optimize for short utterances
+    # Disable dynamic energy threshold adjustment
+    recognizer.dynamic_energy_threshold = False
+    # Set the pause threshold to optimize for short utterances
+    recognizer.pause_threshold = 0.8
     recognizer.single_utterance = True  # Treat each call as a single short utterance
     recognizer.interim_results = True  # Get interim results for streaming
 
@@ -194,12 +204,17 @@ def save_as_mp3(
     @param output_filename: file name to save audio object under
     @return None
     """
-    audio_segment = AudioSegment(audio_data, sample_width=2, frame_rate=44100, channels=1)
+    audio_segment = AudioSegment(
+        audio_data,
+        sample_width=2,
+        frame_rate=44100,
+        channels=1)
     audio_segment.export(output_filename, format="wav")
     if print_completion:
         print(f"Audio saved as {output_filename}")
 
 
 if __name__ == "__main__":
-    _ = nova_speech_api('/Users/ibrahimharoon/Downloads/customer_order_1705338629783.wav')
+    _ = nova_speech_api(
+        '/Users/ibrahimharoon/Downloads/customer_order_1705338629783.wav')
     print(_)

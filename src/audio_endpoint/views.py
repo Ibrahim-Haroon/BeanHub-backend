@@ -20,7 +20,9 @@ from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 class AudioView(APIView):
@@ -32,7 +34,8 @@ class AudioView(APIView):
         self.r = self.connect_to_redis_conversation_history()
         self.embedding_cache = self.connect_to_redis_embedding_cache()
         self.s3 = boto3.client('s3')
-        self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
+        self.connection_pool = psycopg2.pool.SimpleConnectionPool(
+            1, 10, connection_string())
         self.response_audio = None
         get_secret()
 
@@ -42,11 +45,13 @@ class AudioView(APIView):
     ) -> redis.Redis:
         while True:
             try:
-                redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+                redis_client = redis.StrictRedis(
+                    host='localhost', port=6379, db=0)
                 logging.info("Connected to conversation history")
                 return redis_client
             except redis.exceptions.ConnectionError:
-                logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
+                logging.info(
+                    "Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
     @staticmethod
@@ -55,11 +60,13 @@ class AudioView(APIView):
     ) -> redis.Redis:
         while True:
             try:
-                redis_client = redis.StrictRedis(host='localhost', port=6379, db=1)
+                redis_client = redis.StrictRedis(
+                    host='localhost', port=6379, db=1)
                 logging.info("Connected to embedding cache")
                 return redis_client
             except redis.exceptions.ConnectionError:
-                logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
+                logging.info(
+                    "Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
     def get_transcription(
@@ -99,7 +106,10 @@ class AudioView(APIView):
         logging.info(f"audio_write time: {time.time() - audio_write_time}")
 
         upload_time = time.time()
-        self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
+        self.s3.upload_file(
+            res_audio_path,
+            self.bucket_name,
+            f"result_{unique_id}.wav")
         logging.info(f"upload_file time: {time.time() - upload_time}")
 
         return
@@ -109,20 +119,24 @@ class AudioView(APIView):
     ):
         start_time = time.time()
         if 'file_path' not in response.data:
-            return Response({'error': 'file_path not provided'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'file_path not provided'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         unique_id = uuid.uuid4()
 
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
-        order_report, model_report = make_order_report(formatted_transcription, self.connection_pool, self.embedding_cache, aws_connected=True)
+        order_report, model_report = make_order_report(
+            formatted_transcription, self.connection_pool, self.embedding_cache, aws_connected=True)
 
         model_response = conv_ai(transcription,
                                  model_report,
                                  conversation_history="")
-        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
+        response_audio_thread = threading.Thread(
+            target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
-        upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
+        upload_thread = threading.Thread(
+            target=self.upload_file, args=(unique_id,))
 
         response_data = {
             'file_path': f"result_{unique_id}.wav",
@@ -139,28 +153,35 @@ class AudioView(APIView):
             upload_thread.start()
             return Response(response_data, status=status.HTTP_200_OK)
         else:
-            return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                f"{transcription}\n{response_data}",
+                status=status.HTTP_400_BAD_REQUEST)
 
     def patch(
             self, response, format=None
     ):
         start_time = time.time()
         if 'file_path' not in response.data or 'unique_id' not in response.data:
-            return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'file_path or unique_id not provided'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         unique_id = response.data['unique_id']
 
         transcription = self.get_transcription(response.data['file_path'])
         formatted_transcription = split_order(transcription)
 
-        order_report, model_report = make_order_report(formatted_transcription, self.connection_pool, aws_connected=True)
+        order_report, model_report = make_order_report(
+            formatted_transcription, self.connection_pool, aws_connected=True)
 
-        model_response = conv_ai(transcription,
-                                 model_report,
-                                 conversation_history=self.r.get(f"conversation_history_{unique_id}"))
-        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
+        model_response = conv_ai(
+            transcription,
+            model_report,
+            conversation_history=self.r.get(f"conversation_history_{unique_id}"))
+        response_audio_thread = threading.Thread(
+            target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
-        upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
+        upload_thread = threading.Thread(
+            target=self.upload_file, args=(unique_id,))
 
         self.r.append(f"conversation_history_{unique_id}",
                       f"User: \n{transcription}\nModel: {model_response}\n")
@@ -176,4 +197,6 @@ class AudioView(APIView):
             upload_thread.start()
             return Response(response_data, status=status.HTTP_200_OK)
         else:
-            return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                f"{transcription}\n{response_data}",
+                status=status.HTTP_400_BAD_REQUEST)

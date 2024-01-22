@@ -22,7 +22,9 @@ def mock_components(
 def mock_boto3_session_client(
         mocker
 ) -> MagicMock:
-    return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
+    return mocker.patch(
+        'boto3.session.Session.client',
+        return_value=MagicMock())
 
 
 def as_csv_file(
@@ -41,7 +43,8 @@ def test_fill_database_returns_true_if_pass_auth(
         mocker, mock_components, mock_boto3_session_client
 ) -> None:
     # Arrange
-    data = [{"MenuItem": {"item_name": "TestItem", "item_quantity": "5", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
+    data = [{"MenuItem": {"item_name": "TestItem", "item_quantity": "5",
+                          "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
     key = "mock_api_key"
     database_info = [
         ["dbname", "user", "password", "host", "port"],
@@ -50,9 +53,12 @@ def test_fill_database_returns_true_if_pass_auth(
         ["secret_name", "region_name", "aws_access_key_id", "aws_secret_access_key"],
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
-
     # Act
-    result = fill_database(data, key, as_csv_file(aws_info), as_csv_file(database_info))
+    result = fill_database(
+        data,
+        key,
+        as_csv_file(aws_info),
+        as_csv_file(database_info))
 
     # Assert
     assert result is True, f"expect True but got {result}"
@@ -63,7 +69,10 @@ def test_fill_database_exits_when_wrong_passkey_given(
         mock_components
 ) -> None:
     # Arrange
-    data = [{"MenuItem": {"item_name": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
+    data = [{"MenuItem": {"item_name": "TestItem",
+                          "common_allergin": "peanuts",
+                          "num_calories": "500",
+                          "price": 10.0}}]
     key = "mock_key"
 
     # Act
@@ -73,13 +82,15 @@ def test_fill_database_exits_when_wrong_passkey_given(
     assert result is False, f"expected False but got {result}"
 
 
-
 @patch('builtins.input', return_value="NO")
 def test_fill_database_exits_when_no_entered(
         mock_components
 ) -> None:
     # Arrange
-    data = [{"MenuItem": {"item_name": "TestItem", "common_allergin": "peanuts", "num_calories": "500", "price": 10.0}}]
+    data = [{"MenuItem": {"item_name": "TestItem",
+                          "common_allergin": "peanuts",
+                          "num_calories": "500",
+                          "price": 10.0}}]
     key = "mock_key"
 
     # Act

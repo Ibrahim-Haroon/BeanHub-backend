@@ -5,7 +5,8 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("audio_endpoint", "0002_audiofile_audio_name_audiofile_created_at_and_more"),
+        ("audio_endpoint",
+         "0002_audiofile_audio_name_audiofile_created_at_and_more"),
     ]
 
     operations = [

@@ -9,7 +9,8 @@ def mock_components(
     ner_model_mock = mocker.patch('src.ai_integration.fine_tuned_nlp.NERModel')
     mock_instance = ner_model_mock.return_value
 
-    mock_instance.predict.return_value = ([{"entity": "example", "score": 0.99}], None)
+    mock_instance.predict.return_value = (
+        [{"entity": "example", "score": 0.99}], None)
 
     return {
         'ner_model_mock': ner_model_mock

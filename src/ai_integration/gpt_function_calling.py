@@ -20,17 +20,14 @@ client = OpenAI(api_key=api_key)
 def call_chat_gpt_with_functions(
         append_string
 ) -> None:
-    messages = [
-        {
-            "role": "system",
-            "content": "Perform function requests for the user",
-        },
-        {
-            "role": "user",
-            "content": "Hello, I am a user, I would like to call the hello world function passing the string 'It's "
-                       "about time!' to it.",
-        },
-    ]
+    messages = [{"role": "system",
+                 "content": "Perform function requests for the user",
+                 },
+                {"role": "user",
+                 "content": "Hello, I am a user, I would like to call the hello world function passing the string 'It's "
+                 "about time!' to it.",
+                 },
+                ]
 
     # Step 1: Call ChatGPT with the function name
     chat = client.chat.completions.create(
@@ -50,8 +47,7 @@ def call_chat_gpt_with_functions(
                     },
                     "required": ["appendString"],
                 },
-            }
-        ],
+            }],
         function_call="auto",
     )
 
@@ -63,7 +59,8 @@ def call_chat_gpt_with_functions(
         # Step 3: Use ChatGPT arguments to call your function
         if chat.choices[0].message.function_call.name == "helloWorld":
             argument_obj = chat.choices[0].message.function_call.arguments
-            argument_obj = json.loads(argument_obj)  # Convert JSON string to Python dictionary
+            # Convert JSON string to Python dictionary
+            argument_obj = json.loads(argument_obj)
             print(f"arg obj = {argument_obj}")
             content = hello_world(argument_obj["appendString"])
             messages.append(chat.choices[0].message)

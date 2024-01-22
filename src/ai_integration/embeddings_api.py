@@ -8,7 +8,6 @@ from langchain.embeddings import OpenAIEmbeddings
 load_dotenv()
 
 
-
 def openai_embedding_api(
         text: str, api_key: str = None
 ) -> []:
@@ -41,7 +40,6 @@ def get_item_quantity(
         return 0x7fffffff
     else:
         return int(item_quantity)
-
 
 
 def get_common_allergin(
@@ -88,7 +86,11 @@ def parse_menu_csv(
     """
     menu_items = []
 
-    menu_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "menu.csv")
+    menu_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../IO",
+        "menu.csv")
 
     df = pd.read_csv(menu_file_path)
 
@@ -136,5 +138,10 @@ def main(
 
 
 if __name__ == "__main__":
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
+    key_file_path = path.join(
+        path.dirname(
+            path.realpath(__file__)),
+        "../..",
+        "other",
+        "openai_api_key.txt")
     main(key_file_path)

@@ -14,26 +14,31 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="audiofile",
             name="audio_name",
-            field=models.CharField(default=django.utils.timezone.now, max_length=180),
+            field=models.CharField(
+                default=django.utils.timezone.now,
+                max_length=180),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="audiofile",
             name="created_at",
             field=models.DateTimeField(
-                auto_now_add=True, default=django.utils.timezone.now
-            ),
+                auto_now_add=True,
+                default=django.utils.timezone.now),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="audiofile",
             name="description",
-            field=models.TextField(default=django.utils.timezone.now, max_length=180),
+            field=models.TextField(
+                default=django.utils.timezone.now,
+                max_length=180),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="audiofile",
             name="updated_at",
-            field=models.DateTimeField(auto_now=True),
+            field=models.DateTimeField(
+                auto_now=True),
         ),
     ]

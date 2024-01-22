@@ -10,8 +10,10 @@ from src.vector_db.contain_item import contains_quantity
 def mock_components(
         mocker
 ) -> dict:
-    mock_db_instance = mocker.patch('src.vector_db.contain_item.psycopg2.connect')
-    mock_db_instance.return_value.cursor.return_value.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
+    mock_db_instance = mocker.patch(
+        'src.vector_db.contain_item.psycopg2.connect')
+    mock_db_instance.return_value.cursor.return_value.fetchall.return_value = [
+        (7, 'test', 6, 'test', '(60,120)', 10.0)]
     key = "foo-key"
 
     return {
@@ -27,7 +29,9 @@ def mock_components(
 def mock_boto3_session_client(
         mocker
 ) -> MagicMock:
-    return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
+    return mocker.patch(
+        'boto3.session.Session.client',
+        return_value=MagicMock())
 
 
 def as_csv_file(
@@ -55,15 +59,15 @@ def test_contains_quantity_returns_true_when_given_quantity_less_than_stock(
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
     # Act
-    res = contains_quantity(data, aws_csv_file=as_csv_file(aws_info), database_csv_file=as_csv_file(database_info))
+    res = contains_quantity(data, aws_csv_file=as_csv_file(
+        aws_info), database_csv_file=as_csv_file(database_info))
 
     # Assert
     assert res == expected_res, f"expected search to return {expected_res} but got {res}"
 
 
 def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(
-        mocker, mock_boto3_session_client, mock_components
-) -> None:
+        mocker, mock_boto3_session_client, mock_components) -> None:
     # Arrange
     data = "test"
     quantity = 1_000
@@ -79,7 +83,12 @@ def test_contains_quantity_returns_false_when_given_quantity_greater_than_stock(
     db = as_csv_file(database_info)
 
     # Act
-    res = contains_quantity(data, key="foo_key", quantity=quantity, aws_csv_file=aws, database_csv_file=db)
+    res = contains_quantity(
+        data,
+        key="foo_key",
+        quantity=quantity,
+        aws_csv_file=aws,
+        database_csv_file=db)
 
     # Assert
     assert res == expected_res, f"expected search to return {expected_res} but got {res}"

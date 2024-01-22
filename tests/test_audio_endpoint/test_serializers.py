@@ -6,4 +6,3 @@ from django.test import TestCase
 class SerializersTestCase(TestCase):
     def test_serializers(self):
         pass
-
