@@ -1,119 +1,118 @@
 BeanHub
-|—— .github
+|── .github
 |   └── workflows
 |       └── unit-test.yml
 |
-|—— other
-|   |—— api_key.txt (untracked)
-|   |—— aws-info.csv (untracked)
-|   |—— database-info.csv (untracked)
-|   |—— images
-|   |—— getting_start_images
-|        |—— activate_environment.png
-|        |—— choosing_location.png
-|        |—— chose_existing.png
-|        |—— cloning_the_repo.png
-|        |—— completing_download.png
-|        |—— default_screen.png
-|        |—— deleting_installer_after_installation.png
-|        |—— finding_in_downloads.png
-|        |—— finding_python3-11.png
-|        |—— finding_repo.png
-|        |—— getting_to_setting.png
-|        |—— my_env.png
-|        |—— pycharm_welcome.png
-|        |—— starting_installation.png
-|        |—— successfully_setup.png
-|        └── trust_project.png
-|       |—— architecture.drawio.png
-|       |—— bean_logo.png
-|       |—— coffeebeanhub_logo.png
-|       |—— mock_menu.png
-|       └── timeline.drawio.png
-|   |—— codebase_structure.txt
+|── other
+|   |── api_key.txt (untracked)
+|   |── aws-info.csv (untracked)
+|   |── database-info.csv (untracked)
+|   |── images
+|   |── getting_start_images
+|   |   |── activate_environment.png
+|   |   |── choosing_location.png
+|   |   |── chose_existing.png
+|   |   |── cloning_the_repo.png
+|   |   |── completing_download.png
+|   |   |── default_screen.png
+|   |   |── deleting_installer_after_installation.png
+|   |   |── finding_in_downloads.png
+|   |   |── finding_python3-11.png
+|   |   |── finding_repo.png
+|   |   |── getting_to_setting.png
+|   |   |── my_env.png
+|   |   |── pycharm_welcome.png
+|   |   |── starting_installation.png
+|   |   |── successfully_setup.png
+|   |   └── trust_project.png
+|   |── architecture.drawio.png
+|   |── bean_logo.png
+|   |── coffeebeanhub_logo.png
+|   |── mock_menu.png
+|   └── timeline.drawio.png
+|   |── codebase_structure.txt
 |   └── red.py
 |
-|—— scripts
+|── scripts
 |   └── ai_integration
-|       └── __init__.py
-|       |—— google_speech_api.py
-|       |—— nlp_bard.py
-|       |—— openai_embeddings_api.py
-|       |—— openai_text_api.py
+|       |── __init__.py
+|       |── google_speech_api.py
+|       |── nlp_bard.py
+|       |── openai_embeddings_api.py
+|       |── openai_text_api.py
 |       └── openai_tts_api.py
-|   |—— client
-|       |—— node_modules (library root)
-|       |—— public
-|       |   └── favicon.ico
-|       |   |—— index.html
-|       |   |—— logo192.png
-|       |   |—— logo512.png
-|       |   |—— manifest.json
+|   |── client
+|       |── node_modules (library root)
+|       |── public
+|       |   |── favicon.ico
+|       |   |── index.html
+|       |   |── logo192.png
+|       |   |── logo512.png
+|       |   |── manifest.json
 |       |   └── robots.txt
-|       |—— src
-|           └── components
-|               |—— images
-|                   └── BeanHubTextLogo.png
-|                   |—— logo.png
-|                   |—— team.jpg
-|               |—— pages
-|                   └── AboutUs.js
-|                   |—— Features.js
-|                   |—— Home.js
-|                   |—— TryBeanhub.js
-|               |—— Button.css
-|               |—— Button.js
-|               |—— CardItem.js
-|               |—— Cards.css
-|               |—— Cards.js
-|               |—— Chatbot.css
-|               |—— Chatbot.js
-|               |—— ChatContainer.js
-|               |—— Footer.css
-|               |—— Footer.js
-|               |—— HeroSection.css
-|               |—— HeroSection.js
-|               |—— Navbar.css
+|       |── src
+|           |── components
+|               |── images
+|                   |── BeanHubTextLogo.png
+|                   |── logo.png
+|                   |── team.jpg
+|               |── pages
+|                   |── AboutUs.js
+|                   |── Features.js
+|                   |── Home.js
+|                   |── TryBeanhub.js
+|               |── Button.css
+|               |── Button.js
+|               |── CardItem.js
+|               |── Cards.css
+|               |── Cards.js
+|               |── Chatbot.css
+|               |── Chatbot.js
+|               |── ChatContainer.js
+|               |── Footer.css
+|               |── Footer.js
+|               |── HeroSection.css
+|               |── HeroSection.js
+|               |── Navbar.css
 |               └── Navbar.js
-|               |—— Order.css
-|               |—— Order.js
-|               |—— SpeechInput.css
-|               |—— SpeechInput.js
-|           |—— App.css
-|           |—— App.js
-|           |—— index.css
-|           |—— index.js
+|               |── Order.css
+|               |── Order.js
+|               |── SpeechInput.css
+|               |── SpeechInput.js
+|           |── App.css
+|           |── App.js
+|           |── index.css
+|           |── index.js
 |           └── reportWebVitals.js
-|       |—— package.json
-|       |—— package-lock.json
-|   |—— IO
-|      |—— input (untracked)
+|       |── package.json
+|       |── package-lock.json
+|   |── IO
+|      |── input (untracked)
 |      |── menu.csv (untracked)
-|      |—— output (untracked)
-|   |—— server
-|      └── __init__.py
-|      |—— aws_secret.py
-|      |—— connection_string.py
-|      |—— fill_vectordb.py
+|      |── output (untracked)
+|   |── server
+|      |── __init__.py
+|      |── aws_secret.py
+|      |── connection_string.py
+|      |── fill_vectordb.py
 |      └── similarity_search.py
 |
-|—— tests
-|   |—— test_ai_integration
-|       └── __init__.py
-|       |—— empty_audio.wav
-|       |—— test_audio.wav
-|       |—— test_google_speech_api.py
-|       |—— test_openai_embeddings_api.py
-|       |—— test_openai_text_api.py
-|       |—— test_openai_tts_api.py
-|   |—— test_client
+|── tests
+|   |── test_ai_integration
+|       |── __init__.py
+|       |── empty_audio.wav
+|       |── test_audio.wav
+|       |── test_google_speech_api.py
+|       |── test_openai_embeddings_api.py
+|       |── test_openai_text_api.py
+|       └── test_openai_tts_api.py
+|   |── test_client
 |       └── replace_with_first_test.js
-|   |—— test_server
-|       └── __init__.py
-|       |—— test_aws_secret.py
-|       |—— test_connection_string.py
-|       |—— test_fill_vectordb.py
-|       └── test_similarity_search.py
-|—— .gitignore
-|—— README.md
+|   |── test_server
+|       |── __init__.py
+|       |── test_aws_secret.py
+|       |── test_connection_string.py
+|       └── test_fill_vectordb.py
+|── .gitignore
+|── README.md
 └── requirements.txt
