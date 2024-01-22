@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'src.audio_endpoint',
     'corsheaders',
     'debug_toolbar',
+    'drf_yasg',  # Added 'drf_yasg' here
 ]
 
 MIDDLEWARE = [
