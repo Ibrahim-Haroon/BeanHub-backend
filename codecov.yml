@@ -1,0 +1,3 @@
+ignore:
+  - 'src/ai_integration/bert_fine_tuning.py'
+  - 'src/ai_integration/gpt_function_calling.py'
