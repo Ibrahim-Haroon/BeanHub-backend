@@ -41,3 +41,49 @@ def test_that_ner_transformer_returns_empty_list_when_given_empty_string(
 
     # Assert
     assert prediction == expected_prediction, f"expected prediction to be {expected_prediction} but got {prediction}"
+
+
+
+
+
+def test_sweeteners_assignment():
+    # Arrange
+    order_details = {
+        'beverage': ['example_beverage'],
+        'quantities': [1],
+        'temperature': ['hot'],
+        'sweeteners': ['sugar', 'honey'],
+        'add_ons': ['cream'],
+        'sizes': ['large']
+    }
+
+    # Act
+    order_instance = Order("formatted_order", embedding_cache=None, aws_connected=False)
+    order_instance.make_beverage_order(order_details)
+
+    # Assert
+    assert order_instance.sweeteners == order_details.get('sweeteners', [])
+
+def test_make_food_order():
+    # Arrange
+    order_details = {
+        'food': ['example_food'],
+        'quantities': [2]
+    }
+
+    # Add the missing keys to match the function's requirements
+    order_details['temperature'] = ['example_temperature']
+    order_details['add_ons'] = ['example_add_on']
+    order_details['sizes'] = ['example_size']
+
+    # Act
+    order_instance = Order("formatted_order", embedding_cache=None, aws_connected=False)
+    order_instance.make_food_order(order_details)
+
+    # Assert
+    assert order_instance.item_name == order_details['food'][0]
+    
+    # Check if 'quantity' is present in the returned dictionary
+    assert 'quantity' in order_instance.make_food_order(order_details)['FoodItem']
+
+

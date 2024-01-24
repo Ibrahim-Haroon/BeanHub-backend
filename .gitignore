@@ -22,3 +22,5 @@ other/genai_models/vocab.txt
 src/ai_integration/cache_dir
 src/ai_integration/outputs
 src/ai_integration/runs
+
+htmlcov/
