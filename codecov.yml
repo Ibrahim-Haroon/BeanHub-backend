@@ -2,3 +2,6 @@ ignore:
   - 'src/ai_integration/bert_fine_tuning.py'
   - 'src/ai_integration/gpt_function_calling.py'
   - 'src/ai_integration/openai_text_api.py'
+  - 'src/audio_endpoint/serializers.py'
+  - 'src/django_beanhub/wsgi.py'
+  - 'src/django_beanhub/asgi.py'
