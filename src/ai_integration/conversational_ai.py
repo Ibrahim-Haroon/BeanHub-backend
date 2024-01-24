@@ -26,34 +26,6 @@ prompt = """
         """
 
 
-def normal_openai_call(
-        transcription: str, order_report: str, conversation_history: str,
-        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
-) -> str:
-    start_time = time.time()
-    if api_key:
-        client = OpenAI(api_key=api_key)
-    else:
-        client = OpenAI(api_key=env('OPENAI_API_KEY'))
-
-    response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": f"{role} and all previous conversation history: {conversation_history}"
-            },
-            {
-                "role": "user",
-                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"
-            }
-        ],
-        model="gpt-3.5-turbo-1106",
-    )
-
-    logging.info(f"normal_openai_call time: {time.time() - start_time}")
-    return response.choices[0].message.content
-
-
 async def get_openai_response(
         client, model, messages, api_key, max_tokens: int = 400
 ) -> dict:
