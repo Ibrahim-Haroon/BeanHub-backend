@@ -65,16 +65,17 @@ def fill_database(
 
     for item in tqdm(data):
         num_calories = (int(item["MenuItem"]["num_calories"][0]), int(item["MenuItem"]["num_calories"][1]))
+        item_name = item["MenuItem"]["item_name"].lower()
 
         cur.execute("""
             INSERT INTO products (item_name, item_quantity, common_allergin, num_calories, price, embeddings)
             VALUES (%s, %s, %s, %s, %s, %s);
-        """, (item["MenuItem"]["item_name"],
+        """, (item_name,
               item["MenuItem"]["item_quantity"],
-              item["MenuItem"]["common_allergin"],
+              item["MenuItem"]["common_allergin"].lower(),
               num_calories,
               item["MenuItem"]["price"],
-              openai_embedding_api(str(item), key if key else None)))
+              openai_embedding_api(item_name, key if key else None)))
 
     cur.execute("""
             CREATE INDEX ON products
