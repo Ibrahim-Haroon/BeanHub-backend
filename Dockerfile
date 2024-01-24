@@ -1,8 +1,6 @@
 FROM ubuntu:latest
 LABEL authors="masterbean"
 
-ENTRYPOINT ["top", "-b"]
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 
@@ -18,6 +16,8 @@ RUN apt-get update && \
         portaudio19-dev \
         flac \
         ffmpeg \
+        gcc \
+        python3.11-dev \
         python3.11-venv
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
