@@ -29,8 +29,8 @@ def root_view(request):
 
 
 urlpatterns = [
-    path(env('DJANGO_DEBUG_URL'), include("debug_toolbar.urls")),
-    path(env('DJANGO_ADMIN_URL'), admin.site.urls),
-    path(env('DJANGO_ROOT_URL'), root_view, name='root'),
-    path(env('DJANGO_AUDIO_ENDPOINT_URL'), include('src.audio_endpoint.urls')),
+    path(env('DJANGO_DEBUG_URL', default='__debug__/'), include("debug_toolbar.urls")),
+    path(env('DJANGO_ADMIN_URL', default="admin/"), admin.site.urls),
+    path(env('DJANGO_ROOT_URL', default=''), root_view, name='root'),
+    path(env('DJANGO_AUDIO_ENDPOINT_URL', default='audio_endpoint/'), include('src.audio_endpoint.urls')),
 ]

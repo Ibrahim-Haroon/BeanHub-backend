@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('DJANGO_SECRET_KEY')
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='test')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if env('DJANGO_DEBUG') == 'True' else False
@@ -62,7 +62,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_ALLOW_ALL = True if env('DJANGO_CORS_ORIGIN_ALLOW_ALL') == 'True' else False
 CORS_ALLOW_ALL_ORIGINS = True if env('DJANGO_CORS_ALLOW_ALL_ORIGINS') == 'True' else False
 
-ROOT_URLCONF = env('DJANGO_ROOT_URLCONF')
+ROOT_URLCONF = env('DJANGO_ROOT_URLCONF', default='src.django_beanhub.urls')
 
 TEMPLATES = [
     {
@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = env('DJANGO_WSGI_APPLICATION')
+WSGI_APPLICATION = env('DJANGO_WSGI_APPLICATION', default='src.django_beanhub.wsgi.application')
 
 
 # Database
@@ -116,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = env('DJANGO_LANGUAGE_CODE')
+LANGUAGE_CODE = env('DJANGO_LANGUAGE_CODE', default='en-us')
 
-TIME_ZONE = env('DJANGO_TIME_ZONE')
+TIME_ZONE = env('DJANGO_TIME_ZONE', default='UTC')
 
 USE_I18N = True if env('DJANGO_USE_I18N') == 'True' else False
 
@@ -133,11 +133,11 @@ STATIC_URL = env('DJANGO_STATIC_URL')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = env('DJANGO_DEFAULT_AUTO_FIELD')
+DEFAULT_AUTO_FIELD = env('DJANGO_DEFAULT_AUTO_FIELD', default='django.db.models.BigAutoField')
 
 
 # Tell django-storages the domain to use to refer to static files.
-DEFAULT_FILE_STORAGE = env('DJANGO_DEFAULT_FILE_STORAGE')
+DEFAULT_FILE_STORAGE = env('DJANGO_DEFAULT_FILE_STORAGE', default='django.core.files.storage.FileSystemStorage')
 
 
 INTERNAL_IPS = env('DJANGO_INTERNAL_IPS', default='127.0.0.1').strip().split(' ')
