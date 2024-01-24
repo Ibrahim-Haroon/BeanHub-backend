@@ -18,12 +18,15 @@ from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 class AudioView(APIView):
+    
     def __init__(
             self, *args, **kwargs
     ):
@@ -103,7 +106,28 @@ class AudioView(APIView):
         logging.info(f"upload_file time: {time.time() - upload_time}")
 
         return
-
+    @swagger_auto_schema(
+        operation_description=
+        """
+        Initial request from client. Expects file_path which is location of audio file (.wav) on s3 bucket. Creates a 
+        unique id to manage conversation history and as security method in PATCH for verification. Then a transcription
+        is generated and formatted. After a order report is generated along with a model report which contains more
+        details such as allergins. Finally response is created with conversational AI, converted to speech (.wav), and
+        written to s3 bucket.
+        """,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'file_path': openapi.Schema(type=openapi.TYPE_STRING, description='Path to the audio file on s3 bucket'),
+            },
+        ),
+        responses={
+            200: 'OK',
+            400: 'Bad Request',
+            404: 'Not Found',
+            500: 'Internal Error',
+        },
+    )
     def post(
             self, response, format=None
     ):
@@ -140,7 +164,28 @@ class AudioView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
-
+    @swagger_auto_schema(
+        operation_description=
+        """
+        All updates from client. Expects file_path which is location of audio file (.wav) on s3 bucket and unique id to
+        load conversation history. Then generates transcription and formatted. After a order report is generated along
+        with a model report which contains more details such as allergins. Finally response is created with
+        conversational AI (conversation history passed here), converted to speech (.wav), and written to s3 bucket.
+        """,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'file_path': openapi.Schema(type=openapi.TYPE_STRING, description='Path to the audio file on s3 bucket'),
+                'unique_id': openapi.Schema(type=openapi.TYPE_STRING, description='UUID generated from initial POST'),
+            },
+        ),
+        responses={
+            200: 'OK',
+            400: 'Bad Request',
+            404: 'Not Found',
+            500: 'Internal Error',
+        },
+    )
     def patch(
             self, response, format=None
     ):
