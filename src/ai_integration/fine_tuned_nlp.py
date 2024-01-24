@@ -50,7 +50,7 @@ class Order:
     ):
         init_time = time.time()
         self.order: str = formatted_order.casefold().strip()
-        self.allergies: list[str] = []
+        self.allergies: str = ""
         self.item_name: str = ""
         self.quantity: list[int] = []
         self.price: list[float] = []
@@ -141,7 +141,7 @@ class Order:
                 "num_calories": self.num_calories,
                 "size": self.size,
                 "cart_action": self.cart_action,
-                "allergies": self.allergies
+                "common_allergies_in_item": self.allergies
             }
         }
 
@@ -167,7 +167,7 @@ class Order:
                 "num_calories": self.num_calories,
                 "size": self.size,
                 "cart_action": self.cart_action,
-                "allergies": self.allergies
+                "common_allergies_in_item": self.allergies
             }
         }
 
@@ -186,7 +186,7 @@ class Order:
                 "price": self.price,
                 "num_calories": self.num_calories,
                 "cart_action": self.cart_action,
-                "allergies": self.allergies
+                "common_allergies_in_item": self.allergies
             }
         }
 
@@ -205,7 +205,7 @@ class Order:
                 "price": self.price,
                 "num_calories": self.num_calories,
                 "cart_action": self.cart_action,
-                "allergies": self.allergies
+                "common_allergies_in_item": self.allergies
             }
         }
 
@@ -272,24 +272,22 @@ class Order:
 
     def process_item_and_allergies(
             self
-    ):
+    ) -> None:
         item_details, _ = get_item(self.item_name,
                                    connection_pool=self.connection_pool,
                                    embedding_cache=self.embedding_cache if self.embedding_cache else None,
                                    api_key=self.key)
 
         if self.cart_action == "question":
-            self.quantity = []
             self.quantity.append(item_details[0][2])
-            self.allergies = []
-            self.allergies.append(item_details[0][3])
 
+        self.allergies = item_details[0][3]
         self.price.append(item_details[0][5])
         self.num_calories.append(item_details[0][4])
 
     def process_add_ons(
             self
-    ):
+    ) -> None:
         for add_on in self.add_ons:
             add_on_details, _ = get_item(add_on,
                                          connection_pool=self.connection_pool,
@@ -302,7 +300,7 @@ class Order:
 
     def process_sweeteners(
             self
-    ):
+    ) -> None:
         for sweetener in self.sweeteners:
             sweetener_details, _ = get_item(sweetener,
                                             connection_pool=self.connection_pool,
@@ -315,7 +313,7 @@ class Order:
 
     def process_milk(
             self
-    ):
+    ) -> None:
         if self.milk_type and self.milk_type != "regular":
             milk_details, _ = get_item(self.milk_type,
                                        connection_pool=self.connection_pool,
@@ -345,7 +343,7 @@ class Order:
         beverage_pattern = r'\b(water|tea|hot chocolate|hot cocoa|smoothie|juice|lemonade)\b'
         food_pattern = r'\b(egg and cheese croissant|egg and cheese|bacon egg and ' \
                        r'cheese|fruit|yogurt|oatmeal|croissant|hashbrown|hashbrowns)\b'
-        bakery_pattern = r'\b(bagel|pastry|cookie|brownie|cake|pie|croissant|muffin|muffins|glazed donut|glazed '\
+        bakery_pattern = r'\b(bagel|pastry|cookie|brownie|cake|pie|croissant|blueberry muffin|muffins|glazed donut|glazed '\
                          r'donuts|strawberry donut|strawberry donuts|chocolate donut|chocolate donuts|boston cream ' \
                          r'donut|glazed|glaze)\b'
         add_ons_pattern = r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel)\b'
@@ -403,7 +401,7 @@ def make_order_report(
         aws_connected: bool = False
 ) -> [list[dict]]:
     start_time = time.time()
-    order_report , model_report = [], ""
+    order_report, model_report = [], []
 
     threads = []
     for order in split_orders:
@@ -423,18 +421,22 @@ def make_order_report(
 
     logging.info(f"make order report time: {time.time() - start_time}")
 
-    return order_report, model_report
+    return order_report, ''.join(model_report)
 
 
 def process_order(
         order, order_report, model_report, connection_pool,
         embedding_cache, aws_connected
 ) -> None:
+    item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
     final_order = ((Order(order, connection_pool, embedding_cache, aws_connected).make_order()))
 
     if final_order:
-        model_report += str(final_order)
-        final_order.pop('allergies', None)
+        model_report.append(str(final_order))
+        for item_type in item_types:
+            if item_type in final_order:
+                final_order[item_type].pop('common_allergies_in_item')
+                break
         order_report.append(final_order)
 
 
@@ -446,7 +448,7 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "Does your smoothie contain nuts"
+    orders = "What are the allergies in your smoothie"
 
     split_order_time = time.time()
     details = split_order(orders)
@@ -454,10 +456,12 @@ if __name__ == "__main__":
     print(details)
 
     make_order_report_time = time.time()
-    report = make_order_report(details)
+    report, model_version = make_order_report(details)
     print(f"Make order report time: {time.time() - make_order_report_time} seconds")
 
     print(report)
+    print("***********************************************")
+    print(model_version)
 
     end_time = time.time()
     execution_time = end_time - total_time
