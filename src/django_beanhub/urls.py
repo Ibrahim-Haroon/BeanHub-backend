@@ -14,11 +14,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+from os import getenv as env
+from dotenv import load_dotenv
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
+
+load_dotenv()
 
 
 def root_view(request):
@@ -26,8 +29,8 @@ def root_view(request):
 
 
 urlpatterns = [
-    path("__debug__/", include("debug_toolbar.urls")),
-    path("admin/", admin.site.urls),
-    path("", root_view, name='root'),
-    path('audio_endpoint/', include('src.audio_endpoint.urls')),
+    path(env('DJANGO_DEBUG_URL'), include("debug_toolbar.urls")),
+    path(env('DJANGO_ADMIN_URL'), admin.site.urls),
+    path(env('DJANGO_ROOT_URL'), root_view, name='root'),
+    path(env('DJANGO_AUDIO_ENDPOINT_URL'), include('src.audio_endpoint.urls')),
 ]

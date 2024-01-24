@@ -9,13 +9,12 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-import os
 
 from pathlib import Path
-from decouple import config
-import pandas as pd
-from os import path
 from dotenv import load_dotenv
+from os import getenv as env, path
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,13 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+SECRET_KEY = env('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if env('DJANGO_DEBUG') == 'True' else False
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS').strip().split(' ')
 
 # Application definition
 
@@ -61,10 +59,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True if env('DJANGO_CORS_ORIGIN_ALLOW_ALL') == 'True' else False
+CORS_ALLOW_ALL_ORIGINS = True if env('DJANGO_CORS_ALLOW_ALL_ORIGINS') == 'True' else False
 
-ROOT_URLCONF = "src.django_beanhub.urls"
+ROOT_URLCONF = env('DJANGO_ROOT_URLCONF')
 
 TEMPLATES = [
     {
@@ -82,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "src.django_beanhub.wsgi.application"
+WSGI_APPLICATION = env('DJANGO_WSGI_APPLICATION')
 
 
 # Database
@@ -118,29 +116,29 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = env('DJANGO_LANGUAGE_CODE')
 
-TIME_ZONE = "UTC"
+TIME_ZONE = env('DJANGO_TIME_ZONE')
 
-USE_I18N = True
+USE_I18N = True if env('DJANGO_USE_I18N') == 'True' else False
 
-USE_TZ = True
+USE_TZ = True if env('DJANGO_USE_TZ') == 'True' else False
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = env('DJANGO_STATIC_URL')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = env('DJANGO_DEFAULT_AUTO_FIELD')
 
 
 # Tell django-storages the domain to use to refer to static files.
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = env('DJANGO_DEFAULT_FILE_STORAGE')
 
 
-INTERNAL_IPS = ['127.0.0.1']
+INTERNAL_IPS = env('DJANGO_INTERNAL_IPS').strip().split(' ')
 
