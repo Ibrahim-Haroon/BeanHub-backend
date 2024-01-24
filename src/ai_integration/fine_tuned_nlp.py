@@ -440,7 +440,6 @@ def process_order(
         order_report.append(final_order)
 
 
-
 if __name__ == "__main__":
     total_time = time.time()
 
@@ -460,8 +459,6 @@ if __name__ == "__main__":
     print(f"Make order report time: {time.time() - make_order_report_time} seconds")
 
     print(report)
-    print("***********************************************")
-    print(model_version)
 
     end_time = time.time()
     execution_time = end_time - total_time
