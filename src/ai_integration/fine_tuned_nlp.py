@@ -12,9 +12,13 @@ from src.vector_db.get_item import get_item
 from simpletransformers.ner import NERModel
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
+from src.django_beanhub.settings import DEBUG
+
+logging_level = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def ner_transformer(
@@ -75,15 +79,15 @@ class Order:
         if connection_pool:
             self.connection_pool = connection_pool
         else:
-            logging.info("creating new connection pool")
+            logging.debug("creating new connection pool")
             self.connection_pool = psycopg2.pool.SimpleConnectionPool(1,
                                                                       10,
                                                                       connection_string())
 
         if not aws_connected:
-            logging.info("getting aws secret")
+            logging.debug("getting aws secret")
             get_secret()
-        logging.info(f"initialising order time: {time.time() - init_time}")
+        logging.debug(f"initialising order time: {time.time() - init_time}")
 
     def make_order(
             self
@@ -267,7 +271,7 @@ class Order:
         sweeteners_thread.join()
         milk_thread.join()
 
-        logging.info(f"querying db for price, allergies, and num of calories time: {time.time() - db_time}")
+        logging.debug(f"querying db for price, allergies, and num of calories time: {time.time() - db_time}")
         return
 
     def process_item_and_allergies(
@@ -392,7 +396,7 @@ def split_order(
 
     filtered_order = [order for order in split if order not in remove_words and order != remove_chars and order]
 
-    logging.info(f"split order time: {time.time() - start_time}")
+    logging.debug(f"split order time: {time.time() - start_time}")
     return filtered_order
 
 
@@ -419,7 +423,7 @@ def make_order_report(
     for thread in threads:
         thread.join()
 
-    logging.info(f"make order report time: {time.time() - start_time}")
+    logging.debug(f"make order report time: {time.time() - start_time}")
 
     return order_report, ''.join(model_report)
 

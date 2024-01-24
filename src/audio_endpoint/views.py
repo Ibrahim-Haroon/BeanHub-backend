@@ -7,22 +7,25 @@ import logging
 import tempfile
 import threading
 import psycopg2.pool
+from drf_yasg import openapi
 from os import getenv as env
 from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from src.django_beanhub.settings import DEBUG
+from drf_yasg.utils import swagger_auto_schema
 from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+
+logging_level = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 class AudioView(APIView):
@@ -46,10 +49,10 @@ class AudioView(APIView):
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
-                logging.info("Connected to conversation history")
+                logging.debug("Connected to conversation history")
                 return redis_client
             except redis.exceptions.ConnectionError:
-                logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
+                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
     @staticmethod
@@ -59,10 +62,10 @@ class AudioView(APIView):
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=1)
-                logging.info("Connected to embedding cache")
+                logging.debug("Connected to embedding cache")
                 return redis_client
             except redis.exceptions.ConnectionError:
-                logging.info("Failed to connect to Redis. Retrying in 5 seconds...")
+                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
     def get_transcription(
@@ -72,7 +75,7 @@ class AudioView(APIView):
         try:
             start_time = time.time()
             self.s3.download_file(self.bucket_name, file_path, temp_file.name)
-            logging.info(f"download_file time: {time.time() - start_time}")
+            logging.debug(f"download_file time: {time.time() - start_time}")
 
             temp_file.close()
 
@@ -87,7 +90,7 @@ class AudioView(APIView):
     ) -> None:
         tts_time = time.time()
         self.response_audio = openai_text_to_speech_api(transcription)
-        logging.info(f"tts time: {time.time() - tts_time}")
+        logging.debug(f"tts time: {time.time() - tts_time}")
 
     def upload_file(
             self, unique_id: uuid.UUID = None
@@ -99,11 +102,11 @@ class AudioView(APIView):
                 # wait 1 ms for response_audio to be set
                 time.sleep(0.001)
             f.write(self.response_audio)
-        logging.info(f"audio_write time: {time.time() - audio_write_time}")
+        logging.debug(f"audio_write time: {time.time() - audio_write_time}")
 
         upload_time = time.time()
         self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
-        logging.info(f"upload_file time: {time.time() - upload_time}")
+        logging.debug(f"upload_file time: {time.time() - upload_time}")
 
         return
     @swagger_auto_schema(
@@ -161,7 +164,7 @@ class AudioView(APIView):
                      value=f"User: {transcription}\nModel: {model_response}\n")
 
         if response_data:
-            logging.info(f"total time: {time.time() - start_time}")
+            logging.debug(f"total time: {time.time() - start_time}")
             upload_thread.start()
             return Response(response_data, status=status.HTTP_200_OK)
         else:
@@ -220,7 +223,7 @@ class AudioView(APIView):
         }
 
         if response_data:
-            logging.info(f"total time: {time.time() - start_time}")
+            logging.debug(f"total time: {time.time() - start_time}")
             upload_thread.start()
             return Response(response_data, status=status.HTTP_200_OK)
         else:

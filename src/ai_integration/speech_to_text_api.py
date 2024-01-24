@@ -5,8 +5,10 @@ from os import path
 from deepgram import Deepgram
 from pydub import AudioSegment
 import speech_recognition as speech
+from src.django_beanhub.settings import DEBUG
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+logging_level = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def google_cloud_speech_api(
@@ -43,7 +45,7 @@ def google_cloud_speech_api(
         except speech.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
-    logging.info(f"google_cloud_speech time: {time.time() - start_time}")
+    logging.debug(f"google_cloud_speech time: {time.time() - start_time}")
 
     return transcribed_audio
 
@@ -76,7 +78,7 @@ def nova_speech_api(
         audio = {"buffer": f, "mimetype": MIMETYPE}
         response = dg.transcription.sync_prerecorded(audio, options)
 
-    logging.info(f"nova_speech time: {time.time() - start_time}")
+    logging.debug(f"nova_speech time: {time.time() - start_time}")
     return response['results']['channels'][0]['alternatives'][0]['transcript']
 
 
@@ -100,7 +102,7 @@ def whisper_speech_api(
 
     transcription = model.transcribe(source)
 
-    logging.info(f"whisper_speech time: {time.time() - start_time}")
+    logging.debug(f"whisper_speech time: {time.time() - start_time}")
     return transcription['text']
 
 
@@ -129,12 +131,12 @@ def whisper_multi_speech_api(
     mel = whisper.log_mel_spectrogram(audio).to(model.device)
 
     _, probs = model.detect_language(mel)
-    logging.info(f"Detected language: {max(probs, key=probs.get)}")
+    logging.debug(f"Detected language: {max(probs, key=probs.get)}")
 
     options = whisper.DecodingOptions()
     result = whisper.decode(model, mel, options)
 
-    logging.info(f"whisper_multi_speech time: {time.time() - start_time}")
+    logging.debug(f"whisper_multi_speech time: {time.time() - start_time}")
     return result.text
 
 
