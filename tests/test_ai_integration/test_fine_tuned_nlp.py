@@ -86,4 +86,25 @@ def test_make_food_order():
     # Check if 'quantity' is present in the returned dictionary
     assert 'quantity' in order_instance.make_food_order(order_details)['FoodItem']
 
+def test_make_bakery_order():
+    # Arrange
+    order_details = {
+        'bakery': ['example_bakery'],
+        'quantities': [3]
+    }
 
+    # Act
+    order_instance = Order("formatted_order", embedding_cache=None, aws_connected=False)
+    bakery_item = order_instance.make_bakery_order(order_details)['BakeryItem']
+
+    # Assert
+    assert order_instance.item_name == order_details['bakery'][0]
+    
+    # Check if 'quantity' is present in the returned dictionary
+    assert 'quantity' in bakery_item
+
+    # Ensure 'quantity' is a positive value
+    if isinstance(bakery_item['quantity'], list):
+        assert all(qty > 0 for qty in bakery_item['quantity'])
+    else:
+        assert isinstance(bakery_item['quantity'], int) and bakery_item['quantity'] > 0
