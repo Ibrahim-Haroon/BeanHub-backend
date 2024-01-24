@@ -6,12 +6,12 @@ import asyncio
 from os import path
 from os import getenv as env
 from dotenv import load_dotenv
-from openai import OpenAI
+from src.django_beanhub.settings import DEBUG
+
+logging_level = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv()
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 role = """
         You are a fast food drive-thru worker at Aroma Joes. Response should be formed solely based on
@@ -87,7 +87,7 @@ def conv_ai(
     start_time = time.time()
     response = loop.run_until_complete(
         conv_ai_async(transcription, order_report, conversation_history, api_key, max_tokens, print_token_usage))
-    logging.info(f"conv_ai time: {time.time() - start_time}")
+    logging.debug(f"conv_ai time: {time.time() - start_time}")
 
     loop.close()
 
