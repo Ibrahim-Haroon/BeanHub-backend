@@ -63,6 +63,12 @@ MIDDLEWARE = [
 CORS_ORIGIN_ALLOW_ALL = True if env('DJANGO_CORS_ORIGIN_ALLOW_ALL') == 'True' else False
 CORS_ALLOW_ALL_ORIGINS = True if env('DJANGO_CORS_ALLOW_ALL_ORIGINS') == 'True' else False
 
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
+    'DEFAULT_API_URL': 'http://127.0.0.1:8000/',  # Replace with your API's base URL
+}
+
 ROOT_URLCONF = env('DJANGO_ROOT_URLCONF', default='src.django_beanhub.urls')
 
 TEMPLATES = [
@@ -129,7 +135,7 @@ USE_TZ = True if env('DJANGO_USE_TZ') == 'True' else False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = env('DJANGO_STATIC_URL')
+STATIC_URL = env('DJANGO_STATIC_URL', default='')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
