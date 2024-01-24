@@ -27,7 +27,28 @@ class URLsTestCase(TestCase):
             "RDS_HOSTNAME": "test_host",
             "RDS_USERNAME": "test_user",
             "RDS_PASSWORD": "test_password",
-            "RDS_PORT": "1234"
+            "RDS_PORT": "1234",
+            "CODECOV_TOKEN": "codecov_token",
+            "DJANGO_ALLOWED_HOSTS": "test",
+            "DJANGO_SECRET_KEY": "test",
+            "DJANGO_DEBUG_URL": "test",
+            "DJANGO_ADMIN_URL": "test",
+            "DJANGO_ROOT_URL": "test",
+            "DJANGO_AUDIO_ENDPOINT_URL": "test",
+            "APP_AUDIO_ENDPOINT_URL": "test",
+            "DJANGO_DEBUG": "test",
+            "DJANGO_CORS_ORIGIN_ALLOW_ALL": "test",
+            "DJANGO_CORS_ALLOW_ALL_ORIGINS": "test",
+            "DJANGO_ROOT_URLCONF": "test",
+            "DJANGO_WSGI_APPLICATION": "test",
+            "DJANGO_LANGUAGE_CODE": "test",
+            "DJANGO_TIME_ZONE": "test",
+            "DJANGO_USE_I18N": "test",
+            "DJANGO_USE_TZ": "test",
+            "DJANGO_STATIC_URL": "test",
+            "DJANGO_DEFAULT_AUTO_FIELD": "test",
+            "DJANGO_DEFAULT_FILE_STORAGE": "test",
+            "DJANGO_INTERNAL_IPS": "test"
         })
         self.mock_env.start()
 
