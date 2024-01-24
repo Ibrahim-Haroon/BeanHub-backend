@@ -27,7 +27,7 @@ class AudioEndpointTestCase(TestCase):
             "RDS_PASSWORD": "test_password",
             "RDS_PORT": "1234",
             "CODECOV_TOKEN": "codecov_token",
-            "DJANGO_ALLOWED_HOSTS": "test",
+            "DJANGO_ALLOWED_HOSTS": "localhost 127.0.0.1 beanhub.ai",
             "DJANGO_SECRET_KEY": "test",
             "DJANGO_DEBUG_URL": "test",
             "DJANGO_ADMIN_URL": "test",
@@ -105,10 +105,10 @@ class AudioEndpointTestCase(TestCase):
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
         self.mock_db_instance.return_value.cursor.return_value = mock_cursor
 
-    def tearDown(
-            self
-    ) -> None:
-        patch.stopall()
+    # def tearDown(
+    #         self
+    # ) -> None:
+    #     patch.stopall()
 
     def test_post_without_file_path(
             self
