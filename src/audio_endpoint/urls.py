@@ -7,5 +7,5 @@ load_dotenv()
 
 
 urlpatterns = [
-    path(env('APP_AUDIO_ENDPOINT_URL'), AudioView.as_view(), name='audio-view'),
+    path(env('APP_AUDIO_ENDPOINT_URL', default=''), AudioView.as_view(), name='audio-view'),
 ]
