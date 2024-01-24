@@ -6,6 +6,7 @@ import asyncio
 from os import path
 from os import getenv as env
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -13,15 +14,44 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(message)s')
 
 role = """
-            You are a fast food drive-thru worker at Dunkin' Donuts. Based on order transcription,
-            and conversation history fill provide a response to the customer.
-           """
+        You are a fast food drive-thru worker at Aroma Joes. Response should be formed solely based on
+        on order details and conversation history. Don't add items to cart if cart action is # question #
+        Speak a little fast, since the customers are in a rush.
+       """
 
 prompt = """
         Give a response (ex. "Added to your cart! Is there anything else you'd like to order today?"
                         but make your own and somewhat personalize per order to sound normal) given transcription
                         and order details gathered from the database:
         """
+
+
+def normal_openai_call(
+        transcription: str, order_report: str, conversation_history: str,
+        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
+) -> str:
+    start_time = time.time()
+    if api_key:
+        client = OpenAI(api_key=api_key)
+    else:
+        client = OpenAI(api_key=env('OPENAI_API_KEY'))
+
+    response = client.chat.completions.create(
+        messages=[
+            {
+                "role": "system",
+                "content": f"{role} and all previous conversation history: {conversation_history}"
+            },
+            {
+                "role": "user",
+                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"
+            }
+        ],
+        model="gpt-3.5-turbo-1106",
+    )
+
+    logging.info(f"normal_openai_call time: {time.time() - start_time}")
+    return response.choices[0].message.content
 
 
 async def get_openai_response(
@@ -82,7 +112,6 @@ def conv_ai(
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
 
-
     start_time = time.time()
     response = loop.run_until_complete(
         conv_ai_async(transcription, order_report, conversation_history, api_key, max_tokens, print_token_usage))
@@ -101,16 +130,17 @@ def main(
         key = api_key.readline().strip()
 
     start_time = time.time()
-    response = conv_ai(transcription="Let me get a latte with two pumps of caramel and sugar",
-                       order_report="""
-                    [{'MenuItem': {'item_name': 'latte', 'quantity': [1, 2], 'price': [5.0, 10.0, 2.0], 
-                    'temp': 'regular', 'add_ons': ['pumps of caramel'], 'milk_type': 'regular', 'sweeteners': [
-                    'sugar'], 'num_calories': ['(120,180)', '(60,120)', '(200,500)'], 'size': 'regular', 
-                    'cart_action': 'insertion'}}]
+    response = conv_ai(
+        transcription="What are the common allergins in the smoothie",
+        order_report="""
+                   ([{'BeverageItem': {'item_name': 'smoothie', 'quantity': [1], 'price': [5.0], 'temp': 'regular',
+                    'add_ons': [], 'sweeteners': [], 'num_calories': ['(200,200)'], 'size': 'regular',
+                     'cart_action': 'insertion', 'common_allergies_in_item': ['Nuts, Dairy, Soy, Gluten']}}], '')
+
                             """,
-                       conversation_history="",
-                       api_key=key,
-                       print_token_usage=False)
+        conversation_history="",
+        api_key=key,
+        print_token_usage=True)
     print(f"conv_ai time: {time.time() - start_time}")
     print((response))
     return response
