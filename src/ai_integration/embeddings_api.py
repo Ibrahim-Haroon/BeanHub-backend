@@ -114,6 +114,36 @@ def parse_menu_csv(
     return menu_items
 
 
+def parse_deals_csv(
+
+) -> list[dict]:
+    """
+
+    @rtype: list[dict]
+    @return: JSON object of menu items
+    """
+    deal_items = []
+
+    deal_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "deals.csv")
+
+    df = pd.read_csv(deal_file_path)
+
+    for _, row in df.iterrows():
+        deal = row['deal']
+        price = row['price']
+
+        item = {
+            "Deal": {
+                "deal": deal,
+                "price": float(price)
+            }
+        }
+
+        deal_items.append((item))
+
+    return deal_items
+
+
 def main(
         key_path: str
 ) -> int:
@@ -138,3 +168,5 @@ def main(
 if __name__ == "__main__":
     key_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     main(key_file_path)
+
+
