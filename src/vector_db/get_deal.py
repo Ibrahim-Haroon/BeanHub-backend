@@ -122,7 +122,7 @@ def get_deal(
         db_connection.close()
     logging.debug("close db connection time %s:", {time.time() - close_connection_time})
 
-    return result, True
+    return result[0][0], True
 
 
 def main(
