@@ -9,7 +9,7 @@ from src.vector_db.aws_database_auth import connection_string
 
 
 
-def fill_database(
+def fill_products_table(
         data: list[dict], key: str = None,
         aws_csv_file: StringIO = None, database_csv_file: StringIO = None
 ) -> bool:
@@ -99,7 +99,7 @@ def main(
         key = api_key.readline().strip()
 
     menu = parse_menu_csv()
-    fill_database(menu, key)
+    fill_products_table(menu, key)
 
     return 0
 
