@@ -20,23 +20,34 @@ logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(mes
 
 
 def get_deal(
-        product_name: str, api_key: str = None, connection_pool=None, embedding_cache: redis.Redis = None,
+        order: dict, api_key: str = None, connection_pool=None, embedding_cache: redis.Redis = None,
         database_csv_file: StringIO = None
 ) -> str and bool:
     """
 
     @rtype: str + bool
-    @param product_name: customers order ex. "Can I have a black coffee with 3 shots of cream."
+    @param order: order_report from fine_tuned_nlp.py
     @param api_key: OpenAI auth
     @param connection_pool:
     @param embedding_cache: cache to reduce number of calls to OpenAI API
     @param database_csv_file: AWS RDS and PostgreSQL auth
     @return: Closest embedding along with a boolean flag to mark successful retrieval
     """
-    if not product_name:
+    if not order:
         return None, False
 
     return_queue = queue.Queue()
+
+    item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
+    product_name = None
+
+    for item_type in item_types:
+        if order.get(item_type) and order[item_type]['cart_action'] != 'question':
+            product_name = order[item_type]['item_name']
+            break
+
+    if not product_name:
+        return None, False
 
     def get_embedding() -> None:
         openai_embedding_time = time.time()
