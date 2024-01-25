@@ -14,9 +14,10 @@ logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(mes
 load_dotenv()
 
 role = """
-        You are a fast food drive-thru worker at Aroma Joes. Response should be formed solely based on
-        on order details and conversation history. Don't add items to cart if cart action is # question #
-        Speak a little fast, since the customers are in a rush.
+        You are a fast food drive-thru worker at Aroma Joe's. Response should be formed solely based on
+        on order details and conversation history. Don't add items to cart if cart action is # question # and check all
+        attributes of the order details, such as quantity, price, num_calories, allergies, etc. If the customer asks a
+        question
        """
 
 prompt = """
@@ -43,7 +44,7 @@ async def get_openai_response(
 
 
 async def conv_ai_async(
-        transcription: str, order_report: str, conversation_history: str,
+        transcription: str, order_report: str, conversation_history: str, deal: str = None,
         api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
 ) -> str:
     if api_key is None:
@@ -56,7 +57,11 @@ async def conv_ai_async(
             [
                 {
                     "role": "system",
-                    "content": f"{role} and all previous conversation history: {conversation_history}"
+                    "content": (f"{role} and all previous conversation history: {conversation_history}."
+                                if deal is None
+                                else f"{role} and all previous conversation history: {conversation_history} "
+                                     f"and remember to upsell customer with deal: {deal}"
+                                ),
                 },
                 {
                     "role": "user",
@@ -75,7 +80,7 @@ async def conv_ai_async(
 
 
 def conv_ai(
-        transcription: str, order_report: str, conversation_history: str,
+        transcription: str, order_report: str, conversation_history: str, deal: str = None,
         api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
 ) -> str:
     loop = asyncio.new_event_loop()
@@ -86,7 +91,7 @@ def conv_ai(
 
     start_time = time.time()
     response = loop.run_until_complete(
-        conv_ai_async(transcription, order_report, conversation_history, api_key, max_tokens, print_token_usage))
+        conv_ai_async(transcription, order_report, conversation_history, deal, api_key, max_tokens, print_token_usage))
     logging.debug(f"conv_ai time: {time.time() - start_time}")
 
     loop.close()
