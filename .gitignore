@@ -24,3 +24,4 @@ src/ai_integration/outputs
 src/ai_integration/runs
 
 htmlcov/
+.coverage
