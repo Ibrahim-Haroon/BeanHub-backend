@@ -12,6 +12,7 @@ from os import getenv as env
 from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.views import APIView
+from src.vector_db.get_deal import get_deal
 from rest_framework.response import Response
 from src.django_beanhub.settings import DEBUG
 from drf_yasg.utils import swagger_auto_schema
@@ -29,7 +30,7 @@ load_dotenv()
 
 
 class AudioView(APIView):
-    
+
     def __init__(
             self, *args, **kwargs
     ):
@@ -109,6 +110,7 @@ class AudioView(APIView):
         logging.debug(f"upload_file time: {time.time() - upload_time}")
 
         return
+
     @swagger_auto_schema(
         operation_description=
         """
@@ -121,7 +123,8 @@ class AudioView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'file_path': openapi.Schema(type=openapi.TYPE_STRING, description='Path to the audio file on s3 bucket'),
+                'file_path': openapi.Schema(type=openapi.TYPE_STRING,
+                                            description='Path to the audio file on s3 bucket'),
             },
         ),
         responses={
@@ -146,9 +149,13 @@ class AudioView(APIView):
                                                        self.connection_pool,
                                                        self.embedding_cache,
                                                        aws_connected=True)
+        deal, _ = get_deal(order_report[0],
+                           connection_pool=self.connection_pool,
+                           embedding_cache=self.embedding_cache)
         model_response = conv_ai(transcription,
                                  model_report,
-                                 conversation_history="")
+                                 conversation_history="",
+                                 deal=deal if deal else None)
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
         upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
@@ -169,6 +176,7 @@ class AudioView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
+
     @swagger_auto_schema(
         operation_description=
         """
@@ -180,7 +188,8 @@ class AudioView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'file_path': openapi.Schema(type=openapi.TYPE_STRING, description='Path to the audio file on s3 bucket'),
+                'file_path': openapi.Schema(type=openapi.TYPE_STRING,
+                                            description='Path to the audio file on s3 bucket'),
                 'unique_id': openapi.Schema(type=openapi.TYPE_STRING, description='UUID generated from initial POST'),
             },
         ),
@@ -207,9 +216,13 @@ class AudioView(APIView):
                                                        self.connection_pool,
                                                        self.embedding_cache,
                                                        aws_connected=True)
+        deal, _ = get_deal(order_report[0],
+                           connection_pool=self.connection_pool,
+                           embedding_cache=self.embedding_cache)
         model_response = conv_ai(transcription,
                                  model_report,
-                                 conversation_history=self.r.get(f"conversation_history_{unique_id}"))
+                                 conversation_history=self.r.get(f"conversation_history_{unique_id}"),
+                                 deal=deal if deal else None)
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
         upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
