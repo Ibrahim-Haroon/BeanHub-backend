@@ -97,7 +97,7 @@ class URLsTestCase(TestCase):
         }
 
         mock_response = MagicMock()
-        mock_response.content = b'RIFF$\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x00\x04\x00\x00\x00\x04\x00\x00\x01\x00\x08\x00data\x00\x00\x00\x00'
+        mock_response.content = b'mock response'
         self.mock_openai_tts = patch(text_to_speech_path + '.OpenAI')
         self.mock_openai_tts = self.mock_openai_tts.start()
         self.mock_openai_tts.return_value.audio.speech.create.return_value = mock_response
