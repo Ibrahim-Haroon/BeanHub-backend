@@ -403,7 +403,7 @@ def split_order(
 def make_order_report(
         split_orders: list[str], connection_pool=None, embedding_cache: Redis = None,
         aws_connected: bool = False
-) -> [list[dict]]:
+) -> [list[dict]] and str:
     start_time = time.time()
     order_report, model_report = [], []
 
