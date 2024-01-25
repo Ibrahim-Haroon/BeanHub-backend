@@ -84,8 +84,11 @@ class URLsTestCase(TestCase):
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
 
-        self.mock_openai_embedding_api = patch('src.vector_db.get_item.openai_embedding_api')
-        self.mock_openai_embedding_api.start().return_value = [0.1, 0.2, 0.3]
+        self.mock_openai_embedding_api_get_item = patch('src.vector_db.get_item.openai_embedding_api')
+        self.mock_openai_embedding_api_get_item.start().return_value = [0.1, 0.2, 0.3]
+
+        self.mock_openai_embedding_api_get_deal = patch('src.vector_db.get_deal.openai_embedding_api')
+        self.mock_openai_embedding_api_get_deal.start().return_value = [0.1, 0.2, 0.3]
 
         self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
         self.mock_openai_response.start().return_value.json.return_value = {
