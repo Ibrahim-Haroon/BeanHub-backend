@@ -17,7 +17,6 @@ from src.django_beanhub.settings import DEBUG
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
 
-
 load_dotenv()
 
 
@@ -328,7 +327,6 @@ class Order:
             if self.cart_action == "question":
                 self.quantity.append(milk_details[0][2])
 
-
     def parse_order(
             self
     ) -> dict:
@@ -343,18 +341,19 @@ class Order:
                             r'packets)\b'
         flavor_pattern = r'\b(?!pump of )' + r'\b(?!pumps of )' + r'\b(vanilla|caramel|cinnamon|pumpkin ' \
                                                                   r'spice|peppermint|chocolate|white ' \
-                         r'chocolate chip|raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)\b'
+                                                                  r'chocolate chip|raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)\b'
         beverage_pattern = r'\b(water|tea|hot chocolate|hot cocoa|smoothie|juice|lemonade)\b'
         food_pattern = r'\b(egg and cheese croissant|egg and cheese|bacon egg and ' \
                        r'cheese|fruit|yogurt|oatmeal|croissant|hashbrown|hashbrowns)\b'
-        bakery_pattern = r'\b(bagel|pastry|cookie|brownie|cake|pie|croissant|blueberry muffin|muffins|glazed donut|glazed '\
+        bakery_pattern = r'\b(bagel|pastry|cookie|brownie|cake|pie|croissant|blueberry muffin|muffins|glazed donut|glazed ' \
                          r'donuts|strawberry donut|strawberry donuts|chocolate donut|chocolate donuts|boston cream ' \
                          r'donut|glazed|glaze)\b'
         add_ons_pattern = r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel)\b'
         milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
                        r'milk|coconut milk|half and half|heavy cream|cream|creams)\b'
-        common_allergies = (r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose'
-                            r'|sesame|mustard|sulfates)\b')
+        common_allergies = r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose' \
+                           r'|sesame|mustard|sulfates)\b'
+        agent_request = r'\b(agent|employee|worker|staff member|manager|owner|workman|hired help)\b'
 
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
@@ -368,6 +367,7 @@ class Order:
         add_ons = re.findall(add_ons_pattern, self.order)
         milk_types = re.findall(milk_pattern, self.order)
         allergies = re.findall(common_allergies, self.order)
+        agent_requests = re.findall(agent_request, self.order)
 
         return {
             "sizes": sizes,
@@ -381,7 +381,8 @@ class Order:
             "bakery": bakeries,
             "add_ons": add_ons,
             "milk_type": milk_types,
-            "allergies": allergies
+            "allergies": allergies,
+            "agent": agent_requests
         }
 
 
@@ -442,6 +443,13 @@ def process_order(
                 final_order[item_type].pop('common_allergies_in_item')
                 break
         order_report.append(final_order)
+
+
+def human_requested(
+        transcription: str
+) -> bool:
+    pattern = r'\b(human|person|employee|worker|staff member|manager|owner|workman|hired help)\b'
+    return bool(re.search(pattern, transcription))
 
 
 if __name__ == "__main__":
