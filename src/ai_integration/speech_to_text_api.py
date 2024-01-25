@@ -1,4 +1,6 @@
+import io
 import time
+import wave
 import logging
 import whisper
 from os import path
@@ -185,6 +187,24 @@ def record_until_silence(
     return audio_data, transcribed_audio
 
 
+def return_as_wav(
+        audio_data: bytes
+) -> bytes:
+    buffer = io.BytesIO()
+
+    with wave.open(buffer, 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(44100)
+        wf.writeframes(audio_data)
+
+    wav_data = buffer.getvalue()
+
+    buffer.close()
+
+    return wav_data
+
+
 def save_as_mp3(
         audio_data: bytes, output_filename: str = "recorded_audio.wav",
         print_completion: bool = False
@@ -203,5 +223,5 @@ def save_as_mp3(
 
 
 if __name__ == "__main__":
-    _ = nova_speech_api('/Users/ibrahimharoon/Downloads/customer_order_1705338629783.wav')
-    print(_)
+    audio, _ = record_until_silence()
+    save_as_mp3(audio)
