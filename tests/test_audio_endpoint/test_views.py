@@ -1,5 +1,8 @@
+import logging
 import os
 import json
+from unittest import mock
+
 import pytest
 from typing import Final
 from django.test import TestCase
@@ -138,6 +141,70 @@ class AudioEndpointTestCase(TestCase):
 
         # Act
         response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('file_path' in response.json())
+        self.assertTrue('unique_id' in response.json())
+        self.assertTrue('json_order' in response.json())
+
+    def test_post_with_human_requested_transcription(
+            self
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav"
+        }
+
+        with patch('src.audio_endpoint.views.human_requested', return_value=True), \
+                patch('src.audio_endpoint.views.record_until_silence',
+                      return_value=("mocked_human_response", "mocked_response_transcription")), \
+                patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data'):
+            # Act
+            response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('file_path' in response.json())
+        self.assertTrue('unique_id' in response.json())
+        self.assertTrue('json_order' in response.json())
+
+    def test_post_with_model_response(
+            self
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav"
+        }
+
+        with patch('src.audio_endpoint.views.human_requested', return_value=False), \
+                patch('src.audio_endpoint.views.split_order', return_value="formatted_transcription"), \
+                patch('src.audio_endpoint.views.make_order_report', return_value=("order_report", "model_report")), \
+                patch('src.audio_endpoint.views.conv_ai', return_value="mocked_model_response"):
+            # Act
+            response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('file_path' in response.json())
+        self.assertTrue('unique_id' in response.json())
+        self.assertTrue('json_order' in response.json())
+
+    def test_patch_with_human_requested_transcription(
+            self
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav",
+            "unique_id": "test"
+        }
+
+        with patch('src.audio_endpoint.views.human_requested', return_value=True), \
+                patch('src.audio_endpoint.views.record_until_silence',
+                      return_value=("mocked_human_response", "mocked_response_transcription")), \
+                patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data'):
+            # Act
+            response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
