@@ -28,7 +28,7 @@ prompt = """
 
 
 async def get_openai_response(
-        client, model, messages, api_key, max_tokens: int = 400
+        client, model, messages, api_key, max_tokens: int | None = None
 ) -> dict:
     try:
         response = await client.post(
@@ -44,8 +44,8 @@ async def get_openai_response(
 
 
 async def conv_ai_async(
-        transcription: str, order_report: str, conversation_history: str, deal: str = None,
-        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
+        transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
+        api_key: str = None, max_tokens: int | None = None, print_token_usage: bool = False
 ) -> str:
     if api_key is None:
         api_key = os.environ['OPENAI_API_KEY']
@@ -80,8 +80,8 @@ async def conv_ai_async(
 
 
 def conv_ai(
-        transcription: str, order_report: str, conversation_history: str, deal: str = None,
-        api_key: str = None, max_tokens: int = 400, print_token_usage: bool = False
+        transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
+        api_key: str = None, max_tokens: int = 200, print_token_usage: bool = False
 ) -> str:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -108,7 +108,7 @@ def main(
 
     start_time = time.time()
     response = conv_ai(
-        transcription="What are the common allergins in the smoothie",
+        transcription="Can I get one smoothie please",
         order_report="""
                    ([{'BeverageItem': {'item_name': 'smoothie', 'quantity': [1], 'price': [5.0], 'temp': 'regular',
                     'add_ons': [], 'sweeteners': [], 'num_calories': ['(200,200)'], 'size': 'regular',
@@ -116,10 +116,11 @@ def main(
 
                             """,
         conversation_history="",
+        deal="Get a glazed donut for $1 more",
         api_key=key,
         print_token_usage=True)
     print(f"conv_ai time: {time.time() - start_time}")
-    print((response))
+    print(response)
     return response
 
 
