@@ -111,12 +111,12 @@ class AudioEndpointTestCase(TestCase):
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
         self.mock_db_instance.return_value.cursor.return_value = mock_cursor
 
-    # def tearDown(
-    #         self
-    # ) -> None:
-    #     patch.stopall()
+    def tearDown(
+            self
+    ) -> None:
+        patch.stopall()
 
-    def test_post_without_file_path(
+    def test_post_without_file_path_throws_400_error_code(
             self
     ) -> None:
         # Arrange
@@ -131,7 +131,7 @@ class AudioEndpointTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
-    def test_post_with_file_path(
+    def test_post_with_file_path_returns_correct_response(
             self
     ) -> None:
         # Arrange
@@ -148,20 +148,22 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    def test_post_with_human_requested_transcription(
-            self
+    @patch('src.audio_endpoint.views.human_requested', return_value=True)
+    @patch('src.audio_endpoint.views.record_until_silence', return_value=(
+            "mocked_human_response",
+            "mocked_response_transcription")
+           )
+    @patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data')
+    def test_post_returns_correct_response__when_human_requested_function_returns_true(
+            self, mock_return_as_wav, mock_record_until_silence, mock_human_requested
     ) -> None:
         # Arrange
         data = {
             "file_path": "test.wav"
         }
 
-        with patch('src.audio_endpoint.views.human_requested', return_value=True), \
-                patch('src.audio_endpoint.views.record_until_silence',
-                      return_value=("mocked_human_response", "mocked_response_transcription")), \
-                patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data'):
-            # Act
-            response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+        # Act
+        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
@@ -169,20 +171,17 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    def test_post_with_model_response(
-            self
+    @patch('src.audio_endpoint.views.human_requested', return_value=False)
+    def test_post_returns_correct_response_when_human_requested_returns_false(
+            self, mock_human_requested
     ) -> None:
         # Arrange
         data = {
             "file_path": "test.wav"
         }
 
-        with patch('src.audio_endpoint.views.human_requested', return_value=False), \
-                patch('src.audio_endpoint.views.split_order', return_value="formatted_transcription"), \
-                patch('src.audio_endpoint.views.make_order_report', return_value=("order_report", "model_report")), \
-                patch('src.audio_endpoint.views.conv_ai', return_value="mocked_model_response"):
-            # Act
-            response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+        # Act
+        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
@@ -190,8 +189,14 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    def test_patch_with_human_requested_transcription(
-            self
+    @patch('src.audio_endpoint.views.human_requested', return_value=True)
+    @patch('src.audio_endpoint.views.record_until_silence', return_value=(
+            "mocked_human_response",
+            "mocked_response_transcription")
+           )
+    @patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data')
+    def test_patch_sends_correct_response_when_human_requested_function_returns_true(
+            self, mock_return_as_wav, mock_record_until_silence, mock_human_requested
     ) -> None:
         # Arrange
         data = {
@@ -199,12 +204,8 @@ class AudioEndpointTestCase(TestCase):
             "unique_id": "test"
         }
 
-        with patch('src.audio_endpoint.views.human_requested', return_value=True), \
-                patch('src.audio_endpoint.views.record_until_silence',
-                      return_value=("mocked_human_response", "mocked_response_transcription")), \
-                patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data'):
-            # Act
-            response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+        # Act
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
@@ -212,7 +213,26 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    def test_patch_catches_request_without_file_path_and_throws_correct_error(
+    @patch('src.audio_endpoint.views.human_requested', return_value=False)
+    def test_patch_sends_correct_response_when_human_requested_returns_false(
+            self, mock_human_requested
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav",
+            "unique_id": "test"
+        }
+
+        # Act
+        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('file_path' in response.json())
+        self.assertTrue('unique_id' in response.json())
+        self.assertTrue('json_order' in response.json())
+
+    def test_patch_catches_request_without_file_path_and_throws_400_error(
             self
     ) -> None:
         # Arrange
@@ -227,7 +247,7 @@ class AudioEndpointTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path or unique_id not provided'})
 
-    def test_patch_catches_request_without_unique_id_and_throws_correct_error(
+    def test_patch_catches_request_without_unique_id_and_throws_400_error(
             self
     ) -> None:
         # Arrange
