@@ -1,6 +1,6 @@
 import pytest
 from mock import patch, MagicMock
-from src.vector_db.fill_vectordb import fill_database
+from src.vector_db.fill_products_table import fill_database
 from io import StringIO
 import csv
 
