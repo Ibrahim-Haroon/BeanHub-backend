@@ -33,7 +33,9 @@ WORKDIR /BeanHub-backend
 # Copy files from local to container
 COPY .github /BeanHub-backend/.github
 COPY appendonlydir /BeanHub-backend/appendonlydir
-COPY other /BeanHub-backend/other
+COPY other/images /BeanHub-backend/other/images
+COPY other/*.py /BeanHub-backend/other/
+COPY other/genai_models/train%20your%20own%20model /BeanHub-backend/other/genai_models/train%20your%20own%20model
 COPY src /BeanHub-backend/src
 COPY tests /BeanHub-backend/tests
 COPY .env /BeanHub-backend/.env
