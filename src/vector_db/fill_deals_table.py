@@ -53,8 +53,8 @@ def fill_deals_table(
         deal = item["Deal"]["deal"].lower()
 
         cur.execute("""
-            INSERT INTO products (deal, price, embeddings)
-            VALUES (%s, %s, %s, %s, %s, %s);
+            INSERT INTO deals (deal, price, embeddings)
+            VALUES (%s, %s, %s);
         """, (deal,
               item["Deal"]["price"],
               openai_embedding_api(deal, key if key else None)))
@@ -65,7 +65,7 @@ def fill_deals_table(
             WITH (lists = 8);
     """)
 
-    cur.execute("VACUUM ANALYZE products;")
+    cur.execute("VACUUM ANALYZE deals;")
 
     cur.close()
     db_connection.close()
