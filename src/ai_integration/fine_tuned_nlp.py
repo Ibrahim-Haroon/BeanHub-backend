@@ -448,7 +448,7 @@ def process_order(
 def human_requested(
         transcription: str
 ) -> bool:
-    pattern = r'\b(human|person|employee|worker|staff member|manager|owner|workman|hired help)\b'
+    pattern = r'\b(human|person|employee|worker|staff member|manager|owner|workman|hired help|crew member|agent)\b'
     return bool(re.search(pattern, transcription))
 
 
