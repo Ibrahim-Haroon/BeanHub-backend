@@ -33,9 +33,7 @@ WORKDIR /BeanHub-backend
 # Copy files from local to container
 COPY .github /BeanHub-backend/.github
 COPY appendonlydir /BeanHub-backend/appendonlydir
-COPY other/images /BeanHub-backend/other/images
-COPY other/*.py /BeanHub-backend/other/
-COPY other/genai_models/train%20your%20own%20model /BeanHub-backend/other/genai_models/train%20your%20own%20model
+COPY other /BeanHub-backend/other
 COPY src /BeanHub-backend/src
 COPY tests /BeanHub-backend/tests
 COPY .env /BeanHub-backend/.env
@@ -48,5 +46,6 @@ COPY README.md /BeanHub-backend/README.md
 COPY redis.conf /BeanHub-backend/redis.conf
 COPY requirements.txt /BeanHub-backend/requirements.txt
 
-CMD ["/bin/bash"]
+RUN python -m venv myenv
 
+CMD ["/bin/bash"]
