@@ -1,8 +1,8 @@
-import pytest
-from mock import patch, MagicMock
-from src.vector_db.fill_products_table import fill_database
-from io import StringIO
 import csv
+import pytest
+from io import StringIO
+from mock import patch, MagicMock
+from src.vector_db.fill_products_table import fill_products_table
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def as_csv_file(
 
 
 @patch('builtins.input', side_effect=["YES", "beanKnowsWhatBeanWants"])
-def test_fill_database_returns_true_if_pass_auth(
+def test_fill_products_table_returns_true_if_pass_auth(
         mocker, mock_components, mock_boto3_session_client
 ) -> None:
     # Arrange
@@ -61,14 +61,14 @@ def test_fill_database_returns_true_if_pass_auth(
         ["name", "us-east-1", "aws_access_key_id", "aws_secret_access_key"]]
 
     # Act
-    result = fill_database(data, key, as_csv_file(aws_info), as_csv_file(database_info))
+    result = fill_products_table(data, key, as_csv_file(aws_info), as_csv_file(database_info))
 
     # Assert
     assert result is True, f"expect True but got {result}"
 
 
 @patch('builtins.input', side_effect=["YES", "wrong_passkey"])
-def test_fill_database_exits_when_wrong_passkey_given(
+def test_fill_products_table_exits_when_wrong_passkey_given(
         mock_components
 ) -> None:
     # Arrange
@@ -85,14 +85,14 @@ def test_fill_database_exits_when_wrong_passkey_given(
     key = "mock_key"
 
     # Act
-    result = fill_database(data, key)
+    result = fill_products_table(data, key)
 
     # Assert
     assert result is False, f"expected False but got {result}"
 
 
 @patch('builtins.input', return_value="NO")
-def test_fill_database_exits_when_no_entered(
+def test_fill_products_table_exits_when_no_entered(
         mock_components
 ) -> None:
     # Arrange
@@ -110,7 +110,7 @@ def test_fill_database_exits_when_no_entered(
     key = "mock_key"
 
     # Act
-    result = fill_database(data, key)
+    result = fill_products_table(data, key)
 
     # Assert
     assert result is False, f"expect False but got {result}"
