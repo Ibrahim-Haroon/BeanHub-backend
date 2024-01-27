@@ -228,6 +228,6 @@ def save_as_mp3(
         print(f"Audio saved as {output_filename}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     audio, _ = record_until_silence()
     save_as_mp3(audio)

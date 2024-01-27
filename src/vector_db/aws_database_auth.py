@@ -54,5 +54,5 @@ def connection_string(
     return dsn
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(connection_string())

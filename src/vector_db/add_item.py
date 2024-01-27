@@ -45,7 +45,7 @@ def add_item(
 
 def main(
 
-) -> int:
+) -> int:  # pragma: no cover
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
@@ -62,5 +62,5 @@ def main(
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

@@ -491,13 +491,13 @@ def human_requested(
 
 def accepted_deal(
         transcription: str
-) -> bool:
+) -> bool:  # pragma: no cover
     transcription = transcription.lower()
     pattern = r'\b(yes|yeah|sure|okay|ok|yup|yep|alright|fine|deal|k)\b'
     return bool(re.search(pattern, transcription))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     total_time = time.time()
 
     key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")

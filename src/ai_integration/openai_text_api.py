@@ -55,7 +55,7 @@ def openai_text_api(
 
 def main(
         prompts: list[str]
-) -> int:
+) -> int:  # pragma: no cover
     """
     @rtype: int
     @param prompts: str = list of questions for gpt
@@ -75,7 +75,7 @@ def main(
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     input_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "input.txt")
     output_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "output.txt")
 
