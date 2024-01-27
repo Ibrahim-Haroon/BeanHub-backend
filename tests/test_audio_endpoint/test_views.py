@@ -53,10 +53,21 @@ class AudioEndpointTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_redis_session = patch('src.audio_endpoint.views.redis.StrictRedis')
-        mock_redis_session_client = self.mock_redis_session.start().return_value
-        mock_redis_session_client.setex = MagicMock()
-        mock_redis_session_client.append = MagicMock()
+        self.mock_redis_temp_conv_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
+        mock_redis_conv_session_client = self.mock_redis_temp_conv_cache.start().return_value
+        mock_redis_conv_session_client.setex = MagicMock()
+        mock_redis_conv_session_client.append = MagicMock()
+
+        self.mock_redis_temp_deal_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
+        mock_redis_deal_session_client = self.mock_redis_temp_deal_cache.start().return_value
+        mock_redis_deal_session_client.setex = MagicMock()
+        mock_redis_deal_session_client.append = MagicMock()
+        mock_deal_data = {
+            "deal_offered": 'foo',
+            "deal_object": {}
+        }
+        mock_redis_deal_session_client.get = MagicMock(return_value=mock_deal_data)
+        mock_redis_deal_session_client.flushdb = MagicMock()
 
         self.mock_redis_embedding_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
         mock_redis_embedding_client = self.mock_redis_embedding_cache.start().return_value
@@ -96,8 +107,6 @@ class AudioEndpointTestCase(TestCase):
             }
         }
         mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
-
-
 
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
@@ -287,6 +296,44 @@ class AudioEndpointTestCase(TestCase):
             "file_path": "test.wav",
             "unique_id": "test"
         }
+
+        # Act
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('file_path' in response.json())
+        self.assertTrue('unique_id' in response.json())
+        self.assertTrue('json_order' in response.json())
+
+
+    @patch(speech_to_text_path + '.Deepgram.transcription.sync_prerecorded')
+    @patch('src.audio_endpoint.views.AudioView.formatted_deal')
+    def test_patch_sends_successful_response_when_user_accepts_deal(
+            self, mock_sync_prerecorded, mock_formatted_deal
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav",
+            "unique_id": "test",
+        }
+
+        # Mock the sync_prerecorded method directly
+        mock_sync_prerecorded.return_value = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'yes'}]}
+                ]
+            }
+        }
+        mock_formatted_deal.return_value = [{
+            'BakeryItem': {
+                'item_name': 'test',
+                'item_quantity': 6,
+                'common_allergin': 'test',
+                'price': 10.0
+            }
+        }]
 
         # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
