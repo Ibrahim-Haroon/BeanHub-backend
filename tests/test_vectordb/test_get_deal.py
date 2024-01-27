@@ -60,7 +60,7 @@ def test_get_item_returns_true_when_successfully_found_closest_item_and_adds_to_
     db = as_csv_file(database_info)
 
     # Act
-    _, res = get_deal(order=order, api_key="test_key", embedding_cache=mock_redis, database_csv_file=db)
+    _, _, res = get_deal(order=order, api_key="test_key", embedding_cache=mock_redis, database_csv_file=db)
 
     # Assert
     assert res is True, f"expected search to be successful but {res}"
@@ -82,7 +82,7 @@ def test_get_item_returns_true_when_successfully_found_closest_item_without_bein
     db = as_csv_file(database_info)
 
     # Act
-    _, res = get_deal(order=order, api_key="test_key", embedding_cache=None, database_csv_file=db)
+    _, _, res = get_deal(order=order, api_key="test_key", embedding_cache=None, database_csv_file=db)
 
     # Assert
     assert res is True, f"expected search to be successful but {res}"
@@ -95,7 +95,7 @@ def test_get_item_returns_false_when_given_invalid_params(
     data = None
 
     # Act
-    _, res = get_deal(data)
+    _, _, res = get_deal(data)
 
     # Assert
     assert res is False, f"expected search to be unsuccessful but {res}"
