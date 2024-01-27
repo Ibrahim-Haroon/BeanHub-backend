@@ -166,7 +166,7 @@ def record_until_silence(
     recognizer.interim_results = True  # Get interim results for streaming
 
     with speech.Microphone() as audio_source:
-        print("zRecording... Speak until you want to stop.")
+        print("Recording... Speak until you want to stop.")
 
         # Adjust for ambient noise
         recognizer.adjust_for_ambient_noise(audio_source, duration=1)
