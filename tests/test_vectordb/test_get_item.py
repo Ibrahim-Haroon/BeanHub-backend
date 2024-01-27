@@ -47,6 +47,25 @@ def test_get_item_returns_true_when_successfully_found_closest_item_and_adds_to_
     mock_redis = mocker.Mock()
     mock_redis.set = MagicMock()
     mock_redis.exists = MagicMock(return_value=False)
+    database_info = [
+        ["dbname", "user", "password", "host", "port"],
+        ["mydb", "myuser", "mypassword", "localhost", "port"]]
+    db = as_csv_file(database_info)
+
+    # Act
+    _, res = get_item(order="test", api_key="test_key", embedding_cache=mock_redis, database_csv_file=db)
+
+    # Assert
+    assert res is True, f"expected search to be successful but {res}"
+
+
+def test_get_item_returns_true_when_successfully_found_closest_item_and_cache_hit(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
+    # Arrange
+    mock_redis = mocker.Mock()
+    mock_redis.set = MagicMock()
+    mock_redis.exists = MagicMock(return_value=True)
     mock_redis.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
     database_info = [
         ["dbname", "user", "password", "host", "port"],
