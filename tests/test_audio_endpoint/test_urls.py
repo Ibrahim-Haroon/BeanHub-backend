@@ -55,10 +55,21 @@ class URLsTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_redis_session = patch('src.audio_endpoint.views.redis.StrictRedis')
-        mock_redis_session_client = self.mock_redis_session.start().return_value
-        mock_redis_session_client.setex = MagicMock()
-        mock_redis_session_client.append = MagicMock()
+        self.mock_redis_temp_conv_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
+        mock_redis_conv_session_client = self.mock_redis_temp_conv_cache.start().return_value
+        mock_redis_conv_session_client.setex = MagicMock()
+        mock_redis_conv_session_client.append = MagicMock()
+
+        self.mock_redis_temp_deal_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
+        mock_redis_deal_session_client = self.mock_redis_temp_deal_cache.start().return_value
+        mock_redis_deal_session_client.setex = MagicMock()
+        mock_redis_deal_session_client.append = MagicMock()
+        mock_deal_data = {
+            "deal_offered": 'foo',
+            "deal_object": {}
+        }
+        mock_redis_deal_session_client.get = MagicMock(return_value=mock_deal_data)
+        mock_redis_deal_session_client.flushdb = MagicMock()
 
         self.mock_redis_embedding_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
         mock_redis_embedding_client = self.mock_redis_embedding_cache.start().return_value
