@@ -61,11 +61,11 @@ jobs:
       run: |
         pylint src/ || true
 
-    - name: Test with pytest
-      run: python -m coverage run --branch --append --source=src -m pytest
-
     - name: Test with Django
       run: python -m coverage run --branch --source=src manage.py test
+
+    - name: Test with pytest
+      run: python -m coverage run --branch --append --source=src -m pytest
 
     - name: Coverage report
       run: coverage report -m
