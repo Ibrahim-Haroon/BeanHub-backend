@@ -37,13 +37,13 @@ def openai_text_to_speech_api(
 
 def main(
         text: str
-) -> int:
+) -> int:  # pragma: no cover
     openai_text_to_speech_api(text)
 
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     input_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "input")
 
     with open(input_file_path, 'r') as in_file:

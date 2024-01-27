@@ -84,7 +84,7 @@ def fill_deals_table(
 
 def main(
 
-) -> int:
+) -> int:  # pragma: no cover
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
@@ -95,7 +95,7 @@ def main(
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
 
 '''

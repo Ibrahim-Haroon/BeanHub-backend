@@ -70,5 +70,5 @@ def get_secret(
     return get_secret_value_response['SecretString']
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     get_secret()

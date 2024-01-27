@@ -101,7 +101,7 @@ def conv_ai(
 
 def main(
 
-) -> str:
+) -> str:  # pragma: no cover
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
@@ -124,5 +124,5 @@ def main(
     return response
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
