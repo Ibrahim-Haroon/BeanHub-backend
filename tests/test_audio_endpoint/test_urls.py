@@ -35,8 +35,6 @@ class URLsTestCase(TestCase):
             "DJANGO_ADMIN_URL": "test",
             "DJANGO_ROOT_URL": "test",
             "DJANGO_AUDIO_ENDPOINT_URL": "test",
-            "DJANGO_SWAGGER_URL": "test",
-            "DJANGO_REDOC_URL": "test",
             "APP_AUDIO_ENDPOINT_URL": "test",
             "DJANGO_DEBUG": "test",
             "DJANGO_CORS_ORIGIN_ALLOW_ALL": "test",
