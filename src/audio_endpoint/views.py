@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 import time
@@ -20,8 +21,8 @@ from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
-from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested
 from src.ai_integration.speech_to_text_api import nova_speech_api, record_until_silence, return_as_wav
+from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -36,7 +37,8 @@ class AudioView(APIView):
     ):
         super().__init__(**kwargs)
         self.bucket_name = env('S3_BUCKET_NAME')
-        self.r = self.connect_to_redis_conversation_history()
+        self.conversation_cache = self.connect_to_redis_temp_conversation_cache()
+        self.deal_cache = self.connect_to_redis_temp_deal_cache()
         self.embedding_cache = self.connect_to_redis_embedding_cache()
         self.s3 = boto3.client('s3')
         self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
@@ -44,7 +46,7 @@ class AudioView(APIView):
         get_secret()
 
     @staticmethod
-    def connect_to_redis_conversation_history(
+    def connect_to_redis_temp_conversation_cache(
 
     ) -> redis.Redis:
         while True:
@@ -68,6 +70,38 @@ class AudioView(APIView):
             except redis.exceptions.ConnectionError:
                 logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
+
+    @staticmethod
+    def connect_to_redis_temp_deal_cache(
+
+    ) -> redis.Redis:
+        while True:
+            try:
+                redis_client = redis.StrictRedis(host='localhost', port=6379, db=2)
+                logging.debug("Connected to deal history")
+                return redis_client
+            except redis.exceptions.ConnectionError:
+                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
+                time.sleep(5)
+
+
+    @staticmethod
+    def formatted_deal(
+            order: dict
+    ) -> list[dict] | Response:
+        item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
+        common_attributes = {'size': 'regular', 'temp': 'regular', 'add_ons': [], 'sweeteners': []}
+
+        for item_type in ['CoffeeItem', 'BeverageItem']:
+            if item_type in order:
+                order[item_type].update(common_attributes)
+                if item_type == 'CoffeeItem':
+                    order[item_type]['milk_type'] = 'regular'
+
+        if not any(item_type in order for item_type in item_types):
+            return Response({'error': 'item_type not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return [order]
 
     def get_transcription(
             self, file_path: str
@@ -136,40 +170,19 @@ class AudioView(APIView):
     )
     def post(
             self, response, format=None
-    ):
+    ) -> Response:
         start_time = time.time()
         if 'file_path' not in response.data:
             return Response({'error': 'file_path not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
+        deal_object, deal_offered = None, False
         unique_id = uuid.uuid4()
         transcription = self.get_transcription(response.data['file_path'])
 
         if human_requested(transcription):
-            human_response, response_transcription = record_until_silence()
-            self.response_audio = return_as_wav(human_response)
-            self.upload_file(unique_id)
-            order_report = {
-                'human_response': True
-            }
-            conv_history = f"User: {transcription}\nHuman: {response_transcription}\n"
+            order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
-            formatted_transcription = split_order(transcription)
-            order_report, model_report = make_order_report(formatted_transcription,
-                                                           self.connection_pool,
-                                                           self.embedding_cache,
-                                                           aws_connected=True)
-            deal = None
-            if len(order_report) > 0:
-                deal, _ = get_deal(order_report[0],
-                                   connection_pool=self.connection_pool,
-                                   embedding_cache=self.embedding_cache)
-            model_response = conv_ai(transcription,
-                                     model_report,
-                                     conversation_history="",
-                                     deal=deal)
-            conv_history = f"User: {transcription}\nModel: {model_response}\n"
-            response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
-            response_audio_thread.start()
+            order_report, conv_history, deal_object, deal_offered = self.post_normal_request(unique_id, transcription)
 
         upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
 
@@ -179,9 +192,17 @@ class AudioView(APIView):
             'json_order': order_report
         }
 
-        self.r.setex(name=f"conversation_history_{unique_id}",
-                     time=600,  # 10 minutes
-                     value=conv_history)
+        self.conversation_cache.setex(name=f"conversation_history_{unique_id}",
+                                      time=600,  # 10 minutes
+                                      value=conv_history)
+
+        deal_data = {
+            "deal_offered": deal_offered,
+            "deal_object": deal_object
+        }
+        self.deal_cache.setex(name=f"deal_history_{unique_id}",
+                              time=600,  # 10 minutes
+                              value=json.dumps(deal_data))
 
         if response_data:
             logging.debug(f"total time: {time.time() - start_time}")
@@ -215,7 +236,7 @@ class AudioView(APIView):
     )
     def patch(
             self, response, format=None
-    ):
+    ) -> Response:
         start_time = time.time()
         if 'file_path' not in response.data or 'unique_id' not in response.data:
             return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -223,38 +244,18 @@ class AudioView(APIView):
         unique_id = response.data['unique_id']
         transcription = self.get_transcription(response.data['file_path'])
 
-        if human_requested(transcription):
-            human_response, response_transcription = record_until_silence()
-            self.response_audio = return_as_wav(human_response)
-            self.upload_file(unique_id)
-            order_report = {
-                'human_response': True
-            }
-            conv_history = f"User: {transcription}\nHuman: {response_transcription}\n"
+        if accepted_deal(transcription):
+            order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
+        elif human_requested(transcription):
+            order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
-            formatted_transcription = split_order(transcription)
-
-            order_report, model_report = make_order_report(formatted_transcription,
-                                                           self.connection_pool,
-                                                           self.embedding_cache,
-                                                           aws_connected=True)
-            deal = None
-            if len(order_report) > 0:
-                deal, _ = get_deal(order_report[0],
-                                   connection_pool=self.connection_pool,
-                                   embedding_cache=self.embedding_cache)
-            model_response = conv_ai(transcription,
-                                     model_report,
-                                     conversation_history=self.r.get(f"conversation_history_{unique_id}"),
-                                     deal=deal)
-            conv_history = f"User: {transcription}\nModel: {model_response}\n"
-            response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
-            response_audio_thread.start()
+            order_report, conv_history = self.patch_normal_request(unique_id, transcription)
 
         upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
 
-        self.r.append(f"conversation_history_{unique_id}",
-                      conv_history)
+        self.conversation_cache.append(key=f"conversation_history_{unique_id}",
+                                       value=conv_history)
+
         response_data = {
             'file_path': f"result_{unique_id}.wav",
             'unique_id': str(unique_id),
@@ -267,3 +268,93 @@ class AudioView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
+
+    def post_normal_request(
+            self, unique_id: uuid.UUID, transcription: str
+    ) -> dict and str and dict and bool:
+        deal_object = None
+        formatted_transcription = split_order(transcription)
+        order_report, model_report = make_order_report(formatted_transcription,
+                                                       self.connection_pool,
+                                                       self.embedding_cache,
+                                                       aws_connected=True)
+        deal = None
+        if len(order_report) > 0:
+            deal, deal_object, _ = get_deal(order_report[0],
+                                            connection_pool=self.connection_pool,
+                                            embedding_cache=self.embedding_cache)
+        model_response = conv_ai(transcription,
+                                 model_report,
+                                 conversation_history="",
+                                 deal=deal)
+        conv_history = f"User: {transcription}\nModel: {model_response}\n"
+        deal_offered = True
+        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
+        response_audio_thread.start()
+
+        return order_report, conv_history, deal_object, deal_offered
+
+    def transfer_control_to_human(
+            self, unique_id: uuid.UUID, transcription: str
+    ) -> dict and str:
+        human_response, response_transcription = record_until_silence()
+        self.response_audio = return_as_wav(human_response)
+        self.upload_file(unique_id)
+        order_report = {
+            'human_response': True
+        }
+
+        return order_report, f"User: {transcription}\nHuman: {response_transcription}\n"
+
+    def process_and_format_deal(
+            self, unique_id: uuid.UUID, transcription: str
+    ) -> dict and str:
+        deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
+        deal_data = json.loads(deal_data)
+        order_report = self.formatted_deal(deal_data['deal_object'])
+
+        model_response = conv_ai(transcription,
+                                 str(order_report),
+                                 conversation_history=str(self.conversation_cache.get(
+                                     f"conversation_history_{unique_id}")) + "CUSTOMER JUST ACCEPTED DEAL")
+        conv_history = f"User: {transcription}\nModel: {model_response}\n"
+        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
+        response_audio_thread.start()
+
+        # empty cache since deal is accepted
+        self.deal_cache.flushdb()
+        return order_report, conv_history
+
+    def patch_normal_request(
+            self, unique_id: uuid.UUID, transcription: str
+    ) -> dict and str:
+        deal_object, deal_offered = None, False
+        formatted_transcription = split_order(transcription)
+
+        order_report, model_report = make_order_report(formatted_transcription,
+                                                       self.connection_pool,
+                                                       self.embedding_cache,
+                                                       aws_connected=True)
+        deal = None
+        if len(order_report) > 0:
+            deal, deal_object, _ = get_deal(order_report[0],
+                                            connection_pool=self.connection_pool,
+                                            embedding_cache=self.embedding_cache)
+        model_response = conv_ai(transcription,
+                                 model_report,
+                                 conversation_history=self.conversation_cache.get(
+                                     f"conversation_history_{unique_id}"),
+                                 deal=deal)
+        deal_offered = True
+        conv_history = f"User: {transcription}\nModel: {model_response}\n"
+        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
+        response_audio_thread.start()
+
+        deal_data = {
+            "deal_offered": deal_offered,
+            "deal_object": deal_object
+        }
+        self.deal_cache.append(key=f"deal_history_{unique_id}",
+                               value=json.dumps(deal_data))
+
+        return order_report, conv_history
