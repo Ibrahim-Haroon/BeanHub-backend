@@ -21,7 +21,7 @@ from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested
-from src.ai_integration.speech_to_text_api import nova_speech_api, record_until_silence, return_as_wav
+from src.ai_integration.speech_to_text_api import google_cloud_speech_api, record_until_silence, return_as_wav
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -80,7 +80,7 @@ class AudioView(APIView):
 
             temp_file.close()
 
-            transcription = nova_speech_api(temp_file.name)
+            transcription = google_cloud_speech_api(temp_file.name)
         finally:
             os.remove(temp_file.name)
 
