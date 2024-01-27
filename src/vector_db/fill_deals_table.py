@@ -35,7 +35,6 @@ def fill_deals_table(
 
     cur = db_connection.cursor()
 
-
     cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
     register_vector(db_connection)
     cur.execute("DROP TABLE IF EXISTS deals;")
@@ -44,20 +43,30 @@ def fill_deals_table(
             CREATE TABLE IF NOT EXISTS deals (
                 id SERIAL PRIMARY KEY,
                 deal text,
+                item_type text,
+                item_name text,
+                item_quantity int,
                 price double precision,
+                related_items text,
                 embeddings vector(1536)
             );
     """)
 
     for item in tqdm(deals):
         deal = item["Deal"]["deal"].lower()
+        item_name = item["Deal"]["item_name"].lower()
+        related_items = item["Deal"]["related_items"].lower()
 
         cur.execute("""
-            INSERT INTO deals (deal, price, embeddings)
-            VALUES (%s, %s, %s);
+            INSERT INTO deals (deal, item_type, item_name, item_quantity, price, related_items, embeddings)
+            VALUES (%s, %s, %s, %s, %s, %s, %s);
         """, (deal,
+              item["Deal"]["item_type"],
+              item_name,
+              item["Deal"]["item_quantity"],
               item["Deal"]["price"],
-              openai_embedding_api(deal, key if key else None)))
+              related_items,
+              openai_embedding_api(related_items, key if key else None)))
 
     cur.execute("""
             CREATE INDEX ON deals
@@ -89,10 +98,9 @@ def main(
 if __name__ == "__main__":
     main()
 
-
 '''
 If ever want to use hnsw instead of ivfflat, use this code:
-    cur.execute(f"""CREATE INDEX ON embeddings
+    cur.execute(f"""CREATE INDEX ON deals
                     USING hnsw(embedding vector_cosine_ops)
                     WITH (m=2, ef_construction=5);
     """)
