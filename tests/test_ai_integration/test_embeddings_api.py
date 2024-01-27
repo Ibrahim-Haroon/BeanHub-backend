@@ -1,8 +1,8 @@
-from src.ai_integration.embeddings_api import *
 import pytest
-from mock import MagicMock, patch
+import pandas as pd
 from typing import Final
-
+from mock import MagicMock, patch
+from src.ai_integration.embeddings_api import openai_embedding_api, parse_menu_csv, parse_deals_csv
 
 script_path: Final[str] = 'src.ai_integration.embeddings_api'
 
@@ -54,6 +54,37 @@ def test_parse_menu_csv(
 
     # Act
     result = parse_menu_csv()
+
+    # Assert
+    assert result == expected_output, f"expected parsing to be {expected_output} but got {result}"
+
+
+def test_parse_deal_csv(
+        mocker
+) -> None:
+    # Arrange
+    expected_output = [{
+            "Deal": {
+                "deal": "test_deal",
+                "item_name": "test_item_name",
+                "item_quantity": 2,
+                "item_type": "test_item_type",
+                "price": 0.0,
+                "related_items": "test_related_items"
+            }
+        }]
+
+    mocker.patch('pandas.read_csv', return_value=pd.DataFrame({
+        "deal": ["test_deal"],
+        "item_name": ["test_item_name"],
+        'quantity': [2],
+        "item_type": ["test_item_type"],
+        "price": [0.0],
+        "related_items": ["test_related_items"]})
+    )
+
+    # Act
+    result = parse_deals_csv()
 
     # Assert
     assert result == expected_output, f"expected parsing to be {expected_output} but got {result}"
