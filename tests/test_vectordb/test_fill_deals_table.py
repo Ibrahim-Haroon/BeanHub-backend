@@ -45,7 +45,11 @@ def test_fill_deals_table_returns_true_if_pass_auth(
         {
             "Deal": {
                 "deal": "TestItem",
-                "price": 10.0
+                "item_type": "TestType",
+                "item_name": "TestName",
+                "item_quantity": 1,
+                "price": 10.0,
+                "related_items": "TestRelated"
             }
         }
     ]
@@ -73,7 +77,11 @@ def test_fill_deals_table_exits_when_wrong_passkey_given(
         {
             "Deal": {
                 "deal": "TestItem",
-                "price": 10.0
+                "item_type": "TestType",
+                "item_name": "TestName",
+                "item_quantity": 1,
+                "price": 10.0,
+                "related_items": "TestRelated"
             }
         }
     ]
@@ -93,10 +101,13 @@ def test_fill_deals_table_exits_when_no_entered(
     # Arrange
     data = [
         {
-            "Deal":
-            {
+            "Deal": {
                 "deal": "TestItem",
-                "price": 10.0
+                "item_type": "TestType",
+                "item_name": "TestName",
+                "item_quantity": 1,
+                "price": 10.0,
+                "related_items": "TestRelated"
             }
         }
     ]
