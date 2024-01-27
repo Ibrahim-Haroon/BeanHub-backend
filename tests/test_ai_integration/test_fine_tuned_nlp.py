@@ -1,5 +1,7 @@
+import os
 import pytest
-from src.ai_integration.fine_tuned_nlp import *
+from mock import MagicMock
+from src.ai_integration.fine_tuned_nlp import ner_transformer, Order
 
 
 @pytest.fixture
@@ -14,6 +16,24 @@ def mock_components(
     return {
         'ner_model_mock': ner_model_mock
     }
+
+
+@pytest.fixture
+def mock_database_components(
+        mocker
+) -> dict:
+    return {
+        'register_vector': mocker.patch('pgvector.psycopg2.register_vector'),
+        'connect': mocker.patch('src.vector_db.get_item.psycopg2.connect'),
+        'input': mocker.patch('builtins.input'),
+    }
+
+
+@pytest.fixture
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
+    return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
 def test_that_ner_transformer_returns_prediction_given_string(
@@ -44,9 +64,21 @@ def test_that_ner_transformer_returns_empty_list_when_given_empty_string(
 
 
 def test_sweeteners_assignment(
-
+    mocker, mock_boto3_session_client, mock_database_components
 ) -> None:
     # Arrange
+    mocker.patch.dict(os.environ, {
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "AWS_DEFAULT_REGION": "test_region",
+        "SECRET_NAME": "test_secret_name",
+        "RDS_DB_NAME": "test_db_name",
+        "RDS_USERNAME": "test_username",
+        "RDS_PASSWORD": "test_password",
+        "RDS_HOSTNAME": "test_hostname",
+        "RDS_PORT": "test_port"
+    })
+
     order_details = {
         'beverage': ['example_beverage'],
         'quantities': [1],
@@ -65,9 +97,21 @@ def test_sweeteners_assignment(
 
 
 def test_make_food_order(
-
+    mocker, mock_boto3_session_client, mock_database_components
 ) -> None:
     # Arrange
+    mocker.patch.dict(os.environ, {
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "AWS_DEFAULT_REGION": "test_region",
+        "SECRET_NAME": "test_secret_name",
+        "RDS_DB_NAME": "test_db_name",
+        "RDS_USERNAME": "test_username",
+        "RDS_PASSWORD": "test_password",
+        "RDS_HOSTNAME": "test_hostname",
+        "RDS_PORT": "test_port"
+    })
+
     order_details = {
         'food': ['example_food'],
         'quantities': [2]
@@ -86,9 +130,21 @@ def test_make_food_order(
 
 
 def test_make_bakery_order(
-
+    mocker, mock_boto3_session_client, mock_database_components
 ) -> None:
     # Arrange
+    mocker.patch.dict(os.environ, {
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "AWS_DEFAULT_REGION": "test_region",
+        "SECRET_NAME": "test_secret_name",
+        "RDS_DB_NAME": "test_db_name",
+        "RDS_USERNAME": "test_username",
+        "RDS_PASSWORD": "test_password",
+        "RDS_HOSTNAME": "test_hostname",
+        "RDS_PORT": "test_port"
+    })
+
     order_details = {
         'bakery': ['example_bakery'],
         'quantities': [3]
@@ -108,9 +164,21 @@ def test_make_bakery_order(
 
 
 def test_make_coffee_order(
-
+    mocker, mock_boto3_session_client, mock_database_components
 ) -> None:
     # Arrange
+    mocker.patch.dict(os.environ, {
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "AWS_DEFAULT_REGION": "test_region",
+        "SECRET_NAME": "test_secret_name",
+        "RDS_DB_NAME": "test_db_name",
+        "RDS_USERNAME": "test_username",
+        "RDS_PASSWORD": "test_password",
+        "RDS_HOSTNAME": "test_hostname",
+        "RDS_PORT": "test_port"
+    })
+
     order_details = {
         'coffee': ['example_coffee'],
         'quantities': [2],
@@ -140,9 +208,21 @@ def test_make_coffee_order(
 
 
 def test_get_order_type(
-
+    mocker, mock_boto3_session_client, mock_database_components
 ) -> None:
     # Arrange
+    mocker.patch.dict(os.environ, {
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "AWS_DEFAULT_REGION": "test_region",
+        "SECRET_NAME": "test_secret_name",
+        "RDS_DB_NAME": "test_db_name",
+        "RDS_USERNAME": "test_username",
+        "RDS_PASSWORD": "test_password",
+        "RDS_HOSTNAME": "test_hostname",
+        "RDS_PORT": "test_port"
+    })
+
     order_instance = Order("formatted_order", embedding_cache=None, aws_connected=False)
     order_instance.order_text = "I want a coffee with sugar."
 
