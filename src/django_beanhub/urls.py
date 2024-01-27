@@ -49,6 +49,6 @@ urlpatterns = [
     path(env('DJANGO_ADMIN_URL', default="admin/"), admin.site.urls),
     path(env('DJANGO_ROOT_URL', default=''), root_view, name='root'),
     path(env('DJANGO_AUDIO_ENDPOINT_URL', default='audio_endpoint/'), include('src.audio_endpoint.urls')),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path(env('DJANGO_SWAGGER_URL', default='swagger/'), schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path(env('DJANGO_REDOC_URL', default='redoc/'), schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
