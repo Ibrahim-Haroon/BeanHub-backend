@@ -13,7 +13,7 @@ Hot chocolate,5,"Lactose, Soy, Nuts, Gluten, Cocoa, Additives",150-250,5.00
 Apple Juice,4,N/A,200,2.00
 Orange Juice,0,N/A,200,2.00
 Cranberry Juice,0,N/A,200,2.00
-Stawberry Smoothie,3,"Nuts, Dairy, Soy, Gluten",200,5.00
+Strawberry Smoothie,3,"Nuts, Dairy, Soy, Gluten",200,5.00
 Mango Smoothie,3,"Nuts, Dairy, Soy, Gluten",300,5.00
 Pineapple Smoothie,3,"Nuts, Dairy, Soy, Gluten",300,5.00
 Pina Colada Smoothie,3,"Nuts, Dairy, Soy, Gluten",300,5.00
@@ -24,9 +24,6 @@ Mango tea,4,"Mango, Tea Leaves, Additives/ Flavorings",0-100,5.00
 Jasmine,1,"Pollen, Jasmine, Tea Leaves",0-50,7.00
 Green tea,2,"Pollen, Additives",2-50,10.00
 Mint tea,6,"Pollen, Additives",2-50,10.00
-Non-Coffee + Dessert (Combo 1),N/A,None,500-1200,8.00
-Coffee + Dessert (Combo 2),N/A,None,250-700,9.00
-Tea + Dessert (Combo 3),N/A,None,200-700,11.00
 Hazelnut,60,Nut,30,0.50
 Whipped Cream,60,None,50,0.50
 Pump of Caramel,60,None,60,0.50
@@ -36,10 +33,6 @@ Cream,60,Lactose,20,0.00
 Pump of Sugar,60,None,30,0.00
 Pump of Vanilla,60,None,20,.50
 Pump of Butter Pecan,60,None,20,.50
-Cookie n cream,6,"Milk, Egg and Soy",80,1.50
-Cookie pieces,6,"Milk, Egg and Soy",80,1.50
-Twix,2,"Milk, Egg and Soy",70,1.50
-Snickers,7,"Nuts, Milk, Egg and Soy",70,1.50
 Grilled Cheese,2,"Lactose, Gluten",300,3.00
 Egg and Cheese on a Croissant,7,"Lactose, Gluten",360,5.00
 Bacon Egg and Cheese on an English Muffin,6,"Lactose, Gluten",420,6.00
@@ -48,10 +41,10 @@ Hashbrowns,22,Gluten,150,2.50
 Spinach and Feta Wrap,4,"Gluten, Lactose, Soy",250,600
 Hummus Chicken Salad Wrap,0,"Gluten, Chicken, Soy",250,5.50
 Turkey Classic Wrap, 1,"Gluten, Turkey, Soy",290,6.50
-Plain Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
-Everything Bagel w/ cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
-Sesame Bagel w/ cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
-Cinnamon Raisin Bagel w/ cream cheese,4,"Gluten, Lactose",430,4.50
+Plain Bagel with cream cheese,4,"Gluten, Lactose",430,4.50
+Everything Bagel with cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
+Sesame Bagel with cream cheese,4,"Gluten, Lactose, Seeds",430,4.50
+Cinnamon Raisin Bagel with cream cheese,4,"Gluten, Lactose",430,4.50
 Glazed Donut,12,"Lactose, Gluten, Eggs, Soy",200-500,2.00
 Strawberry Donut,9,"Lactose, Gluten, Eggs, Soy",200-500,2.00
 Chocolate Donut,4,"Lactose, Gluten, Eggs, Soy, Cocoa",200-500,2.00
