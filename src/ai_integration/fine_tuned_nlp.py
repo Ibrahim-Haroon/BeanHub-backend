@@ -332,35 +332,65 @@ class Order:
     ) -> dict:
 
         size_pattern = r'\b(small|medium|large|extra large)\b'
-        coffee_pattern = r'\b(coffee|black coffee|coffees|cappuccino|latte|americano|macchiato '
-        r'|frappuccino|chai latte\b' \
-        r'(?<!shot of)espresso)\b'
-        quantity_pattern = r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen' \
-                           r'|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|dozen|a lot|a|an)\b'
+
+        coffee_pattern = (
+            r'\b(coffee|black coffee|coffees|cappuccino|latte|americano|macchiato|'
+            r'frappuccino|chai latte|espresso)(?<!shot of)\b'
+        )
+
+        quantity_pattern = (
+            r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|'
+            r'fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|'
+            r'dozen|a lot|a|an)\b'
+        )
+
         temperature_pattern = r'\b(hot|cold|iced|warm|room temp|extra hot)\b'
-        sweetener_pattern = r'\b(sugar|honey|liquid cane sugar|sweet n low|equal|butter pecan|pink velvet|sugar ' \
-                            r'packets)\b'
-        flavor_pattern = r'\b(?!pump of )' + r'\b(?!pumps of )' + r'\b(vanilla|caramel|cinnamon|pumpkin ' \
-                                                                  r'spice|peppermint|chocolate|white ' \
-                                                                  r'raspberry|blueberry|strawberry|peach|mango| '
-        r'banana|coconut|almond|hazelnut)\b'
-        beverage_pattern = r'\b(water|tea|hot chocolate|hot cocoa|apple juice|orange juice|cranberry juice|mango '
-        r'smoothie|pineapple smoothie|pina colada smoothie|vanilla ' \
-        r'milkshake|lemon tea|mango tea|jasmine|green tea|green tea|mint tea)\b'
-        food_pattern = r'\b(egg and cheese croissant|egg and cheese|bacon egg and ' \
-                       r'cheese|fruit|yogurt|oatmeal|egg and cheese on croissant|hashbrown|hashbrowns|hash brown|hash' \
-                       r'browns|grilled cheese|grilled cheeses|egg and cheese on english muffine|plain bagel\ ' \
-                       r'everything bagel|sesame bagel|asiago bagel)\b'
-        bakery_pattern = r'\b(brownie|blueberry muffin|blueberry muffins|glazed donut|glazed ' \
-                         r'donuts|strawberry donut|strawberry donuts|chocolate donut|chocolate donuts| ' \
-                         r'donut|glazed|glaze|boston cream donuts|boston cream|lemon cake|chocolate chip muffin)\b'
-        add_ons_pattern = (r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel|pump of vanilla|pumps '
-                           r'of vanilla|pump of sugar|pumps of sugar|liquid sugar|pump of of butter pecan|pumps of of'
-                           r' butter pecan)\b')
-        milk_pattern = r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|soy ' \
-                       r'milk|coconut milk|half and half|heavy cream|cream|creams)\b'
-        common_allergies = r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|lactose' \
-                           r'|sesame|mustard|sulfates)\b'
+
+        sweetener_pattern = (
+            r'\b(sugar|honey|liquid cane sugar|sweet n low|equal|butter pecan|pink velvet|'
+            r'sugar packets)\b'
+        )
+
+        flavor_pattern = (
+            r'\b(?!pump of |pumps of )'
+            r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
+            r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)\b'
+        )
+
+        beverage_pattern = (
+            r'\b(water|tea|hot chocolate|hot cocoa|apple juice|orange juice|cranberry juice|'
+            r'mango smoothie|pineapple smoothie|pina colada smoothie|vanilla milkshake|'
+            r'lemon tea|mango tea|jasmine|green tea|mint tea)\b'
+        )
+
+        food_pattern = (
+            r'\b(egg and cheese croissant|egg and cheese|bacon egg and cheese|fruit|yogurt|'
+            r'oatmeal|egg and cheese on croissant|hashbrown|hashbrowns|hash brown|hash '
+            r'browns|grilled cheese|egg and cheese on english muffin|plain bagel|'
+            r'everything bagel|sesame bagel|asiago bagel)\b'
+        )
+
+        bakery_pattern = (
+            r'\b(brownie|blueberry muffin|blueberry muffins|glazed donut|glazed donuts|'
+            r'strawberry donut|strawberry donuts|chocolate donut|chocolate donuts|donut|'
+            r'boston cream donuts|boston cream|lemon cake|chocolate chip muffin)\b'
+        )
+
+        add_ons_pattern = (
+            r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel|pump of '
+            r'vanilla|pumps of vanilla|pump of sugar|pumps of sugar|liquid sugar|pump of '
+            r'butter pecan|pumps of butter pecan)\b'
+        )
+
+        milk_pattern = (
+            r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|'
+            r'soy milk|coconut milk|half and half|heavy cream|cream)\b'
+        )
+
+        common_allergies = (
+            r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|'
+            r'lactose|sesame|mustard|sulfates)\b'
+        )
 
         sizes = re.findall(size_pattern, self.order)
         quantities = re.findall(quantity_pattern, self.order)
@@ -464,7 +494,7 @@ if __name__ == "__main__":
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "What are the allergies in your smoothie"
+    orders = "Can I have one black coffee with a pump of caramel"
 
     split_order_time = time.time()
     details = split_order(orders)
