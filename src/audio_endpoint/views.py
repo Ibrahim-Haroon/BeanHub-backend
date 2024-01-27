@@ -84,7 +84,6 @@ class AudioView(APIView):
                 logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
-
     @staticmethod
     def formatted_deal(
             order: dict
