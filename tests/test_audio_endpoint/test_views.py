@@ -1,12 +1,9 @@
-import logging
 import os
 import json
-from unittest import mock
-
 import pytest
 from typing import Final
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
@@ -20,6 +17,7 @@ class AudioEndpointTestCase(TestCase):
         self.mock_env = patch.dict(os.environ, {
             "S3_BUCKET_NAME": "test_bucket_name",
             "OPENAI_API_KEY": "test_api_key",
+            "DEEPGRAM_API_KEY": "test_api_key",
             "AWS_ACCESS_KEY_ID": "test_access_key_id",
             "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
             "AWS_DEFAULT_REGION": "us-east-1",
@@ -83,6 +81,23 @@ class AudioEndpointTestCase(TestCase):
         self.mock_google_cloud.start().return_value = mock_recognizer_instance
         expected_transcription = "One black coffee"
         mock_recognizer_instance.recognize_google.return_value = expected_transcription
+
+        self.mock_deepgram_file = patch('builtins.open', new_callable=mock_open, read_data='fake_deepgram_api_key')
+        self.mock_deepgram_file.start()
+
+        self.mock_deepgram_class = patch(speech_to_text_path + '.Deepgram')
+        mock_deepgram_instance = MagicMock()
+        self.mock_deepgram_class.start().return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'test transcription'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
+
+
 
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
