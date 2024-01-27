@@ -4,14 +4,10 @@ import wave
 import logging
 import whisper
 from os import path
-from os import getenv as env
 from deepgram import Deepgram
-from dotenv import load_dotenv
 from pydub import AudioSegment
 import speech_recognition as speech
 from src.django_beanhub.settings import DEBUG
-
-load_dotenv()
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -65,11 +61,9 @@ def nova_speech_api(
     @param source: audio file path
     @return: transcription
     """
-    key = env("DEEPGRAM_API_KEY")
-    if not key:
-        key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "deepgram_api_key.txt")
-        with open(key_path) as api_key:
-            key = api_key.readline().strip()
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "deepgram_api_key.txt")
+    with open(key_path) as api_key:
+        key = api_key.readline().strip()
 
     start_time = time.time()
     dg = Deepgram(key)
@@ -166,7 +160,7 @@ def record_until_silence(
     recognizer.interim_results = True  # Get interim results for streaming
 
     with speech.Microphone() as audio_source:
-        print("zRecording... Speak until you want to stop.")
+        print("Recording... Speak until you want to stop.")
 
         # Adjust for ambient noise
         recognizer.adjust_for_ambient_noise(audio_source, duration=1)
@@ -177,7 +171,7 @@ def record_until_silence(
                 audio_data.append(audio_chunk.frame_data)
 
                 # Try to convert speech to text
-                transcribed_audio = recognizer.recognize_tensorflow(audio_chunk)
+                transcribed_audio = recognizer.recognize_google(audio_chunk)
                 print(f"Recognized: {transcribed_audio}")
 
             except speech.WaitTimeoutError:
