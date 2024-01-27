@@ -1,2 +1,3 @@
-deal,price
-glazed donut for only a dollar more,1.
+deal,item_type,item_name,quantity,price,related_items
+glazed donut for only a dollar more,BakeryItem,glazed donut,12,1.00,coffees
+black coffee for only two dollars more,CoffeeItem,black coffee,20,2.00,donuts
