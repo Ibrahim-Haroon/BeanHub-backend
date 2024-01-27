@@ -40,7 +40,7 @@ def as_csv_file(
     return file_object
 
 
-def test_get_item_returns_true_when_successfully_found_closest_item_and_adds_to_cache(
+def test_get_deal_returns_true_when_successfully_found_closest_item_and_adds_to_cache(
         mocker, mock_boto3_session_client, mock_components
 ) -> None:
     # Arrange
@@ -66,7 +66,7 @@ def test_get_item_returns_true_when_successfully_found_closest_item_and_adds_to_
     assert res is True, f"expected search to be successful but {res}"
 
 
-def test_get_item_returns_true_when_successfully_found_closest_item_without_being_passed_embedding_cache(
+def test_get_deal_returns_true_when_successfully_found_closest_item_without_being_passed_embedding_cache(
         mock_boto3_session_client, mock_components
 ) -> None:
     # Arrange
@@ -88,7 +88,24 @@ def test_get_item_returns_true_when_successfully_found_closest_item_without_bein
     assert res is True, f"expected search to be successful but {res}"
 
 
-def test_get_item_returns_false_when_given_invalid_params(
+def test_get_deal_returns_false_when_item_type_is_invalid(
+        mock_boto3_session_client, mock_components
+) -> None:
+    # Arrange
+    order = {
+        "Foo": {
+            "cart_action": "add",
+            "item_name": "test"
+        }
+    }
+    # Act
+    _, _, res = get_deal(order)
+
+    # Assert
+    assert res is False, f"expected search to be unsuccessful but {res}"
+
+
+def test_get_deal_returns_false_when_given_invalid_params(
         mock_boto3_session_client, mock_components
 ) -> None:
     # Arrange
