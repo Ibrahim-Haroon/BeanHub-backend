@@ -25,3 +25,4 @@ src/ai_integration/runs
 
 htmlcov/
 .coverage
+coverage.xml
