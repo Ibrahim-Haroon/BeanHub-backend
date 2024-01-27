@@ -372,8 +372,9 @@ class Order:
 
         bakery_pattern = (
             r'\b(brownie|blueberry muffin|blueberry muffins|glazed donut|glazed donuts|'
-            r'strawberry donut|strawberry donuts|chocolate donut|chocolate donuts|donut|'
-            r'boston cream donuts|boston cream|lemon cake|chocolate chip muffin)\b'
+            r'strawberry donut|strawberry doughnut|strawberry donuts|strawberry doughnuts|chocolate donut|'
+            r'chocolate doughnut|chocolate doughnuts|glazed doughnut|glazed doughnuts|munchkins|munchkin|'
+            r'chocolate donuts|donut|boston cream donuts|boston cream|lemon cake|chocolate chip muffin)\b'
         )
 
         add_ons_pattern = (
@@ -483,7 +484,16 @@ def process_order(
 def human_requested(
         transcription: str
 ) -> bool:
+    transcription = transcription.lower()
     pattern = r'\b(human|person|employee|worker|staff member|manager|owner|workman|hired help|crew member|agent)\b'
+    return bool(re.search(pattern, transcription))
+
+
+def accepted_deal(
+        transcription: str
+) -> bool:
+    transcription = transcription.lower()
+    pattern = r'\b(yes|yeah|sure|okay|ok|yup|yep|alright|fine|deal|k)\b'
     return bool(re.search(pattern, transcription))
 
 
