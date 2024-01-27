@@ -66,6 +66,33 @@ def test_get_deal_returns_true_when_successfully_found_closest_item_and_adds_to_
     assert res is True, f"expected search to be successful but {res}"
 
 
+def test_get_deal_returns_true_when_successfully_found_closest_item_and_cache_hit(
+        mocker, mock_boto3_session_client, mock_components
+) -> None:
+    # Arrange
+    mock_redis = mocker.Mock()
+    mock_redis.set = MagicMock()
+    mock_redis.exists = MagicMock(return_value=True)
+    mock_redis.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
+    order = {
+        "CoffeeItem": {
+            "cart_action": "add",
+            "item_name": "test"
+        }
+    }
+    database_info = [
+        ["dbname", "user", "password", "host", "port"],
+        ["mydb", "myuser", "mypassword", "localhost", "port"]]
+    db = as_csv_file(database_info)
+
+    # Act
+    _, _, res = get_deal(order=order, api_key="test_key", embedding_cache=mock_redis, database_csv_file=db)
+
+    # Assert
+    assert res is True, f"expected search to be successful but {res}"
+
+
+
 def test_get_deal_returns_true_when_successfully_found_closest_item_without_being_passed_embedding_cache(
         mock_boto3_session_client, mock_components
 ) -> None:
