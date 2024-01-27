@@ -22,19 +22,19 @@ logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(mes
 def get_deal(
         order: dict, api_key: str = None, connection_pool=None, embedding_cache: redis.Redis = None,
         database_csv_file: StringIO = None
-) -> str and bool:
+) -> str and dict and bool:
     """
 
-    @rtype: str + bool
+    @rtype: str + dict + bool
     @param order: order_report from fine_tuned_nlp.py
     @param api_key: OpenAI auth
     @param connection_pool:
     @param embedding_cache: cache to reduce number of calls to OpenAI API
     @param database_csv_file: AWS RDS and PostgreSQL auth
-    @return: Closest embedding along with a boolean flag to mark successful retrieval
+    @return: Closest embedding along, object that can be used by frontend, a boolean flag to mark successful retrieval
     """
     if not order:
-        return None, False
+        return None, None, False
 
     return_queue = queue.Queue()
 
@@ -47,7 +47,7 @@ def get_deal(
             break
 
     if not product_name:
-        return None, False
+        return None, None, False
 
     def get_embedding() -> None:
         openai_embedding_time = time.time()
@@ -100,7 +100,7 @@ def get_deal(
         return "Error, return_queue.get turned into a deadlock. Check the `get_embedding` function", False
 
     execute_time = time.time()
-    cur.execute(""" SELECT deal, price
+    cur.execute(""" SELECT deal, item_type, item_name, item_quantity, price
                     FROM deals
                     ORDER BY embeddings <-> %s 
                     LIMIT 1;""",
@@ -122,7 +122,22 @@ def get_deal(
         db_connection.close()
     logging.debug("close db connection time %s:", {time.time() - close_connection_time})
 
-    return result[0][0], True
+    deal = result[0][0]
+    item_type: str = result[0][1]
+    item_name: str = result[0][2]
+    # item_quantity: int = result[0][3]
+    item_price = (result[0][4])
+
+    deal_object = {
+        item_type: {
+            "item_name": item_name,
+            "quantity": [1],
+            "price": [item_price],
+            "cart_action": "insertion"
+        }
+    }
+
+    return deal, deal_object, True
 
 
 def main(
@@ -132,12 +147,18 @@ def main(
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
+    order = {
+        "CoffeeItem": {
+            "item_name": "glazed donut",
+            "cart_action": "insertion"
+        }
+    }
     connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
 
     get_secret()
 
     total_time = time.time()
-    res = get_deal(product_name="black coffee", api_key=key, embedding_cache=None, connection_pool=connection_pool)
+    res = get_deal(order=order, api_key=key, embedding_cache=None, connection_pool=connection_pool)
     print(f"total time: {time.time() - total_time}")
 
     print(res)
