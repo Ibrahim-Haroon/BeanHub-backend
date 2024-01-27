@@ -28,17 +28,23 @@ def mock_speech(
 
 
 @pytest.fixture
-def mock_microphone(mocker):
+def mock_microphone(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.speech.Microphone')
 
 
 @pytest.fixture
-def mock_audio_segment(mocker):
+def mock_audio_segment(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.AudioSegment')
 
 
 @pytest.fixture
-def mock_whisper(mocker):
+def mock_whisper(
+        mocker
+) -> MagicMock:
     return mocker.patch(script_path + '.whisper')
 
 
@@ -124,7 +130,9 @@ def test_record_until_silence_returns_expected_audio_bytes_and_transcription(
     assert transcribed_audio == expected_transcribed_audio, f"Expected transcribed audio to be '{expected_transcribed_audio}', but got '{transcribed_audio}'"
 
 
-def test_nova_speech_api_returns_expected_transcription_with_env_api_key(mocker, mock_deepgram):
+def test_nova_speech_api_returns_expected_transcription_with_env_api_key(
+        mocker, mock_deepgram
+) -> None:
     # Arrange
     mocker.patch(script_path + '.open', mocker.mock_open(read_data='foo'))
     mocker.patch.dict(os.environ, {
@@ -150,7 +158,9 @@ def test_nova_speech_api_returns_expected_transcription_with_env_api_key(mocker,
     assert transcript == 'test transcription', f"expected transcript to be 'test transcription' but got {transcript}"
 
 
-def test_nova_speech_api_returns_expected_transcription_with_file_api_key(mocker, mock_deepgram):
+def test_nova_speech_api_returns_expected_transcription_with_file_api_key(
+        mocker, mock_deepgram
+) -> None:
     # Arrange
     mocker.patch(script_path + '.open', mocker.mock_open(read_data='fake_api_key'))
     fake_response = {
@@ -171,7 +181,9 @@ def test_nova_speech_api_returns_expected_transcription_with_file_api_key(mocker
     assert transcript == 'test transcription', f"expected transcript to be 'test transcription' but got {transcript}"
 
 
-def test_save_as_mp3(mock_audio_segment, capsys):
+def test_save_as_mp3(
+        mock_audio_segment, capsys
+) -> None:
     # Arrange
     mock_audio_data = b'mock audio data'
     output_filename = "test_audio.mp3"
@@ -188,7 +200,9 @@ def test_save_as_mp3(mock_audio_segment, capsys):
     assert f"Audio saved as {output_filename}" in captured.out, "expected completion message in stdout but got nothing"
 
 
-def test_save_as_mp3_prints_completion_message(mock_audio_segment, capsys):
+def test_save_as_mp3_prints_completion_message(
+        mock_audio_segment, capsys
+) -> None:
     # Arrange
     mock_audio_data = b'mock audio data'
     output_filename = "test_audio.mp3"
@@ -201,7 +215,9 @@ def test_save_as_mp3_prints_completion_message(mock_audio_segment, capsys):
     assert f"Audio saved as {output_filename}" in captured.out
 
 
-def test_whisper_multi_speech_api_returns_correct_transcription(mock_whisper):
+def test_whisper_multi_speech_api_returns_correct_transcription(
+        mock_whisper
+) -> None:
     # Arrange
     expected_transcription = 'test transcription'
     mock_model = MagicMock()
@@ -225,7 +241,9 @@ def test_whisper_multi_speech_api_returns_correct_transcription(mock_whisper):
     assert transcription == expected_transcription, f"Expected {expected_transcription} but got {transcription}"
 
 
-def test_whisper_speech_api_returns_correct_transcription(mock_whisper):
+def test_whisper_speech_api_returns_correct_transcription(
+        mock_whisper
+) -> None:
     # Arrange
     expected_transcription = 'test transcription'
     mock_model = MagicMock()
