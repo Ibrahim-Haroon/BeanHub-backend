@@ -92,7 +92,7 @@ def parse_menu_csv(
 
     df = pd.read_csv(menu_file_path)
 
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
         item_name = row['item_name']
         item_quantity = get_item_quantity(row['item_quantity'])
         common_allergin = get_common_allergin(row['common_allergin'])
@@ -130,12 +130,20 @@ def parse_deals_csv(
 
     for _, row in df.iterrows():
         deal = row['deal']
-        price = row['price']
+        item_type: str = row['item_type']
+        item_name: str = row['item_name']
+        item_quantity: int = get_item_quantity(row['quantity'])
+        price: int = row['price']
+        related_items: float = row['related_items']
 
         item = {
             "Deal": {
                 "deal": deal,
-                "price": float(price)
+                "item_type": item_type,
+                "item_name": item_name,
+                "item_quantity": item_quantity,
+                "price": float(price),
+                "related_items": related_items
             }
         }
 
