@@ -1,10 +1,9 @@
-FROM ubuntu:latest
-LABEL authors="masterbean"
+FROM python:3.11
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=America/New_York
+ENV PYTHONUNBUFFERED 1
 
-# Install necessary dependencies
+WORKDIR /beanhub_app
+
 RUN apt-get update && \
     apt-get install -y \
         gnupg \
@@ -12,7 +11,6 @@ RUN apt-get update && \
         net-tools \
         software-properties-common \
         python3.11-distutils \
-        curl \
         portaudio19-dev \
         flac \
         ffmpeg \
@@ -20,32 +18,15 @@ RUN apt-get update && \
         python3.11-dev \
         python3.11-venv
 
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-RUN python3.11 get-pip.py
+COPY requirements.txt .
 
-# Source Python
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+RUN pip install -r requirements.txt
 
-# Create folder in container and cd into it
-RUN mkdir /BeanHub-backend
-WORKDIR /BeanHub-backend
+COPY . .
 
-# Copy files from local to container
-COPY .github /BeanHub-backend/.github
-COPY appendonlydir /BeanHub-backend/appendonlydir
-COPY other /BeanHub-backend/other
-COPY src /BeanHub-backend/src
-COPY tests /BeanHub-backend/tests
-COPY .env /BeanHub-backend/.env
-COPY .gitignore /BeanHub-backend/.gitignore
-COPY environment.sh /BeanHub-backend/environment.sh
-COPY LICENSE /BeanHub-backend/LICENSE
-COPY manage.py /BeanHub-backend/manage.py
-COPY pytest.ini /BeanHub-backend/pytest.ini
-COPY README.md /BeanHub-backend/README.md
-COPY redis.conf /BeanHub-backend/redis.conf
-COPY requirements.txt /BeanHub-backend/requirements.txt
+RUN python manage.py test
+RUN pytest tests
 
-RUN python -m venv myenv
+EXPOSE 8000
 
-CMD ["/bin/bash"]
+CMD ["python", "manage.py", "runserver"]
