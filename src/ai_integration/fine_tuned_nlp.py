@@ -218,7 +218,10 @@ class Order:
             quantities
     ) -> None:  # pragma: no cover
         for quantity in quantities:
-            quantity = number_map(quantity)
+            try:
+                quantity = int(quantity)
+            except ValueError:
+                quantity = number_map(quantity)
             if self.__cart_action == "modification":
                 self.__quantity.append(-1 * quantity)
             else:
@@ -441,7 +444,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "2 coffees with 2 pumps of vanilla and 1 pump of caramel and two splenda packets"
+    orders = "2 coffees with two pumps of vanilla and one pump of caramel and two splenda packets"
 
     split_order_time = time.time()
     details = split_order(orders)
