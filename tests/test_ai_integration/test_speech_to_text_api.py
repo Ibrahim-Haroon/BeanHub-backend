@@ -2,7 +2,7 @@ import os
 import pytest
 from typing import Final
 from mock import MagicMock, patch
-from speech_recognition import WaitTimeoutError
+from speech_recognition import WaitTimeoutError, UnknownValueError, RequestError
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api, return_as_wav, record_until_silence, nova_speech_api, save_as_mp3, whisper_speech_api, whisper_multi_speech_api
 
 script_path: Final[str] = 'src.ai_integration.speech_to_text_api'
@@ -128,6 +128,43 @@ def test_record_until_silence_returns_expected_audio_bytes_and_transcription(
     # Assert
     assert audio_data == expected_audio_data, f"Expected audio data to be {expected_audio_data}, but got {audio_data}"
     assert transcribed_audio == expected_transcribed_audio, f"Expected transcribed audio to be '{expected_transcribed_audio}', but got '{transcribed_audio}'"
+
+
+def test_record_until_silence_prints_correct_exception_for_unknown_value(
+        mock_google_cloud, mock_microphone, capsys
+) -> None:
+    # Arrange
+    mock_recognizer_instance = MagicMock()
+    mock_google_cloud.return_value = mock_recognizer_instance
+    mock_microphone_instance = MagicMock()
+    mock_microphone.return_value = mock_microphone_instance
+    mock_recognizer_instance.listen.side_effect = UnknownValueError()
+
+    # Act
+    audio_data, transcribed_audio = record_until_silence()
+    captured = capsys.readouterr()
+
+    # Assert
+    assert "Could not understand audio." in captured.out
+
+
+def test_record_until_silence_prints_correct_exception_for_request_error(
+        mock_google_cloud, mock_microphone, capsys
+) -> None:
+    # Arrange
+    mock_recognizer_instance = MagicMock()
+    mock_google_cloud.return_value = mock_recognizer_instance
+    mock_microphone_instance = MagicMock()
+    mock_microphone.return_value = mock_microphone_instance
+    exception_message = "Request Error Occurred"
+    mock_recognizer_instance.listen.side_effect = RequestError(exception_message)
+
+    # Act
+    audio_data, transcribed_audio = record_until_silence()
+    captured = capsys.readouterr()
+
+    # Assert
+    assert f"Google Speech Recognition request failed: {exception_message}" in captured.out
 
 
 def test_nova_speech_api_returns_expected_transcription_with_env_api_key(
