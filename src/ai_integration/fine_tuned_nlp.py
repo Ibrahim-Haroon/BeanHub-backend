@@ -51,7 +51,7 @@ class Order:
     def __init__(
             self, formatted_order: str, connection_pool=None,
             embedding_cache: Redis = None, aws_connected: bool = False
-    ):  # pragma: no cover
+    ):
         init_time = time.time()
         self.__order: str = formatted_order.casefold().strip()
         self.__allergies: str = ""
@@ -107,7 +107,7 @@ class Order:
 
     def __get_order_type(
             self
-    ) -> tuple[str, dict]:  # pragma: no cover
+    ) -> tuple[str, dict]:
         order_details = self.__parse_order()
 
         if order_details['coffee']:
@@ -123,7 +123,7 @@ class Order:
 
     def __make_coffee_order(
             self, order_details
-    ) -> dict:  # pragma: no cover
+    ) -> dict:
         self.__cart_action = self.__get_cart_action()
         self.__item_name = order_details['coffee'][0]
         self.__calculate_quantity(order_details['quantities'])
@@ -151,7 +151,7 @@ class Order:
 
     def __make_beverage_order(
             self, order_details
-    ) -> dict:  # pragma: no cover
+    ) -> dict:
         self.__cart_action = self.__get_cart_action()
         self.__item_name = order_details['beverage'][0]
         self.__calculate_quantity(order_details['quantities'])
@@ -178,7 +178,7 @@ class Order:
     def __make_food_order(
             self,
             order_details
-    ) -> dict:  # pragma: no cover
+    ) -> dict:
         self.__cart_action = self.__get_cart_action()
         self.__item_name = order_details['food'][0]
         self.__calculate_quantity(order_details['quantities'])
@@ -197,7 +197,7 @@ class Order:
     def __make_bakery_order(
             self,
             order_details
-    ) -> dict:  # pragma: no cover
+    ) -> dict:
         self.__cart_action = self.__get_cart_action()
         self.__item_name = order_details['bakery'][0]
         self.__calculate_quantity(order_details['quantities'])
@@ -216,7 +216,7 @@ class Order:
     def __calculate_quantity(
             self,
             quantities
-    ) -> None:  # pragma: no cover
+    ) -> None:
         for quantity in quantities:
             try:
                 quantity = int(quantity)
@@ -231,7 +231,7 @@ class Order:
 
     def __get_cart_action(
             self
-    ) -> str:  # pragma: no cover
+    ) -> str:
         if self.__is_question():
             return "question"
         elif self.__is_modification():
@@ -241,14 +241,14 @@ class Order:
 
     def __is_question(
             self
-    ) -> bool:  # pragma: no cover
+    ) -> bool:
         pattern = r'\b(do you|how many|how much|does|what are)\b'
 
         return bool(re.search(pattern, self.__order))
 
     def __is_modification(
             self
-    ) -> bool:  # pragma: no cover
+    ) -> bool:
         pattern = (r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
                    r'away|replace)\b')
 
@@ -256,7 +256,7 @@ class Order:
 
     def __get_price_and_allergies_and_num_calories(
             self
-    ) -> None:  # pragma: no cover
+    ) -> None:
         db_time = time.time()
 
         item_thread = threading.Thread(target=self.__process_item_and_allergies)
@@ -279,7 +279,7 @@ class Order:
 
     def __process_item_and_allergies(
             self
-    ) -> None:  # pragma: no cover
+    ) -> None:
         item_details, _ = get_item(self.__item_name,
                                    connection_pool=self.connection_pool,
                                    embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
@@ -294,7 +294,7 @@ class Order:
 
     def __process_add_ons(
             self
-    ) -> None:  # pragma: no cover
+    ) -> None:
         for add_on in self.__add_ons:
             add_on_details, _ = get_item(add_on,
                                          connection_pool=self.connection_pool,
@@ -307,7 +307,7 @@ class Order:
 
     def __process_sweeteners(
             self
-    ) -> None:  # pragma: no cover
+    ) -> None:
         for sweetener in self.__sweeteners:
             sweetener_details, _ = get_item(sweetener,
                                             connection_pool=self.connection_pool,
@@ -320,7 +320,7 @@ class Order:
 
     def __process_milk(
             self
-    ) -> None:  # pragma: no cover
+    ) -> None:
         if self.__milk_type and self.__milk_type != "regular":
             milk_details, _ = get_item(self.__milk_type,
                                        connection_pool=self.connection_pool,
@@ -333,7 +333,7 @@ class Order:
 
     def __parse_order(
             self
-    ) -> dict:  # pragma: no cover
+    ) -> dict:
         sizes = re.findall(size_pattern, self.__order)
         quantities = re.findall(quantity_pattern, self.__order)
         coffees = re.findall(coffee_pattern, self.__order)
