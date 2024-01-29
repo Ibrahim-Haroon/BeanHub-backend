@@ -22,9 +22,12 @@ def mock_components(
 def mock_database_components(
         mocker
 ) -> dict:
+    mock_embedding_api = mocker.patch('src.vector_db.get_item.openai_embedding_api')
+    mock_embedding_api.return_value = [0.1, 0.2, 0.3]
     return {
         'register_vector': mocker.patch('pgvector.psycopg2.register_vector'),
         'connect': mocker.patch('src.vector_db.get_item.psycopg2.connect'),
+        'openai_embedding_api': mock_embedding_api,
         'input': mocker.patch('builtins.input'),
     }
 
