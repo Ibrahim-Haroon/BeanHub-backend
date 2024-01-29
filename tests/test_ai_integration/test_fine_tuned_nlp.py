@@ -11,7 +11,7 @@ def mock_components(
     ner_model_mock = mocker.patch('src.ai_integration.fine_tuned_nlp.NERModel')
     mock_instance = ner_model_mock.return_value
 
-    mock_instance.predict.return_value = ([{"entity": "example", "score": 0.99}], None)
+    mock_instance.predict.return_value = ([[{'test': 'O'}]], None)
 
     return {
         'ner_model_mock': ner_model_mock
@@ -36,16 +36,31 @@ def mock_boto3_session_client(
     return mocker.patch('boto3.session.Session.client', return_value=MagicMock())
 
 
-def test_that_ner_transformer_returns_prediction_given_string(
+def test_that_ner_transformer_returns_prediction_given_string_and_does_not_print_out_prediction(
         mock_components
 ) -> None:
     # Arrange
-    expected_prediction = [{"entity": "example", "score": 0.99}]
+    expected_prediction = [[{'test': 'O'}]]
 
     # Act
     prediction = ner_transformer("test")
 
     # Assert
+    assert prediction == expected_prediction, f"expected prediction to be {expected_prediction} but got {prediction}"
+
+
+def test_that_ner_transformer_returns_prediction_given_string_and_does_print_out_prediction(
+        mock_components, capsys
+) -> None:
+    # Arrange
+    expected_prediction = [[{'test': 'O'}]]
+
+    # Act
+    prediction = ner_transformer("test", print_prediction=True)
+    captured = capsys.readouterr()
+
+    # Assert
+    assert "[[{'test': 'O'}]]" in captured.out
     assert prediction == expected_prediction, f"expected prediction to be {expected_prediction} but got {prediction}"
 
 
