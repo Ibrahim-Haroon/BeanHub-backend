@@ -48,7 +48,7 @@ def mock_whisper(
     return mocker.patch(script_path + '.whisper')
 
 
-def test_get_transcription_with_none_passed_for_audio_file_path(
+def test_google_cloud_get_transcription_with_none_passed_for_audio_file_path(
         mock_speech
 ) -> None:
     # Arrange
@@ -61,38 +61,73 @@ def test_get_transcription_with_none_passed_for_audio_file_path(
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
 
 
-def test_get_transcription_with_empty_audio_file(
+def test_google_cloud_get_transcription_with_empty_audio_file(
         mock_google_cloud, mock_speech
 ) -> None:
     # Arrange
-    audio_file_path = "test/file/path"
+    mock_audio_file_path = "test/file/path"
     mock_recognizer_instance = MagicMock()
     mock_google_cloud.return_value = mock_recognizer_instance
     expected_transcription = "None"
     mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
     # Act
-    actual_transcription = google_cloud_speech_api(audio_file_path)
+    actual_transcription = google_cloud_speech_api(mock_audio_file_path)
 
     # Assert
     assert expected_transcription == actual_transcription, f"expected transcription to be None but got {actual_transcription}"
 
 
-def test_get_transcription_with_non_empty_audio_file(
+def test_google_cloud_get_transcription_with_non_empty_audio_file(
         mock_google_cloud, mock_speech
 ) -> None:
     # Arrange
-    audio_file_path = "test/file/path"
+    mock_audio_file_path = "test/file/path"
     mock_recognizer_instance = MagicMock()
     mock_google_cloud.return_value = mock_recognizer_instance
     expected_transcription = "this is a test"
     mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
     # Act
-    actual_transcription = google_cloud_speech_api(audio_file_path)
+    actual_transcription = google_cloud_speech_api(mock_audio_file_path)
 
     # Assert
     assert expected_transcription == actual_transcription, f"expected transcription to be {expected_transcription} but {actual_transcription}"
+
+
+def test_google_cloud_get_transcription_prints_correct_error_for_request_error(
+        mock_google_cloud, mock_speech, capsys
+) -> None:
+    # Arrange
+    mock_audio_file_path = "test/file/path"
+    mock_recognizer_instance = MagicMock()
+    mock_google_cloud.return_value = mock_recognizer_instance
+    e = "Request Error Occurred"
+    mock_recognizer_instance.recognize_google.side_effect = RequestError(e)
+
+    # Act
+    transcribed_audio = google_cloud_speech_api(mock_audio_file_path)
+    captured = capsys.readouterr()
+
+    # Assert
+    assert "Could not request results from Google Speech Recognition service; {0}".format(e) in captured.out
+
+
+def test_google_cloud_get_transcription_prints_correct_error_for_unknown_request_error(
+        mock_google_cloud, mock_speech, capsys
+) -> None:
+    # Arrange
+    mock_audio_file_path = "test/file/path"
+    mock_recognizer_instance = MagicMock()
+    mock_google_cloud.return_value = mock_recognizer_instance
+    mock_recognizer_instance.recognize_google.side_effect = UnknownValueError()
+
+    # Act
+    transcribed_audio = google_cloud_speech_api(mock_audio_file_path)
+    captured = capsys.readouterr()
+
+    # Assert
+    assert "Google Speech Recognition could not understand audio" in captured.out
 
 
 def test_return_as_wave_returns_byte_object(
