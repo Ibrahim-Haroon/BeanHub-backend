@@ -417,6 +417,7 @@ def process_order(
         for item_type in item_types:
             if item_type in final_order:
                 final_order[item_type].pop('common_allergies_in_item')
+                final_order[item_type].pop('num_calories')
                 break
         order_report.append(final_order)
 
