@@ -111,16 +111,16 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_coffee_item(
             'cart_action': 'insertion',
             'common_allergies_in_item': 'test',
             'item_name': 'black coffee',
-            'milk_type': 'regular',
-            'num_calories': ['(60,120)'],
-            'price': [10.0],
+            'milk_type': 'cream',
+            'num_calories': ['(60,120)', '(60,120)'],
+            'price': [10.0, 10.0],
             'quantity': [1],
             'size': 'regular',
-            'sweeteners': [],
+            'sweeteners': ['sugar'],
             'temp': 'regular'
         }
     }
-    mock_bakery_order = "1 black coffee"
+    mock_bakery_order = "1 black coffee with cream and sugar"
 
     # Act
     actual_return_value = Order(mock_bakery_order).make_order()
@@ -197,15 +197,15 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_food_item(
                                                                                                    10.0)]
     expected_return_value = {
         'FoodItem': {
-            'cart_action': 'insertion',
+            'cart_action': 'modification',
             'common_allergies_in_item': 'test',
             'item_name': 'egg and cheese croissant',
             'num_calories': ['(60,120)'],
             'price': [10.0],
-            'quantity': [1]
+            'quantity': []
         }
     }
-    mock_bakery_order = "1 egg and cheese croissant"
+    mock_bakery_order = "remove the egg and cheese croissant"
 
     # Act
     actual_return_value = Order(mock_bakery_order).make_order()
@@ -239,15 +239,15 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_bakery_item(
                                                                                                    10.0)]
     expected_return_value = {
         'BakeryItem': {
-            'cart_action': 'insertion',
+            'cart_action': 'question',
             'common_allergies_in_item': 'test',
             'item_name': 'glazed donut',
             'num_calories': ['(60,120)'],
             'price': [10.0],
-            'quantity': [1]
+            'quantity': [6]
         }
     }
-    mock_bakery_order = "1 glazed donut"
+    mock_bakery_order = "Do you sell glazed donut"
 
     # Act
     actual_return_value = Order(mock_bakery_order).make_order()
