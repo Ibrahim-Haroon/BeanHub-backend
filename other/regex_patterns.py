@@ -65,7 +65,6 @@ split_exception_pattern = (
     '|' + milk_pattern +
     '|' + add_ons_pattern +
     '|' + temperature_pattern +
-    '|' + 'cheese' +
     '|' + sweetener_pattern + r')'
 )
 
