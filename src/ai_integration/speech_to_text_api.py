@@ -185,10 +185,8 @@ def record_until_silence(
                 break
             except speech.UnknownValueError:
                 print("Could not understand audio.")
-                break
             except speech.RequestError as e:
                 print(f"Google Speech Recognition request failed: {e}")
-                break
 
     audio_data = b"".join(audio_data)
 
