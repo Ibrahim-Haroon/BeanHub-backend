@@ -86,50 +86,50 @@ def test_that_ner_transformer_returns_empty_list_when_given_empty_string(
 
 
 # TODO: Fix this test, it is flaky
-# def test_that_make_order_in_Order_class_returns_expected_dict_for_coffee_item(
-#         mocker, mock_boto3_session_client, mock_database_components
-# ) -> None:
-#     # Arrange
-#     mocker.patch.dict(os.environ, {
-#         "AWS_ACCESS_KEY_ID": "test_access_key_id",
-#         "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
-#         "AWS_DEFAULT_REGION": "test_region",
-#         "SECRET_NAME": "test_secret_name",
-#         "RDS_DB_NAME": "test_db_name",
-#         "RDS_USERNAME": "test_username",
-#         "RDS_PASSWORD": "test_password",
-#         "RDS_HOSTNAME": "test_hostname",
-#         "RDS_PORT": "test_port"
-#     })
-#     mock_database_components['connect'].return_value.cursor.return_value.fetchall.return_value = [(7,
-#                                                                                                    'test',
-#                                                                                                    6,
-#                                                                                                    'test',
-#                                                                                                    '(60,120)',
-#                                                                                                    10.0)]
-#     expected_return_value = {
-#         'CoffeeItem': {
-#             'add_ons': ['pump of caramel'],
-#             'cart_action': 'insertion',
-#             'common_allergies_in_item': 'test',
-#             'item_name': 'black coffee',
-#             'milk_type': 'cream',
-#             'num_calories': ['(60,120)', '(60,120)', '(60,120)'],
-#             'price': [10.0, 10.0, 10.0],
-#             'quantity': [1, 1, 1, 1],
-#             'size': 'regular',
-#             'sweeteners': ['sugar'],
-#             'temp': 'regular'
-#         }
-#     }
-#     mock_coffee_order = "One black coffee with one cream and one sugar and a pump of caramel"
-#
-#     # Act
-#     actual_return_value = Order(mock_coffee_order).make_order()
-#
-#     # Assert
-#     assert actual_return_value == expected_return_value,\
-#         f"expected return value to be {expected_return_value} but got {actual_return_value}"
+def test_that_make_order_in_Order_class_returns_expected_dict_for_coffee_item(
+        mocker, mock_boto3_session_client, mock_database_components
+) -> None:
+    # Arrange
+    mocker.patch.dict(os.environ, {
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "AWS_DEFAULT_REGION": "test_region",
+        "SECRET_NAME": "test_secret_name",
+        "RDS_DB_NAME": "test_db_name",
+        "RDS_USERNAME": "test_username",
+        "RDS_PASSWORD": "test_password",
+        "RDS_HOSTNAME": "test_hostname",
+        "RDS_PORT": "test_port"
+    })
+    mock_database_components['connect'].return_value.cursor.return_value.fetchall.return_value = [(7,
+                                                                                                   'test',
+                                                                                                   6,
+                                                                                                   'test',
+                                                                                                   '(60,120)',
+                                                                                                   10.0)]
+    expected_return_value = {
+        'CoffeeItem': {
+            'add_ons': ['pump of caramel'],
+            'cart_action': 'insertion',
+            'common_allergies_in_item': 'test',
+            'item_name': 'black coffee',
+            'milk_type': 'cream',
+            'num_calories': ['(60,120)', '(60,120)', '(60,120)'],
+            'price': [10.0, 10.0, 10.0],
+            'quantity': [1, 1, 1, 1],
+            'size': 'regular',
+            'sweeteners': ['sugar'],
+            'temp': 'regular'
+        }
+    }
+    mock_coffee_order = "One black coffee with one cream and one sugar and a pump of caramel"
+
+    # Act
+    actual_return_value = Order(mock_coffee_order).make_order()
+
+    # Assert
+    assert actual_return_value == expected_return_value,\
+        f"expected return value to be {expected_return_value} but got {actual_return_value}"
 
 
 def test_that_make_order_in_Order_class_returns_expected_dict_for_beverage_item(
