@@ -269,8 +269,8 @@ class AudioView(APIView):
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
 
     def post_normal_request(
-            self, unique_id: uuid.UUID, transcription: str, offer_deal: bool = True
-    ) -> list[dict] and str and dict and bool:
+            self, unique_id: uuid.UUID, transcription: str
+    ) -> dict and str and dict and bool:
         deal_object = None
         formatted_transcription = split_order(transcription)
         order_report, model_report = make_order_report(formatted_transcription,
@@ -278,7 +278,7 @@ class AudioView(APIView):
                                                        self.embedding_cache,
                                                        aws_connected=True)
         deal = None
-        if offer_deal and len(order_report) > 0:
+        if len(order_report) > 0:
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
@@ -307,7 +307,7 @@ class AudioView(APIView):
 
     def process_and_format_deal(
             self, unique_id: uuid.UUID, transcription: str
-    ) -> list[dict] and str:
+    ) -> dict and str:
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
         order_report = self.formatted_deal(deal_data['deal_object'])
@@ -325,8 +325,8 @@ class AudioView(APIView):
         return order_report, conv_history
 
     def patch_normal_request(
-            self, unique_id: uuid.UUID, transcription: str, offer_deal: bool = True
-    ) -> list[dict] and str:
+            self, unique_id: uuid.UUID, transcription: str
+    ) -> dict and str:
         deal_object, deal_offered = None, False
         formatted_transcription = split_order(transcription)
 
@@ -335,7 +335,7 @@ class AudioView(APIView):
                                                        self.embedding_cache,
                                                        aws_connected=True)
         deal = None
-        if offer_deal and len(order_report) > 0:
+        if len(order_report) > 0:
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
