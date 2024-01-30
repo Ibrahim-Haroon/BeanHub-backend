@@ -177,7 +177,7 @@ def record_until_silence(
                 audio_data.append(audio_chunk.frame_data)
 
                 # Try to convert speech to text
-                transcribed_audio = recognizer.recognize_google_cloud(audio_chunk)
+                transcribed_audio = recognizer.recognize_google(audio_chunk)
                 print(f"Recognized: {transcribed_audio}")
 
             except speech.WaitTimeoutError:
