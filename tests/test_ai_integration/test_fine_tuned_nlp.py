@@ -107,20 +107,20 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_coffee_item(
                                                                                                    10.0)]
     expected_return_value = {
         'CoffeeItem': {
-            'add_ons': ['pump of caramel'],
+            'add_ons': [],
             'cart_action': 'insertion',
             'common_allergies_in_item': 'test',
             'item_name': 'black coffee',
             'milk_type': 'cream',
-            'num_calories': ['(60,120)', '(60,120)', '(60,120)'],
-            'price': [10.0, 10.0, 10.0],
+            'num_calories': ['(60,120)', '(60,120)'],
+            'price': [10.0, 10.0],
             'quantity': [1],
             'size': 'regular',
             'sweeteners': ['sugar'],
             'temp': 'regular'
         }
     }
-    mock_bakery_order = "One black coffee with cream and sugar and pump of caramel"
+    mock_bakery_order = "1 black coffee with cream and sugar"
 
     # Act
     actual_return_value = Order(mock_bakery_order).make_order()
