@@ -7,13 +7,12 @@ import psycopg2.pool
 from redis import Redis
 from os import getenv as env
 from dotenv import load_dotenv
-from other.regex_patterns import *
 from other.number_map import number_map
 from src.vector_db.get_item import get_item
 from simpletransformers.ner import NERModel
-from src.django_beanhub.settings import DEBUG
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
+from src.django_beanhub.settings import DEBUG
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -53,29 +52,29 @@ class Order:
             embedding_cache: Redis = None, aws_connected: bool = False
     ):
         init_time = time.time()
-        self.__order: str = formatted_order.casefold().strip()
-        self.__allergies: str = ""
-        self.__item_name: str = ""
-        self.__quantity: list[int] = []
-        self.__price: list[float] = []
-        self.__temp: str = ""
-        self.__add_ons: list[str] = []
-        self.__milk_type: str = ""
-        self.__sweeteners: list[str] = []
-        self.__num_calories: list[str] = []
-        self.__cart_action: str = ""
-        self.__size: str = ""
+        self.order: str = formatted_order.casefold().strip()
+        self.allergies: str = ""
+        self.item_name: str = ""
+        self.quantity: list[int] = []
+        self.price: list[float] = []
+        self.temp: str = ""
+        self.add_ons: list[str] = []
+        self.milk_type: str = ""
+        self.sweeteners: list[str] = []
+        self.num_calories: list[str] = []
+        self.cart_action: str = ""
+        self.size: str = ""
         if embedding_cache:
-            self.__embedding_cache = embedding_cache
+            self.embedding_cache = embedding_cache
         else:
-            self.__embedding_cache = None
+            self.embedding_cache = None
         key_path = path.join(path.dirname(path.realpath(__file__)),
                              "../../other/" + "openai_api_key.txt")
         if path.exists(key_path):
             with open(key_path) as KEY:
-                self.__key = KEY.readline().strip()
+                self.key = KEY.readline().strip()
         else:
-            self.__key = env('OPENAI_API_KEY')
+            self.key = env('OPENAI_API_KEY')
         if connection_pool:
             self.connection_pool = connection_pool
         else:
@@ -92,23 +91,23 @@ class Order:
     def make_order(
             self
     ) -> dict:
-        order_type, order_details = self.__get_order_type()
+        order_type, order_details = self.get_order_type()
 
         if order_type == "coffee":
-            return self.__make_coffee_order(order_details)
+            return self.make_coffee_order(order_details)
         elif order_type == "beverage":
-            return self.__make_beverage_order(order_details)
+            return self.make_beverage_order(order_details)
         elif order_type == "food":
-            return self.__make_food_order(order_details)
+            return self.make_food_order(order_details)
         elif order_type == "bakery":
-            return self.__make_bakery_order(order_details)
+            return self.make_bakery_order(order_details)
 
         return {}
 
-    def __get_order_type(
+    def get_order_type(
             self
     ) -> tuple[str, dict]:
-        order_details = self.__parse_order()
+        order_details = self.parse_order()
 
         if order_details['coffee']:
             return "coffee", order_details
@@ -121,145 +120,145 @@ class Order:
 
         return "", {}
 
-    def __make_coffee_order(
+    def make_coffee_order(
             self, order_details
     ) -> dict:
-        self.__cart_action = self.__get_cart_action()
-        self.__item_name = order_details['coffee'][0]
-        self.__calculate_quantity(order_details['quantities'])
-        self.__temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
-        self.__sweeteners.extend(order_details['sweeteners'])
-        self.__add_ons.extend(order_details['add_ons'])
-        self.__milk_type = "regular" if not order_details['milk_type'] else str(order_details['milk_type'][0])
-        self.__size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
-        self.__get_price_and_allergies_and_num_calories()
+        self.cart_action = self.get_cart_action()
+        self.item_name = order_details['coffee'][0]
+        self.calculate_quantity(order_details['quantities'])
+        self.temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
+        self.sweeteners.extend(order_details['sweeteners'])
+        self.add_ons.extend(order_details['add_ons'])
+        self.milk_type = "regular" if not order_details['milk_type'] else str(order_details['milk_type'][0])
+        self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
+        self.get_price_and_allergies_and_num_calories()
         return {
             "CoffeeItem": {
-                "item_name": self.__item_name,
-                "quantity": self.__quantity,
-                "price": self.__price,
-                "temp": self.__temp,
-                "add_ons": self.__add_ons,
-                "milk_type": self.__milk_type,
-                "sweeteners": self.__sweeteners,
-                "num_calories": self.__num_calories,
-                "size": self.__size,
-                "cart_action": self.__cart_action,
-                "common_allergies_in_item": self.__allergies
+                "item_name": self.item_name,
+                "quantity": self.quantity,
+                "price": self.price,
+                "temp": self.temp,
+                "add_ons": self.add_ons,
+                "milk_type": self.milk_type,
+                "sweeteners": self.sweeteners,
+                "num_calories": self.num_calories,
+                "size": self.size,
+                "cart_action": self.cart_action,
+                "common_allergies_in_item": self.allergies
             }
         }
 
-    def __make_beverage_order(
+    def make_beverage_order(
             self, order_details
     ) -> dict:
-        self.__cart_action = self.__get_cart_action()
-        self.__item_name = order_details['beverage'][0]
-        self.__calculate_quantity(order_details['quantities'])
-        self.__temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
-        self.__sweeteners = order_details['sweeteners']
-        self.__add_ons = order_details['add_ons']
-        self.__size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
-        self.__get_price_and_allergies_and_num_calories()
+        self.cart_action = self.get_cart_action()
+        self.item_name = order_details['beverage'][0]
+        self.calculate_quantity(order_details['quantities'])
+        self.temp = "regular" if not order_details['temperature'] else str(order_details['temperature'][0])
+        self.sweeteners = order_details['sweeteners']
+        self.add_ons = order_details['add_ons']
+        self.size = "regular" if not order_details['sizes'] else str(order_details['sizes'][0])
+        self.get_price_and_allergies_and_num_calories()
         return {
             "BeverageItem": {
-                "item_name": self.__item_name,
-                "quantity": self.__quantity,
-                "price": self.__price,
-                "temp": self.__temp,
-                "add_ons": self.__add_ons,
-                "sweeteners": self.__sweeteners,
-                "num_calories": self.__num_calories,
-                "size": self.__size,
-                "cart_action": self.__cart_action,
-                "common_allergies_in_item": self.__allergies
+                "item_name": self.item_name,
+                "quantity": self.quantity,
+                "price": self.price,
+                "temp": self.temp,
+                "add_ons": self.add_ons,
+                "sweeteners": self.sweeteners,
+                "num_calories": self.num_calories,
+                "size": self.size,
+                "cart_action": self.cart_action,
+                "common_allergies_in_item": self.allergies
             }
         }
 
-    def __make_food_order(
+    def make_food_order(
             self,
             order_details
     ) -> dict:
-        self.__cart_action = self.__get_cart_action()
-        self.__item_name = order_details['food'][0]
-        self.__calculate_quantity(order_details['quantities'])
-        self.__get_price_and_allergies_and_num_calories()
+        self.cart_action = self.get_cart_action()
+        self.item_name = order_details['food'][0]
+        self.calculate_quantity(order_details['quantities'])
+        self.get_price_and_allergies_and_num_calories()
         return {
             "FoodItem": {
-                "item_name": self.__item_name,
-                "quantity": self.__quantity,
-                "price": self.__price,
-                "num_calories": self.__num_calories,
-                "cart_action": self.__cart_action,
-                "common_allergies_in_item": self.__allergies
+                "item_name": self.item_name,
+                "quantity": self.quantity,
+                "price": self.price,
+                "num_calories": self.num_calories,
+                "cart_action": self.cart_action,
+                "common_allergies_in_item": self.allergies
             }
         }
 
-    def __make_bakery_order(
+    def make_bakery_order(
             self,
             order_details
     ) -> dict:
-        self.__cart_action = self.__get_cart_action()
-        self.__item_name = order_details['bakery'][0]
-        self.__calculate_quantity(order_details['quantities'])
-        self.__get_price_and_allergies_and_num_calories()
+        self.cart_action = self.get_cart_action()
+        self.item_name = order_details['bakery'][0]
+        self.calculate_quantity(order_details['quantities'])
+        self.get_price_and_allergies_and_num_calories()
         return {
             "BakeryItem": {
-                "item_name": self.__item_name,
-                "quantity": self.__quantity,
-                "price": self.__price,
-                "num_calories": self.__num_calories,
-                "cart_action": self.__cart_action,
-                "common_allergies_in_item": self.__allergies
+                "item_name": self.item_name,
+                "quantity": self.quantity,
+                "price": self.price,
+                "num_calories": self.num_calories,
+                "cart_action": self.cart_action,
+                "common_allergies_in_item": self.allergies
             }
         }
 
-    def __calculate_quantity(
+    def calculate_quantity(
             self,
             quantities
     ) -> None:
         for quantity in quantities:
             quantity = number_map(quantity)
-            if self.__cart_action == "modification":
-                self.__quantity.append(-1 * quantity)
+            if self.cart_action == "modification":
+                self.quantity.append(-1 * quantity)
             else:
-                self.__quantity.append(quantity)
+                self.quantity.append(quantity)
 
         return
 
-    def __get_cart_action(
+    def get_cart_action(
             self
     ) -> str:
-        if self.__is_question():
+        if self.is_question():
             return "question"
-        elif self.__is_modification():
+        elif self.is_modification():
             return "modification"
         else:
             return "insertion"
 
-    def __is_question(
+    def is_question(
             self
     ) -> bool:
         pattern = r'\b(do you|how many|how much|does|what are)\b'
 
-        return bool(re.search(pattern, self.__order))
+        return bool(re.search(pattern, self.order))
 
-    def __is_modification(
+    def is_modification(
             self
     ) -> bool:
         pattern = (r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
                    r'away|replace)\b')
 
-        return bool(re.search(pattern, self.__order))
+        return bool(re.search(pattern, self.order))
 
-    def __get_price_and_allergies_and_num_calories(
+    def get_price_and_allergies_and_num_calories(
             self
     ) -> None:
         db_time = time.time()
 
-        item_thread = threading.Thread(target=self.__process_item_and_allergies)
-        add_ons_thread = threading.Thread(target=self.__process_add_ons)
-        sweeteners_thread = threading.Thread(target=self.__process_sweeteners)
-        milk_thread = threading.Thread(target=self.__process_milk)
+        item_thread = threading.Thread(target=self.process_item_and_allergies)
+        add_ons_thread = threading.Thread(target=self.process_add_ons)
+        sweeteners_thread = threading.Thread(target=self.process_sweeteners)
+        milk_thread = threading.Thread(target=self.process_milk)
 
         item_thread.start()
         add_ons_thread.start()
@@ -274,75 +273,138 @@ class Order:
         logging.debug(f"querying db for price, allergies, and num of calories time: {time.time() - db_time}")
         return
 
-    def __process_item_and_allergies(
+    def process_item_and_allergies(
             self
     ) -> None:
-        item_details, _ = get_item(self.__item_name,
+        item_details, _ = get_item(self.item_name,
                                    connection_pool=self.connection_pool,
-                                   embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
-                                   api_key=self.__key)
+                                   embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                   api_key=self.key)
 
-        if self.__cart_action == "question":
-            self.__quantity.append(item_details[0][2])
+        if self.cart_action == "question":
+            self.quantity.append(item_details[0][2])
 
-        self.__allergies = item_details[0][3]
-        self.__price.append(item_details[0][5])
-        self.__num_calories.append(item_details[0][4])
+        self.allergies = item_details[0][3]
+        self.price.append(item_details[0][5])
+        self.num_calories.append(item_details[0][4])
 
-    def __process_add_ons(
+    def process_add_ons(
             self
     ) -> None:
-        for add_on in self.__add_ons:
+        for add_on in self.add_ons:
             add_on_details, _ = get_item(add_on,
                                          connection_pool=self.connection_pool,
-                                         embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
-                                         api_key=self.__key)
-            self.__price.append(add_on_details[0][5])
-            self.__num_calories.append(add_on_details[0][4])
-            if self.__cart_action == "question":
-                self.__quantity.append(add_on_details[0][2])
+                                         embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                         api_key=self.key)
+            self.price.append(add_on_details[0][5])
+            self.num_calories.append(add_on_details[0][4])
+            if self.cart_action == "question":
+                self.quantity.append(add_on_details[0][2])
 
-    def __process_sweeteners(
+    def process_sweeteners(
             self
     ) -> None:
-        for sweetener in self.__sweeteners:
+        for sweetener in self.sweeteners:
             sweetener_details, _ = get_item(sweetener,
                                             connection_pool=self.connection_pool,
-                                            embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
-                                            api_key=self.__key)
-            self.__price.append(sweetener_details[0][5])
-            self.__num_calories.append(sweetener_details[0][4])
-            if self.__cart_action == "question":
-                self.__quantity.append(sweetener_details[0][2])
+                                            embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                            api_key=self.key)
+            self.price.append(sweetener_details[0][5])
+            self.num_calories.append(sweetener_details[0][4])
+            if self.cart_action == "question":
+                self.quantity.append(sweetener_details[0][2])
 
-    def __process_milk(
+    def process_milk(
             self
     ) -> None:
-        if self.__milk_type and self.__milk_type != "regular":
-            milk_details, _ = get_item(self.__milk_type,
+        if self.milk_type and self.milk_type != "regular":
+            milk_details, _ = get_item(self.milk_type,
                                        connection_pool=self.connection_pool,
-                                       embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
-                                       api_key=self.__key)
-            self.__price.append(milk_details[0][5])
-            self.__num_calories.append(milk_details[0][4])
-            if self.__cart_action == "question":
-                self.__quantity.append(milk_details[0][2])
+                                       embedding_cache=self.embedding_cache if self.embedding_cache else None,
+                                       api_key=self.key)
+            self.price.append(milk_details[0][5])
+            self.num_calories.append(milk_details[0][4])
+            if self.cart_action == "question":
+                self.quantity.append(milk_details[0][2])
 
-    def __parse_order(
+    def parse_order(
             self
     ) -> dict:
-        sizes = re.findall(size_pattern, self.__order)
-        quantities = re.findall(quantity_pattern, self.__order)
-        coffees = re.findall(coffee_pattern, self.__order)
-        temperatures = re.findall(temperature_pattern, self.__order)
-        sweeteners = re.findall(sweetener_pattern, self.__order)
-        flavors = re.findall(flavor_pattern, self.__order)
-        beverages = re.findall(beverage_pattern, self.__order)
-        foods = re.findall(food_pattern, self.__order)
-        bakeries = re.findall(bakery_pattern, self.__order)
-        add_ons = re.findall(add_ons_pattern, self.__order)
-        milk_types = re.findall(milk_pattern, self.__order)
-        allergies = re.findall(common_allergies, self.__order)
+
+        size_pattern = r'\b(small|medium|large|extra large)\b'
+
+        coffee_pattern = (
+            r'\b(coffee|black coffee|coffees|cappuccino|latte|americano|macchiato|'
+            r'frappuccino|chai latte|espresso)(?<!shot of)\b'
+        )
+
+        quantity_pattern = (
+            r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|'
+            r'fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|'
+            r'dozen|a lot|a|an)\b'
+        )
+
+        temperature_pattern = r'\b(hot|cold|iced|warm|room temp|extra hot)\b'
+
+        sweetener_pattern = (
+            r'\b(sugar|honey|liquid cane sugar|sweet n low|equal|butter pecan|pink velvet|'
+            r'sugar packets)\b'
+        )
+
+        flavor_pattern = (
+            r'\b(?!pump of |pumps of )'
+            r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
+            r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)\b'
+        )
+
+        beverage_pattern = (
+            r'\b(water|tea|hot chocolate|hot cocoa|apple juice|orange juice|cranberry juice|'
+            r'mango smoothie|pineapple smoothie|pina colada smoothie|vanilla milkshake|'
+            r'lemon tea|mango tea|jasmine|green tea|mint tea)\b'
+        )
+
+        food_pattern = (
+            r'\b(egg and cheese croissant|egg and cheese|bacon egg and cheese|fruit|yogurt|'
+            r'oatmeal|egg and cheese on croissant|hashbrown|hashbrowns|hash brown|hash '
+            r'browns|grilled cheese|egg and cheese on english muffin|plain bagel|'
+            r'everything bagel|sesame bagel|asiago bagel)\b'
+        )
+
+        bakery_pattern = (
+            r'\b(brownie|blueberry muffin|blueberry muffins|glazed donut|glazed donuts|'
+            r'strawberry donut|strawberry doughnut|strawberry donuts|strawberry doughnuts|chocolate donut|'
+            r'chocolate doughnut|chocolate doughnuts|glazed doughnut|glazed doughnuts|munchkins|munchkin|'
+            r'chocolate donuts|donut|boston cream donuts|boston cream|lemon cake|chocolate chip muffin)\b'
+        )
+
+        add_ons_pattern = (
+            r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel|pump of '
+            r'vanilla|pumps of vanilla|pump of sugar|pumps of sugar|liquid sugar|pump of '
+            r'butter pecan|pumps of butter pecan)\b'
+        )
+
+        milk_pattern = (
+            r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|'
+            r'soy milk|coconut milk|half and half|heavy cream|cream)\b'
+        )
+
+        common_allergies = (
+            r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|'
+            r'lactose|sesame|mustard|sulfates)\b'
+        )
+
+        sizes = re.findall(size_pattern, self.order)
+        quantities = re.findall(quantity_pattern, self.order)
+        coffees = re.findall(coffee_pattern, self.order)
+        temperatures = re.findall(temperature_pattern, self.order)
+        sweeteners = re.findall(sweetener_pattern, self.order)
+        flavors = re.findall(flavor_pattern, self.order)
+        beverages = re.findall(beverage_pattern, self.order)
+        foods = re.findall(food_pattern, self.order)
+        bakeries = re.findall(bakery_pattern, self.order)
+        add_ons = re.findall(add_ons_pattern, self.order)
+        milk_types = re.findall(milk_pattern, self.order)
+        allergies = re.findall(common_allergies, self.order)
 
         return {
             "sizes": sizes,
@@ -364,6 +426,7 @@ def split_order(
         order
 ) -> list[str]:
     start_time = time.time()
+    split_pattern = r'\b(plus|get|and|also)\b(?! (a shot|a pump|whipped|cheese|sugar|cream|one|two|three|wait)\b)'
     split = re.split(split_pattern, order)
     remove_words = ['plus', 'get', 'and', 'also']
     remove_chars = '[^a-zA-Z0-9]'
@@ -441,7 +504,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "2 coffees with 2 pumps of vanilla and 1 pump of caramel and two splenda packets"
+    orders = "Can I have one black coffee with a pump of caramel"
 
     split_order_time = time.time()
     details = split_order(orders)
