@@ -64,7 +64,7 @@ class AudioEndpointTestCase(TestCase):
         self.mock_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
 
         self.mock_deal_client = MagicMock()
-        mock_deal_data = '{"deal_accepted": "foo", "deal_offered": "foo", "deal_object": {}}'
+        mock_deal_data = '{"deal_accepted": "foo", "deal_object": {}}'
         self.mock_deal_client.get = MagicMock(return_value=mock_deal_data)
         self.mock_deal_client.setex = MagicMock()
         self.mock_deal_client.append = MagicMock()
@@ -307,10 +307,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    @patch('src.audio_endpoint.views.AudioView.formatted_deal')
     @patch(speech_to_text_path + '.Deepgram')
-    def test_patch_sends_successful_response_when_user_accepts_deal(
-            self, mock_deepgram, mock_formatted_deal
+    def test_patch_sends_successful_response_when_user_accepts_deal_and_deal_is_coffee_item(
+            self, mock_deepgram
     ) -> None:
         # Arrange
         data = {
@@ -318,14 +317,21 @@ class AudioEndpointTestCase(TestCase):
             "unique_id": "test",
         }
 
-        mock_formatted_deal.return_value = [{
-            'BakeryItem': {
-                'item_name': 'test',
-                'item_quantity': 6,
-                'common_allergin': 'test',
-                'price': 10.0
-            }
-        }]
+        mock_deal_data = (
+            '{'
+            '    "deal_accepted": "foo",'
+            '    "deal_object": {'
+            '        "CoffeeItem": {'
+            '            "item_name": "black coffee",'
+            '            "quantity": [1],'
+            '            "price": [2.0],'
+            '            "cart_action": "insertion"'
+            '        }'
+            '    }'
+            '}'
+        )
+
+        self.mock_deal_client.get = MagicMock(return_value=mock_deal_data)
 
         mock_deepgram_instance = MagicMock()
         mock_deepgram.return_value = mock_deepgram_instance
@@ -346,3 +352,31 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
+
+    @patch(speech_to_text_path + '.Deepgram')
+    def test_patch_sends_400_error_response_when_user_deal_invalid(
+            self, mock_deepgram
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav",
+            "unique_id": "test",
+        }
+
+        mock_deepgram_instance = MagicMock()
+        mock_deepgram.return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'yes'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
+
+        # Act
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'error': 'item_type not found'})
