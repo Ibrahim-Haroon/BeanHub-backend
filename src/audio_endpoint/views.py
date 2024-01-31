@@ -48,7 +48,7 @@ class AudioView(APIView):
     @staticmethod
     def connect_to_redis_temp_conversation_cache(
 
-    ) -> redis.Redis:
+    ) -> redis.Redis:  # pragma: no cover
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
@@ -61,7 +61,7 @@ class AudioView(APIView):
     @staticmethod
     def connect_to_redis_embedding_cache(
 
-    ) -> redis.Redis:
+    ) -> redis.Redis:  # pragma: no cover
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=1)
@@ -74,7 +74,7 @@ class AudioView(APIView):
     @staticmethod
     def connect_to_redis_temp_deal_cache(
 
-    ) -> redis.Redis:
+    ) -> redis.Redis:  # pragma: no cover
         while True:
             try:
                 redis_client = redis.StrictRedis(host='localhost', port=6379, db=2)
