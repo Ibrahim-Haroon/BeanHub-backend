@@ -9,8 +9,8 @@ from os import getenv as env
 from dotenv import load_dotenv
 from other.regex_patterns import *
 from other.number_map import number_map
-from src.vector_db.get_item import get_item
 from simpletransformers.ner import NERModel
+from src.vector_db.get_item import get_item
 from src.django_beanhub.settings import DEBUG
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
@@ -93,6 +93,7 @@ class Order:
             self
     ) -> dict:
         order_type, order_details = self.__get_order_type()
+        self.__verify_quantities(order_type, order_details)
 
         if order_type == "coffee":
             return self.__make_coffee_order(order_details)
@@ -361,6 +362,37 @@ class Order:
             "milk_type": milk_types,
             "allergies": allergies
         }
+
+    def __verify_quantities(
+            self, order_type, order_details
+    ) -> None:
+        order_functions = {
+            "coffee": (["add_ons", "sweeteners", "milk_type"]),
+            "beverage": (["add_ons", "sweeteners"]),
+            "food": ([]),
+            "bakery": ([])
+        }
+
+        if order_type in order_functions:
+            total_items = order_functions[order_type]
+            num_items = sum(len(order_details[item]) for item in total_items)
+            min_length = len(order_details['quantities']) + num_items
+            if len(order_details['quantities']) < min_length:
+                order_details['quantities'] = self.correct_quantities()
+
+    def correct_quantities(
+            self
+    ) -> list[str]:
+        updated_quantities = []
+
+        for quantity in self.__order.split(' '):
+            if (
+                    quantity.isnumeric() or
+                    quantity in number_map
+            ):
+                updated_quantities.append(quantity)
+
+        return updated_quantities
 
 
 def split_order(
