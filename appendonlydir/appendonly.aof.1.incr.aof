@@ -1340,3 +1340,58 @@ $3
 DEL
 $49
 deal_history_e45a1f01-d708-425d-9d30-3229556f049d
+*2
+$6
+SELECT
+$1
+0
+*5
+$3
+SET
+$57
+conversation_history_e8114882-8899-4639-adee-a24eea6c4b63
+$362
+User: give me one black coffee with two creams and one sugar and two pumps of caramel and one glazed donut
+Model: One black coffee with two creams, one sugar, and two pumps of caramel, along with a glazed donut has been added to your cart! Is there anything else you'd like to order today? And don't forget, you can add a black coffee for only two dollars more!
+
+$4
+PXAT
+$13
+1706667008984
+*2
+$6
+SELECT
+$1
+2
+*5
+$3
+SET
+$49
+deal_history_e8114882-8899-4639-adee-a24eea6c4b63
+$145
+{"deal_offered": true, "deal_object": {"CoffeeItem": {"item_name": "black coffee", "quantity": [1], "price": [2.0], "cart_action": "insertion"}}}
+$4
+PXAT
+$13
+1706667008997
+*3
+$6
+APPEND
+$49
+deal_history_e8114882-8899-4639-adee-a24eea6c4b63
+$43
+{"deal_offered": true, "deal_object": null}
+*2
+$6
+SELECT
+$1
+0
+*3
+$6
+APPEND
+$57
+conversation_history_e8114882-8899-4639-adee-a24eea6c4b63
+$278
+User: what are the common allergies in the blueberry muffin
+Model: The common allergies in the blueberry muffin include gluten, dairy, eggs, nuts, and soy. Is there anything else you'd like to order today? And don't forget, you can add a black coffee for only two dollars more!
+
