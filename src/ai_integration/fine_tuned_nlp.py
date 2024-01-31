@@ -219,9 +219,9 @@ class Order:
             quantities
     ) -> None:
         for quantity in quantities:
-            try:
+            if quantity.isnumeric():
                 quantity = int(quantity)
-            except ValueError:
+            else:
                 quantity = number_map(quantity)
             if self.__cart_action == "modification":
                 self.__quantity.append(-1 * quantity)
