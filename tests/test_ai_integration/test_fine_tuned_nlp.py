@@ -5,12 +5,11 @@ from src.ai_integration.fine_tuned_nlp import ner_transformer, Order
 
 
 @pytest.fixture
-def mock_components(
+def mock_ner_model(
         mocker
 ) -> dict:
     ner_model_mock = mocker.patch('src.ai_integration.fine_tuned_nlp.NERModel')
     mock_instance = ner_model_mock.return_value
-
     mock_instance.predict.return_value = ([[{'test': 'O'}]], None)
 
     return {
@@ -22,13 +21,18 @@ def mock_components(
 def mock_database_components(
         mocker
 ) -> dict:
-    mock_embedding_api = mocker.patch('src.vector_db.get_item.openai_embedding_api')
-    mock_embedding_api.return_value = [0.1, 0.2, 0.3]
+    mock_fetchall = mocker.Mock()
+    mock_fetchall.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
+
+    mock_cursor = mocker.Mock()
+    mock_cursor.cursor.return_value = mock_fetchall
+
+    mock_connection_pool = mocker.patch('src.ai_integration.fine_tuned_nlp.psycopg2.pool.SimpleConnectionPool')
+    mock_connection_pool.return_value.getconn.return_value = mock_cursor
 
     return {
         'register_vector': mocker.patch('pgvector.psycopg2.register_vector'),
-        'connect': mocker.patch('src.vector_db.get_item.psycopg2.connect'),
-        'openai_embedding_api': mock_embedding_api,
+        'pool': mock_connection_pool,
         'input': mocker.patch('builtins.input'),
     }
 
@@ -41,7 +45,7 @@ def mock_boto3_session_client(
 
 
 def test_that_ner_transformer_returns_prediction_given_string_and_does_not_print_out_prediction(
-        mock_components
+        mock_ner_model
 ) -> None:
     # Arrange
     expected_prediction = [[{'test': 'O'}]]
@@ -55,7 +59,7 @@ def test_that_ner_transformer_returns_prediction_given_string_and_does_not_print
 
 
 def test_that_ner_transformer_returns_prediction_given_string_and_does_print_out_prediction(
-        mock_components, capsys
+        mock_ner_model, capsys
 ) -> None:
     # Arrange
     expected_prediction = [[{'test': 'O'}]]
@@ -71,7 +75,7 @@ def test_that_ner_transformer_returns_prediction_given_string_and_does_print_out
 
 
 def test_that_ner_transformer_returns_empty_list_when_given_empty_string(
-        mock_components
+        mock_ner_model
 ) -> None:
     # Arrange
     empty_string = ""
@@ -85,12 +89,12 @@ def test_that_ner_transformer_returns_empty_list_when_given_empty_string(
         f"expected prediction to be {expected_prediction} but got {prediction}"
 
 
-# TODO: Fix this test, it is flaky
 def test_that_make_order_in_Order_class_returns_expected_dict_for_coffee_item(
         mocker, mock_boto3_session_client, mock_database_components
 ) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
+        "OPENAI_API_KEY": "test_api_key",
         "AWS_ACCESS_KEY_ID": "test_access_key_id",
         "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
         "AWS_DEFAULT_REGION": "test_region",
@@ -101,25 +105,20 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_coffee_item(
         "RDS_HOSTNAME": "test_hostname",
         "RDS_PORT": "test_port"
     })
-    mock_database_components['connect'].return_value.cursor.return_value.fetchall.return_value = [(7,
-                                                                                                   'test',
-                                                                                                   6,
-                                                                                                   'test',
-                                                                                                   '(60,120)',
-                                                                                                   10.0)]
+
     expected_return_value = {
         'CoffeeItem': {
+            'item_name': 'black coffee',
+            'quantity': [1, 1, 1, 1],
+            'price': [10.0, 10.0, 10.0, 10.0],
+            'temp': 'regular',
             'add_ons': ['pump of caramel'],
+            'milk_type': 'cream',
+            'sweeteners': ['sugar'],
+            'size': 'regular',
             'cart_action': 'insertion',
             'common_allergies_in_item': 'test',
-            'item_name': 'black coffee',
-            'milk_type': 'cream',
-            'num_calories': ['(60,120)', '(60,120)', '(60,120)'],
-            'price': [10.0, 10.0, 10.0],
-            'quantity': [1, 1, 1, 1],
-            'size': 'regular',
-            'sweeteners': ['sugar'],
-            'temp': 'regular'
+            'num_calories': ['(60,120)', '(60,120)', '(60,120)', '(60,120)']
         }
     }
     mock_coffee_order = "One black coffee with one cream and one sugar and a pump of caramel"
@@ -137,6 +136,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_beverage_item(
 ) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
+        "OPENAI_API_KEY": "test_api_key",
         "AWS_ACCESS_KEY_ID": "test_access_key_id",
         "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
         "AWS_DEFAULT_REGION": "test_region",
@@ -147,12 +147,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_beverage_item(
         "RDS_HOSTNAME": "test_hostname",
         "RDS_PORT": "test_port"
     })
-    mock_database_components['connect'].return_value.cursor.return_value.fetchall.return_value = [(7,
-                                                                                                   'test',
-                                                                                                   6,
-                                                                                                   'test',
-                                                                                                   '(60,120)',
-                                                                                                   10.0)]
+
     expected_return_value = {
         'BeverageItem': {
             'add_ons': [],
@@ -181,6 +176,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_food_item(
 ) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
+        "OPENAI_API_KEY": "test_api_key",
         "AWS_ACCESS_KEY_ID": "test_access_key_id",
         "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
         "AWS_DEFAULT_REGION": "test_region",
@@ -191,12 +187,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_food_item(
         "RDS_HOSTNAME": "test_hostname",
         "RDS_PORT": "test_port"
     })
-    mock_database_components['connect'].return_value.cursor.return_value.fetchall.return_value = [(7,
-                                                                                                   'test',
-                                                                                                   6,
-                                                                                                   'test',
-                                                                                                   '(60,120)',
-                                                                                                   10.0)]
+
     expected_return_value = {
         'FoodItem': {
             'cart_action': 'modification',
@@ -223,6 +214,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_bakery_item(
 ) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
+        "OPENAI_API_KEY": "test_api_key",
         "AWS_ACCESS_KEY_ID": "test_access_key_id",
         "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
         "AWS_DEFAULT_REGION": "test_region",
@@ -233,12 +225,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_bakery_item(
         "RDS_HOSTNAME": "test_hostname",
         "RDS_PORT": "test_port"
     })
-    mock_database_components['connect'].return_value.cursor.return_value.fetchall.return_value = [(7,
-                                                                                                   'test',
-                                                                                                   6,
-                                                                                                   'test',
-                                                                                                   '(60,120)',
-                                                                                                   10.0)]
+
     expected_return_value = {
         'BakeryItem': {
             'cart_action': 'question',
@@ -264,6 +251,7 @@ def test_that_make_order_in_Order_class_returns_empty_dict_for_item_of_invalid_t
 ) -> None:
     # Arrange
     mocker.patch.dict(os.environ, {
+        "OPENAI_API_KEY": "test_api_key",
         "AWS_ACCESS_KEY_ID": "test_access_key_id",
         "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
         "AWS_DEFAULT_REGION": "test_region",
