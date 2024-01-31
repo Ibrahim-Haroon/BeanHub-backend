@@ -77,12 +77,12 @@ class Order:
         else:
             self.__key = env('OPENAI_API_KEY')
         if connection_pool:
-            self.connection_pool = connection_pool
+            self.__connection_pool = connection_pool
         else:
             logging.debug("creating new connection pool")
-            self.connection_pool = psycopg2.pool.SimpleConnectionPool(1,
-                                                                      10,
-                                                                      connection_string())
+            self.__connection_pool = psycopg2.pool.SimpleConnectionPool(1,
+                                                                        10,
+                                                                        connection_string())
 
         if not aws_connected:
             logging.debug("getting aws secret")
@@ -281,7 +281,7 @@ class Order:
             self
     ) -> None:
         item_details, _ = get_item(self.__item_name,
-                                   connection_pool=self.connection_pool,
+                                   connection_pool=self.__connection_pool,
                                    embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
                                    api_key=self.__key)
 
@@ -297,7 +297,7 @@ class Order:
     ) -> None:
         for add_on in self.__add_ons:
             add_on_details, _ = get_item(add_on,
-                                         connection_pool=self.connection_pool,
+                                         connection_pool=self.__connection_pool,
                                          embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
                                          api_key=self.__key)
             self.__price.append(add_on_details[0][5])
@@ -310,7 +310,7 @@ class Order:
     ) -> None:
         for sweetener in self.__sweeteners:
             sweetener_details, _ = get_item(sweetener,
-                                            connection_pool=self.connection_pool,
+                                            connection_pool=self.__connection_pool,
                                             embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
                                             api_key=self.__key)
             self.__price.append(sweetener_details[0][5])
@@ -323,7 +323,7 @@ class Order:
     ) -> None:
         if self.__milk_type and self.__milk_type != "regular":
             milk_details, _ = get_item(self.__milk_type,
-                                       connection_pool=self.connection_pool,
+                                       connection_pool=self.__connection_pool,
                                        embedding_cache=self.__embedding_cache if self.__embedding_cache else None,
                                        api_key=self.__key)
             self.__price.append(milk_details[0][5])
