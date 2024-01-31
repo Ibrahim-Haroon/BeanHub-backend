@@ -29,7 +29,7 @@ prompt = """
 
 async def get_openai_response(
         client, model, messages, api_key, max_tokens: int | None = None
-) -> dict:
+) -> dict: # pragma: no cover
     try:
         response = await client.post(
             "https://api.openai.com/v1/chat/completions",
