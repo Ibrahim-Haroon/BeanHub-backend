@@ -83,9 +83,6 @@ class URLsTestCase(TestCase):
         self.mock_connection_string = patch('src.audio_endpoint.views.connection_string')
         self.mock_connection_string.start().return_value = MagicMock()
 
-        self.mock_connection_pool = patch('pgvector.psycopg2.register_vector')
-        self.mock_connection_pool.start().return_value = MagicMock()
-
         self.mock_boto3_session_client = patch('boto3.session.Session.client')
         self.mock_boto3_session_client.start().return_value = MagicMock()
 
@@ -110,8 +107,6 @@ class URLsTestCase(TestCase):
         }
         mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
 
-
-
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
 
@@ -133,9 +128,6 @@ class URLsTestCase(TestCase):
         self.mock_openai_tts = self.mock_openai_tts.start()
         self.mock_openai_tts.return_value.audio.speech.create.return_value = mock_response
 
-        self.mock_connect = patch('src.audio_endpoint.views.psycopg2.connect')
-        self.mock_connect.start().return_value = MagicMock()
-
         self.mock_db_instance = patch('src.audio_endpoint.views.psycopg2.connect').start()
         mock_cursor = MagicMock()
         mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
@@ -145,6 +137,7 @@ class URLsTestCase(TestCase):
             self
     ) -> None:
         patch.stopall()
+        super().tearDown()
 
     def test_audio_view_url_is_resolves_to_AudioView_class(
             self
