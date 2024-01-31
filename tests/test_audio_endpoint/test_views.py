@@ -14,6 +14,7 @@ class AudioEndpointTestCase(TestCase):
     def setUp(
             self
     ) -> None:
+        super().setUp()
         self.mock_env = patch.dict(os.environ, {
             "S3_BUCKET_NAME": "test_bucket_name",
             "OPENAI_API_KEY": "test_api_key",
@@ -53,27 +54,32 @@ class AudioEndpointTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_redis_temp_conv_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
-        mock_redis_conv_session_client = self.mock_redis_temp_conv_cache.start().return_value
-        mock_redis_conv_session_client.setex = MagicMock()
-        mock_redis_conv_session_client.append = MagicMock()
+        self.mock_conv_client = MagicMock()
+        self.mock_conv_client.setex = MagicMock()
+        self.mock_conv_client.append = MagicMock()
 
-        self.mock_redis_temp_deal_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
-        mock_redis_deal_session_client = self.mock_redis_temp_deal_cache.start().return_value
-        mock_redis_deal_session_client.setex = MagicMock()
-        mock_redis_deal_session_client.append = MagicMock()
-        mock_deal_data = {
-            "deal_offered": 'foo',
-            "deal_object": {}
-        }
-        mock_redis_deal_session_client.get = MagicMock(return_value=mock_deal_data)
-        mock_redis_deal_session_client.flushdb = MagicMock()
+        self.mock_embedding_client = MagicMock()
+        self.mock_embedding_client.set = MagicMock()
+        self.mock_embedding_client.exists = MagicMock(return_value=False)
+        self.mock_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
 
-        self.mock_redis_embedding_cache = patch('src.audio_endpoint.views.redis.StrictRedis')
-        mock_redis_embedding_client = self.mock_redis_embedding_cache.start().return_value
-        mock_redis_embedding_client.set = MagicMock()
-        mock_redis_embedding_client.exists = MagicMock(return_value=False)
-        mock_redis_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
+        self.mock_deal_client = MagicMock()
+        mock_deal_data = '{"deal_accepted": "foo", "deal_offered": "foo", "deal_object": {}}'
+        self.mock_deal_client.get = MagicMock(return_value=mock_deal_data)
+        self.mock_deal_client.setex = MagicMock()
+        self.mock_deal_client.append = MagicMock()
+        self.mock_deal_client.flushdb = MagicMock()
+
+        patcher_conv = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_conversation_cache',
+                             return_value=self.mock_conv_client)
+        patcher_embedding = patch('src.audio_endpoint.views.AudioView.connect_to_redis_embedding_cache',
+                                  return_value=self.mock_embedding_client)
+        patcher_deal = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_deal_cache',
+                             return_value=self.mock_deal_client)
+
+        patcher_conv.start()
+        patcher_embedding.start()
+        patcher_deal.start()
 
         self.mock_s3 = patch('src.audio_endpoint.views.boto3.client')
         self.mock_s3.start().return_value = MagicMock()
@@ -99,7 +105,7 @@ class AudioEndpointTestCase(TestCase):
         nova_response = {
             'results': {
                 'channels': [
-                    {'alternatives': [{'transcript': 'test transcription'}]}
+                    {'alternatives': [{'transcript': 'this is a test'}]}
                 ]
             }
         }
@@ -301,11 +307,10 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-
-    @patch(speech_to_text_path + '.Deepgram.transcription.sync_prerecorded')
     @patch('src.audio_endpoint.views.AudioView.formatted_deal')
+    @patch(speech_to_text_path + '.Deepgram')
     def test_patch_sends_successful_response_when_user_accepts_deal(
-            self, mock_sync_prerecorded, mock_formatted_deal
+            self, mock_deepgram, mock_formatted_deal
     ) -> None:
         # Arrange
         data = {
@@ -313,14 +318,6 @@ class AudioEndpointTestCase(TestCase):
             "unique_id": "test",
         }
 
-        # Mock the sync_prerecorded method directly
-        mock_sync_prerecorded.return_value = {
-            'results': {
-                'channels': [
-                    {'alternatives': [{'transcript': 'yes'}]}
-                ]
-            }
-        }
         mock_formatted_deal.return_value = [{
             'BakeryItem': {
                 'item_name': 'test',
@@ -329,6 +326,17 @@ class AudioEndpointTestCase(TestCase):
                 'price': 10.0
             }
         }]
+
+        mock_deepgram_instance = MagicMock()
+        mock_deepgram.return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'yes'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
 
         # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
