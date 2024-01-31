@@ -245,6 +245,8 @@ class AudioView(APIView):
 
         if accepted_deal(transcription):
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
+            if isinstance(order_report, Response):
+                return order_report
         elif human_requested(transcription):
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
@@ -307,11 +309,13 @@ class AudioView(APIView):
 
     def process_and_format_deal(
             self, unique_id: uuid.UUID, transcription: str
-    ) -> list[dict] and str:
+    ) -> (list[dict] and str) or (Response and None):
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
         order_report = self.formatted_deal(deal_data['deal_object'])
 
+        if isinstance(order_report, Response):
+            return order_report, None
         model_response = conv_ai(transcription,
                                  str(order_report),
                                  conversation_history=str(self.conversation_cache.get(
