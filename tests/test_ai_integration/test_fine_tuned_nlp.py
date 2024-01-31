@@ -30,9 +30,13 @@ def mock_database_components(
     mock_connection_pool = mocker.patch('src.ai_integration.fine_tuned_nlp.psycopg2.pool.SimpleConnectionPool')
     mock_connection_pool.return_value.getconn.return_value = mock_cursor
 
+    mock_embedding_api = mocker.patch('src.vector_db.get_item.openai_embedding_api')
+    mock_embedding_api.return_value = [0.1, 0.2, 0.3]
+
     return {
         'register_vector': mocker.patch('pgvector.psycopg2.register_vector'),
         'pool': mock_connection_pool,
+        'embedding_api': mock_embedding_api,
         'input': mocker.patch('builtins.input'),
     }
 
