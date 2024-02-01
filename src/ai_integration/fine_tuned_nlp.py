@@ -288,6 +288,7 @@ class Order:
                                    api_key=self.__key)
 
         if self.__cart_action == "question":
+            self.__quantity = []
             self.__quantity.append(item_details[0][2])
 
         self.__allergies = item_details[0][3]
@@ -464,7 +465,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "glazed donut"
+    orders = "how many glazed donut"
 
     split_order_time = time.time()
     details = split_order(orders)
