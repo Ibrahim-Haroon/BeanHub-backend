@@ -9,7 +9,7 @@ from other.regex_patterns import (
 
 def split_order(order: str) -> list[str]:
     split_pattern = (
-            r'(' + size_pattern +
+            r'(?:' + size_pattern +
             '|' + coffee_pattern +
             '|' + quantity_pattern +
             '|' + temperature_pattern +
@@ -28,7 +28,7 @@ def split_order(order: str) -> list[str]:
     result = re.split(split_pattern, order)
     result = [s.strip() for s in result if s is not None and s.strip()]
 
-    return list(set(result))
+    return result
 
 
 def correct_coffee_order_quantities(
@@ -43,8 +43,6 @@ def correct_coffee_order_quantities(
                 set(order_details['milk_type']))
 
     for index, item in enumerate(order):
-        if index == 0 and len(order) > 1:
-            continue
         quantity = order[index - 1] if index > 0 else order[index]
         if item in item_set:
             if (
@@ -70,8 +68,6 @@ def correct_beverage_order_quantities(
                 set(order_details['sweeteners']))
 
     for index, item in enumerate(order):
-        if index == 0 and len(order) > 1:
-            continue
         quantity = order[index - 1] if index > 0 else order[index]
         if item in item_set:
             if (
@@ -95,8 +91,6 @@ def correct_food_order_quantities(
     item_set = set(order_details['food'])
 
     for index, item in enumerate(order):
-        if index == 0 and len(order) > 1:
-            continue
         quantity = order[index - 1] if index > 0 else order[index]
         if item in item_set:
             if (
@@ -110,6 +104,7 @@ def correct_food_order_quantities(
 
     return updated_quantities
 
+
 def correct_bakery_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
@@ -119,8 +114,6 @@ def correct_bakery_order_quantities(
     item_set = set(order_details['bakery'])
 
     for index, item in enumerate(order):
-        if index == 0 and len(order) > 1:
-            continue
         quantity = order[index - 1] if index > 0 else order[index]
         if item in item_set:
             if (
