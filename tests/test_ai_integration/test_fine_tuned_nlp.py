@@ -199,7 +199,7 @@ def test_that_make_order_in_Order_class_returns_expected_dict_for_food_item(
             'item_name': 'egg and cheese croissant',
             'num_calories': ['(60,120)'],
             'price': [10.0],
-            'quantity': []
+            'quantity': [-1]
         }
     }
     mock_food_order = "remove the egg and cheese croissant"
