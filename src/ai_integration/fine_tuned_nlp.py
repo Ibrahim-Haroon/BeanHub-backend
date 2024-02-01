@@ -8,6 +8,7 @@ from redis import Redis
 from os import getenv as env
 from dotenv import load_dotenv
 from other.regex_patterns import *
+from other.quantity_correction import *
 from other.number_map import number_map
 from simpletransformers.ner import NERModel
 from src.vector_db.get_item import get_item
@@ -364,39 +365,25 @@ class Order:
         }
 
     def __verify_quantities(
-            self, order_type, order_details
+        self, order_type, order_details
     ) -> None:
         order_functions = {
-            "coffee": (["add_ons", "sweeteners", "milk_type"]),
-            "beverage": (["add_ons", "sweeteners"]),
-            "food": ([]),
-            "bakery": ([])
+            "coffee": (correct_coffee_order_quantities, ["add_ons", "sweeteners", "milk_type"]),
+            "beverage": (correct_beverage_order_quantities, ["add_ons", "sweeteners"]),
+            "food": (correct_food_order_quantities, []),
+            "bakery": (correct_bakery_order_quantities, [])
         }
 
         if order_type in order_functions:
-            total_items = order_functions[order_type]
-            num_items = sum(len(order_details[item]) for item in total_items)
-            min_length = len(order_details['quantities']) + num_items
-            if len(order_details['quantities']) < min_length:
-                order_details['quantities'] = self.correct_quantities()
-
-    def correct_quantities(
-            self
-    ) -> list[str]:
-        updated_quantities = []
-
-        for quantity in self.__order.split(' '):
-            if (
-                    quantity.isnumeric() or
-                    quantity in number_map
-            ):
-                updated_quantities.append(quantity)
-
-        return updated_quantities
+            correction, total_additions = order_functions[order_type]
+            num_additions = sum(len(order_details[addition]) for addition in total_additions)
+            min_length = len(order_details['quantities']) + num_additions
+            if len(order_details['quantities']) < max(min_length, 1):
+                order_details['quantities'] = correction(order_details, self.__order)
 
 
 def split_order(
-        order
+        order: str
 ) -> list[str]:
     start_time = time.time()
     split = re.split(split_pattern, order)
@@ -477,7 +464,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "2 coffees with two pumps of vanilla and one pump of caramel and two splenda packets"
+    orders = "glazed donut"
 
     split_order_time = time.time()
     details = split_order(orders)
