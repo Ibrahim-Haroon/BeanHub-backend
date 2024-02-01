@@ -97,7 +97,7 @@ def get_deal(
         embedding = return_queue.get(timeout=5)
     except queue.Empty:
         logging.debug("queue empty")
-        return "Error, return_queue.get turned into a deadlock. Check the `get_embedding` function", False
+        return "Error, return_queue.get turned into a deadlock. Check the `get_embedding` function", None, False
 
     execute_time = time.time()
     cur.execute(""" SELECT deal, item_type, item_name, item_quantity, price
