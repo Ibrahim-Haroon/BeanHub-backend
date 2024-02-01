@@ -40,7 +40,9 @@ schema_view = get_schema_view(
 )
 
 
-def root_view(request):
+def root_view(
+        request
+) -> HttpResponse:  # pragma: no cover
     return HttpResponse("Hello! You're at the root of the BeanHub server.")
 
 
