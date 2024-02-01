@@ -1,5 +1,6 @@
 import csv
 import json
+import queue
 import pytest
 from io import StringIO
 from mock import MagicMock
@@ -106,6 +107,28 @@ def test_get_item_returns_false_when_given_invalid_params(
 
     # Assert
     assert res is False, f"expected search to be unsuccessful but {res}"
+
+
+def test_get_item_throws_correct_exception_when_queue_empty(
+        mocker, mock_components
+) -> None:
+    # Mock the queue to raise queue.Empty
+    mock_queue = MagicMock(spec=queue.Queue)
+    mock_queue.get.side_effect = queue.Empty
+
+    mocker.patch('src.vector_db.get_item.queue.Queue', return_value=mock_queue)
+
+    database_info = [
+        ["dbname", "user", "password", "host", "port"],
+        ["mydb", "myuser", "mypassword", "localhost", "port"]]
+    db = as_csv_file(database_info)
+
+    # Call the function under test
+    error_message, success_flag = get_item(order="test", api_key="test_key", database_csv_file=db)
+
+    # Assertions
+    assert error_message == "Error, return_queue.get turned into a deadlock. Check the `get_embedding` function"
+    assert success_flag is False
 
 
 #### Temporarily not needed. ###
