@@ -252,7 +252,7 @@ class Order:
             self
     ) -> bool:
         pattern = (r'\b(actually remove|actually change|dont want|don\'t want|remove|change|swap|adjust|modify|take '
-                   r'away|replace)\b')
+                   r'away|replace|minus|deduct)\b')
 
         return bool(re.search(pattern, self.__order))
 
@@ -465,7 +465,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "how many glazed donut"
+    orders = "remove minus three glazed donuts"
 
     split_order_time = time.time()
     details = split_order(orders)
