@@ -8,7 +8,7 @@ coffee_pattern = (
 quantity_pattern = (
     r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|'
     r'fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|'
-    r'dozen|a lot|a|an|\d+)\b'
+    r'dozen|a lot|a|an|bakers dozen|\d+)\b'
 )
 
 temperature_pattern = r'\b(hot|cold|iced|warm|room temp|extra hot)\b'

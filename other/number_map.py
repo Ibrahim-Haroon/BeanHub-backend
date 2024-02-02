@@ -27,7 +27,8 @@ def number_map(num: str) -> int:
         "dozen": 12,
         "a lot": 6,
         "a": 1,
-        "an": 1
+        "an": 1,
+        "bakers dozen": 13
     }
 
     return map.get(num, 0x7FFFFFFF)
