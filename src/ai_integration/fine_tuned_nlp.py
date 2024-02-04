@@ -388,7 +388,7 @@ def split_order(
 ) -> list[str]:
     start_time = time.time()
     split = re.split(split_pattern, order)
-    remove_words = ['plus', 'get', 'and', 'also']
+    remove_words = {'plus', 'get', 'and', 'also'}
     remove_chars = '[^a-zA-Z0-9]'
 
     filtered_order = [order for order in split if order not in remove_words and order != remove_chars and order]
@@ -465,7 +465,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "remove minus three glazed donuts"
+    orders = "hi can I get one black coffee with two creams and sugar and two pumps of caramel with that finally can I get an egg and cheese croissant and a glazed donut and three blueberry muffins please"
 
     split_order_time = time.time()
     details = split_order(orders)
