@@ -5,15 +5,16 @@ coffee_pattern = (
     r'frappuccino|chai latte|espresso)s?(?<!shot of)\b'
 )
 
-quantity_pattern = (
-    r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|'
-    r'fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|'
-    r'dozen|a lot|a|an|bakers dozen|\d+)\b'
+flavor_pattern = (
+    r'\b(?!pump of |pumps of )'
+    r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
+    r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)'
+    r'(?!\s+(donut|muffin|doughnut)s?)\b'
 )
 
 temperature_pattern = (
     r'\b(hot|cold|iced|warm|room temp|extra hot)'
-    r'(?!\s+(chocolate|cocoa|tea)s?)\b'
+    r'(?!\s+(chocolate|cocoa|tea|' + flavor_pattern + r')s?)\b'
 )
 
 sweetener_pattern = (
@@ -21,11 +22,10 @@ sweetener_pattern = (
     r'sugar packet|splenda packet|splenda)s?\b'
 )
 
-flavor_pattern = (
-    r'\b(?!pump of |pumps of )'
-    r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
-    r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)'
-    r'(?!\s+(donut|muffin|doughnut)s?)\b'
+quantity_pattern = (
+    r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|'
+    r'fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|couple|few|'
+    r'dozen|a lot|a|an|bakers dozen|\d+)\b'
 )
 
 beverage_pattern = (
@@ -75,6 +75,6 @@ split_exception_pattern = (
 
 split_pattern = (
     r'\b(plus|get|and|also)\b'
-    r'(?!\s+(\w+\s+){0,2}(?:' + split_exception_pattern + r'))'
+    r'(?!\s+(\w+\s+){0,1}(?:' + split_exception_pattern + r'))'
     r'(?!\s+(?:' + temperature_pattern + r'))'
 )
