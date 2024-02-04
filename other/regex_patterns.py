@@ -11,7 +11,10 @@ quantity_pattern = (
     r'dozen|a lot|a|an|bakers dozen|\d+)\b'
 )
 
-temperature_pattern = r'\b(hot|cold|iced|warm|room temp|extra hot)\b'
+temperature_pattern = (
+    r'\b(hot|cold|iced|warm|room temp|extra hot)'
+    r'(?!\s+(chocolate|cocoa|tea)s?)\b'
+)
 
 sweetener_pattern = (
     r'\b(sugar|honey|liquid cane sugar|sweet n low|equal|butter pecan|pink velvet|'
@@ -70,8 +73,8 @@ split_exception_pattern = (
     '|' + sweetener_pattern + r')'
 )
 
-
 split_pattern = (
     r'\b(plus|get|and|also)\b'
     r'(?!\s+(\w+\s+){0,2}(?:' + split_exception_pattern + r'))'
+    r'(?!\s+(?:' + temperature_pattern + r'))'
 )
