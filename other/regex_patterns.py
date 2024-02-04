@@ -31,7 +31,7 @@ flavor_pattern = (
 beverage_pattern = (
     r'\b(water|waters|tea|hot chocolate|hot cocoa|apple juice|orange juice|cranberry juice|'
     r'mango smoothie|pineapple smoothie|pina colada smoothie|vanilla milkshake|'
-    r'lemon tea|mango tea|jasmine|green tea|mint tea)\b'
+    r'lemon tea|mango tea|jasmine|green tea|mint tea)s?\b'
 )
 
 food_pattern = (
