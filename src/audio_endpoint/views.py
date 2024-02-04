@@ -318,14 +318,25 @@ class AudioView(APIView):
     ) -> (list[dict] and str) or (Response and None):
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
-        order_report = self.formatted_deal(deal_data['deal_object'])
+        deal_report, order_report = None, None
+        if len(transcription) > 4:
+            formatted_transcription = split_order(transcription)
+            deal_report = self.formatted_deal(deal_data['deal_object'])
+            order_report, model_report = make_order_report(formatted_transcription,
+                                                           self.connection_pool,
+                                                           self.embedding_cache,
+                                                           aws_connected=True)
+            order_report.extend(deal_report)
+        else:
+            deal_report = self.formatted_deal(deal_data['deal_object'])
 
-        if isinstance(order_report, Response):
-            return order_report, None
+        if isinstance(deal_report, Response):
+            return deal_report, None
         model_response = conv_ai(transcription,
-                                 str(order_report),
+                                 str(order_report) if order_report else str(deal_report),
                                  conversation_history=str(self.conversation_cache.get(
                                      f"conversation_history_{unique_id}")) + "CUSTOMER JUST ACCEPTED DEAL")
+
         conv_history = f"User: {transcription}\nModel: {model_response}\n"
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
