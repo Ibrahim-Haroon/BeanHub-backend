@@ -465,7 +465,8 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "two large cappuccinos with two sugars and 2 hot teas and a glazed donuts and four blueberry muffins"
+    orders = ("two large cappuccinos with two sugars and two pumps of caramel then also two iced banana teas"
+              " and finally add a glazed donuts and four blueberry muffins")
 
     split_order_time = time.time()
     details = split_order(orders)
