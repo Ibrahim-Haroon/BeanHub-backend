@@ -21,7 +21,8 @@ sweetener_pattern = (
 flavor_pattern = (
     r'\b(?!pump of |pumps of )'
     r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
-    r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)\b'
+    r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)'
+    r'(?!\s+(donut|donuts|muffin|muffins|doughnut|doughnuts))\b'
 )
 
 beverage_pattern = (
