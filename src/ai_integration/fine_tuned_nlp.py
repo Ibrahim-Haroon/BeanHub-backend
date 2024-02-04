@@ -337,18 +337,18 @@ class Order:
     def __parse_order(
             self
     ) -> dict:
-        sizes = re.findall(size_pattern, self.__order)
-        quantities = re.findall(quantity_pattern, self.__order)
-        coffees = re.findall(coffee_pattern, self.__order)
-        temperatures = re.findall(temperature_pattern, self.__order)
-        sweeteners = re.findall(sweetener_pattern, self.__order)
-        flavors = re.findall(flavor_pattern, self.__order)
-        beverages = re.findall(beverage_pattern, self.__order)
-        foods = re.findall(food_pattern, self.__order)
-        bakeries = re.findall(bakery_pattern, self.__order)
-        add_ons = re.findall(add_ons_pattern, self.__order)
-        milk_types = re.findall(milk_pattern, self.__order)
-        allergies = re.findall(common_allergies, self.__order)
+        sizes = [match for match in re.findall(size_pattern, self.__order) if match]
+        quantities = [match for match in re.findall(quantity_pattern, self.__order) if match]
+        coffees = [match for match in re.findall(coffee_pattern, self.__order) if match]
+        temperatures = [match for match in re.findall(temperature_pattern, self.__order) if match]
+        sweeteners = [match for match in re.findall(sweetener_pattern, self.__order) if match]
+        flavors = [match for match in re.findall(flavor_pattern, self.__order) if match]
+        beverages = [match for match in re.findall(beverage_pattern, self.__order) if match]
+        foods = [match for match in re.findall(food_pattern, self.__order) if match]
+        bakeries = [match for match in re.findall(bakery_pattern, self.__order) if match]
+        add_ons = [match for match in re.findall(add_ons_pattern, self.__order) if match]
+        milk_types = [match for match in re.findall(milk_pattern, self.__order) if match]
+        allergies = [match for match in re.findall(common_allergies, self.__order) if match]
 
         return {
             "sizes": sizes,
@@ -465,7 +465,7 @@ if __name__ == "__main__":  # pragma: no cover
     with open(key_file_path) as api_key:
         key = api_key.readline().strip()
 
-    orders = "hi can I get one black coffee with two creams and sugar and two pumps of caramel with that finally can I get an egg and cheese croissant and a glazed donut and three blueberry muffins please"
+    orders = "two large cappuccinos with two sugars and 2 hot teas and a glazed donuts and four blueberry muffins"
 
     split_order_time = time.time()
     details = split_order(orders)
