@@ -5,3 +5,4 @@ ignore:
   - 'src/audio_endpoint/serializers.py'
   - 'src/django_beanhub/wsgi.py'
   - 'src/django_beanhub/asgi.py'
+  - '*deprecated*'
