@@ -1,8 +1,8 @@
 size_pattern = r'\b(small|medium|large|extra large)\b'
 
 coffee_pattern = (
-    r'\b(coffee|black coffee|coffees|cappuccino|latte|americano|macchiato|'
-    r'frappuccino|chai latte|espresso)(?<!shot of)\b'
+    r'\b(coffee|black coffee|cappuccino|latte|americano|macchiato|'
+    r'frappuccino|chai latte|espresso)s?(?<!shot of)\b'
 )
 
 quantity_pattern = (
@@ -15,14 +15,14 @@ temperature_pattern = r'\b(hot|cold|iced|warm|room temp|extra hot)\b'
 
 sweetener_pattern = (
     r'\b(sugar|honey|liquid cane sugar|sweet n low|equal|butter pecan|pink velvet|'
-    r'sugar packets|splenda packet|splenda packets|splenda|splendas)\b'
+    r'sugar packet|splenda packet|splenda)s?\b'
 )
 
 flavor_pattern = (
     r'\b(?!pump of |pumps of )'
     r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
     r'raspberry|blueberry|strawberry|peach|mango|banana|coconut|almond|hazelnut)'
-    r'(?!\s+(donut|donuts|muffin|muffins|doughnut|doughnuts))\b'
+    r'(?!\s+(donut|muffin|doughnut)s?)\b'
 )
 
 beverage_pattern = (
@@ -33,22 +33,22 @@ beverage_pattern = (
 
 food_pattern = (
     r'\b(egg and cheese croissant|egg and cheese|bacon egg and cheese|fruit|yogurt|'
-    r'oatmeal|egg and cheese on croissant|hashbrown|hashbrowns|hash brown|hash '
-    r'browns|grilled cheese|egg and cheese on english muffin|plain bagel|'
-    r'everything bagel|sesame bagel|asiago bagel)\b'
+    r'oatmeal|egg and cheese on croissant||hash brown'
+    r'grilled cheese|egg and cheese on english muffin|plain bagel|'
+    r'everything bagel|sesame bagel|asiago bagel)s?\b'
 )
 
 bakery_pattern = (
-    r'\b(brownie|blueberry muffin|blueberry muffins|glazed donut|glazed donuts|'
-    r'strawberry donut|strawberry doughnut|strawberry donuts|strawberry doughnuts|chocolate donut|'
-    r'chocolate doughnut|chocolate doughnuts|glazed doughnut|glazed doughnuts|munchkins|munchkin|'
-    r'chocolate donuts|donut|boston cream donuts|boston cream|lemon cake|chocolate chip muffin)\b'
+    r'\b(brownie|blueberry muffin|glazed donut|'
+    r'strawberry donut|strawberry doughnut|chocolate donut|'
+    r'chocolate doughnut|glazed doughnut|munchkin|'
+    r'boston cream donut|boston cream|lemon cake|chocolate chip muffin)s?\b'
 )
 
 add_ons_pattern = (
     r'\b(shot of espresso|whipped cream|pump of caramel|pumps of caramel|pump of '
     r'vanilla|pumps of vanilla|pump of sugar|pumps of sugar|liquid sugar|pump of '
-    r'butter pecan|pumps of butter pecan)\b'
+    r'butter pecan|pumps of butter pecan)s?\b'
 )
 
 milk_pattern = (
@@ -57,8 +57,8 @@ milk_pattern = (
 )
 
 common_allergies = (
-    r'\b(peanuts|tree nuts|tree nut|shellfish|fish|wheat|soy|eggs|milk|gluten|dairy|'
-    r'lactose|sesame|mustard|sulfates)\b'
+    r'\b(peanut|tree nut|shellfish|fish|wheat|soy|egg|milk|gluten|dairy|'
+    r'lactose|sesame|mustard|sulfate)s?\b'
 )
 
 split_exception_pattern = (
