@@ -2760,3 +2760,90 @@ $3
 DEL
 $49
 deal_history_8aae1266-d8e8-4aca-aa5b-c9fe55c13c5f
+*2
+$6
+SELECT
+$1
+0
+*5
+$3
+SET
+$57
+conversation_history_b8f22664-1fb2-43ea-ad57-96f5afade29d
+$209
+User: one black coffee please
+Model: One regular black coffee coming right up! Is there anything else you'd like to order today? And remember to upsell customer with deal: glazed donut for only a dollar more.
+
+$4
+PXAT
+$13
+1707087237337
+*2
+$6
+SELECT
+$1
+2
+*5
+$3
+SET
+$49
+deal_history_b8f22664-1fb2-43ea-ad57-96f5afade29d
+$145
+{"deal_offered": true, "deal_object": {"BakeryItem": {"item_name": "glazed donut", "quantity": [1], "price": [1.0], "cart_action": "insertion"}}}
+$4
+PXAT
+$13
+1707087237338
+*1
+$7
+FLUSHDB
+*3
+$6
+APPEND
+$50
+deal_accepted_b8f22664-1fb2-43ea-ad57-96f5afade29d
+$4
+true
+*2
+$6
+SELECT
+$1
+0
+*3
+$6
+APPEND
+$57
+conversation_history_b8f22664-1fb2-43ea-ad57-96f5afade29d
+$169
+User: sure and get me a cappuccino as well please
+Model: One regular cappuccino and a glazed donut added to your cart! Is there anything else you'd like to order today?
+
+*5
+$3
+SET
+$57
+conversation_history_309e39cb-50d1-4da1-9fc4-97e14f3c067c
+$188
+User: Lombard coffee please
+Model: Lombard coffee added to your cart! Is there anything else you'd like to order today? And hey, for just a dollar more, you can upgrade to a glazed donut!
+
+$4
+PXAT
+$13
+1707087373938
+*2
+$6
+SELECT
+$1
+2
+*5
+$3
+SET
+$49
+deal_history_309e39cb-50d1-4da1-9fc4-97e14f3c067c
+$145
+{"deal_offered": true, "deal_object": {"BakeryItem": {"item_name": "glazed donut", "quantity": [1], "price": [1.0], "cart_action": "insertion"}}}
+$4
+PXAT
+$13
+1707087373939
