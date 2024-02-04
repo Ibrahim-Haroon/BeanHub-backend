@@ -98,21 +98,6 @@ class URLsTestCase(TestCase):
         expected_transcription = "One black coffee"
         mock_recognizer_instance.recognize_google.return_value = expected_transcription
 
-        self.mock_deepgram_file = patch('builtins.open', new_callable=mock_open, read_data='fake_deepgram_api_key')
-        self.mock_deepgram_file.start()
-
-        self.mock_deepgram_class = patch(speech_to_text_path + '.Deepgram')
-        mock_deepgram_instance = MagicMock()
-        self.mock_deepgram_class.start().return_value = mock_deepgram_instance
-        nova_response = {
-            'results': {
-                'channels': [
-                    {'alternatives': [{'transcript': 'this is a test'}]}
-                ]
-            }
-        }
-        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
-
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
 
