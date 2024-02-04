@@ -245,12 +245,18 @@ class AudioView(APIView):
 
         if accepted_deal(transcription):
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
+            self.deal_cache.append(key=f'deal_accepted_{unique_id}', value=json.dumps(True))
             if isinstance(order_report, Response):
                 return order_report
         elif human_requested(transcription):
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
-            order_report, conv_history = self.patch_normal_request(unique_id, transcription)
+            order_report, conv_history = self.patch_normal_request(unique_id,
+                                                                   transcription,
+                                                                   offer_deal=bool(json.loads(self.deal_cache.get(
+                                                                       f'deal_accepted_{unique_id}'))
+                                                                   ))
+
 
         upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
 
