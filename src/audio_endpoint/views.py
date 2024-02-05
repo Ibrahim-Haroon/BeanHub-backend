@@ -107,9 +107,8 @@ class AudioView(APIView):
             deal: dict, orders: list[str]
     ) -> None:
         item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
-        logging.debug(f"deal object in remove_duplicate_deal: {deal}")
-        logging.debug(f"orders in remove_duplicate_deal: {orders}")
         order_to_remove = None
+
         for item_type in item_types:
             if item_type in deal:
                 item_name = deal[item_type]['item_name']
@@ -261,18 +260,15 @@ class AudioView(APIView):
 
         unique_id = response.data['unique_id']
         transcription = self.get_transcription(response.data['file_path'])
-        logging.debug("transcription: " + transcription)
+
         if accepted_deal(transcription):
-            logging.debug(f"ACCEPTED DEAL")
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
             self.deal_cache.append(key=f'deal_accepted_{unique_id}', value=json.dumps(True))
             if isinstance(order_report, Response):
                 return order_report
         elif human_requested(transcription):
-            logging.debug(f"HUMAN REQUESTED")
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
-            logging.debug(f"NORMAL REQUEST")
             try:
                 offer_deal = bool(json.loads(self.deal_cache.get(
                     f'deal_accepted_{unique_id}')
@@ -280,7 +276,6 @@ class AudioView(APIView):
             except TypeError:
                 offer_deal = True
 
-            logging.debug(f"offer_deal: {offer_deal}")
             order_report, conv_history = self.patch_normal_request(unique_id,
                                                                    transcription,
                                                                    offer_deal=offer_deal)
@@ -353,9 +348,7 @@ class AudioView(APIView):
         if len(transcription) > 4:
             formatted_transcription = split_order(transcription)
             # edge case to avoid double ordering of deal
-            logging.debug(f"formatted_transcription before remove_duplicate_deal: {formatted_transcription}")
             self.remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
-            logging.debug(f"formatted_transcription after remove_duplicate_deal: {formatted_transcription}")
             order_report, model_report = make_order_report(formatted_transcription,
                                                            self.connection_pool,
                                                            self.embedding_cache,
