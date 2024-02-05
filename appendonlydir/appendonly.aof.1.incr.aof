@@ -4926,3 +4926,105 @@ $3
 DEL
 $57
 conversation_history_55764834-4bf8-435a-a798-a6957793f3f5
+*5
+$3
+SET
+$57
+conversation_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$270
+Customer: hi can I get that one black coffee
+Model: One black coffee coming right up! Your order has been added to your cart. Is there anything else you'd like to order today? And hey, for just a dollar more, you can add a delicious glazed donut to go with your coffee!
+
+$4
+PXAT
+$13
+1707155450170
+*2
+$6
+SELECT
+$1
+2
+*5
+$3
+SET
+$49
+deal_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$145
+{"deal_offered": true, "deal_object": {"BakeryItem": {"item_name": "glazed donut", "quantity": [1], "price": [1.0], "cart_action": "insertion"}}}
+$4
+PXAT
+$13
+1707155450175
+*3
+$6
+APPEND
+$49
+deal_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$145
+{"deal_offered": true, "deal_object": {"CoffeeItem": {"item_name": "black coffee", "quantity": [1], "price": [2.0], "cart_action": "insertion"}}}
+*2
+$6
+SELECT
+$1
+0
+*3
+$6
+APPEND
+$57
+conversation_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$265
+Customer: add blueberry muffin
+Model: One delicious blueberry muffin added to your order! Is there anything else you'd like to add today, or are you all set? And hey, for just two dollars more, you can pair that blueberry muffin with a freshly brewed black coffee!
+
+*2
+$6
+SELECT
+$1
+2
+*3
+$6
+APPEND
+$49
+deal_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$145
+{"deal_offered": true, "deal_object": {"BakeryItem": {"item_name": "glazed donut", "quantity": [1], "price": [1.0], "cart_action": "insertion"}}}
+*2
+$6
+SELECT
+$1
+0
+*3
+$6
+APPEND
+$57
+conversation_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$256
+Customer: add the black coffee
+Model: One black coffee coming right up! Your order has been added to your cart. Is there anything else you'd like to order today? And hey, for just a dollar more, you can add a delicious glazed donut to go with your coffee!
+
+*2
+$6
+SELECT
+$1
+2
+*3
+$6
+APPEND
+$49
+deal_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$43
+{"deal_offered": true, "deal_object": null}
+*2
+$6
+SELECT
+$1
+0
+*3
+$6
+APPEND
+$57
+conversation_history_89e8698f-6685-48c9-a0a0-d1b6d616b507
+$71
+Customer: at the Disco
+Model: I'm sorry, I can't fulfill this request.
+
