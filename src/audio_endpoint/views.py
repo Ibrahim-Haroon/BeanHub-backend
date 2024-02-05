@@ -102,6 +102,25 @@ class AudioView(APIView):
 
         return [order]
 
+    @staticmethod
+    def remove_duplicate_deal(
+            deal: dict, orders: list[str]
+    ) -> None:
+        item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
+        logging.debug(f"deal object in remove_duplicate_deal: {deal}")
+        logging.debug(f"orders in remove_duplicate_deal: {orders}")
+        order_to_remove = None
+        for item_type in item_types:
+            if item_type in deal:
+                item_name = deal[item_type]['item_name']
+                for order in orders:
+                    if item_name in order:
+                        order_to_remove = order
+                        break
+
+        if order_to_remove:
+            orders.remove(order_to_remove)
+
     def get_transcription(
             self, file_path: str
     ) -> str:
@@ -242,21 +261,29 @@ class AudioView(APIView):
 
         unique_id = response.data['unique_id']
         transcription = self.get_transcription(response.data['file_path'])
-
+        logging.debug("transcription: " + transcription)
         if accepted_deal(transcription):
+            logging.debug(f"ACCEPTED DEAL")
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
             self.deal_cache.append(key=f'deal_accepted_{unique_id}', value=json.dumps(True))
             if isinstance(order_report, Response):
                 return order_report
         elif human_requested(transcription):
+            logging.debug(f"HUMAN REQUESTED")
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
+            logging.debug(f"NORMAL REQUEST")
+            try:
+                offer_deal = bool(json.loads(self.deal_cache.get(
+                    f'deal_accepted_{unique_id}')
+                ))
+            except TypeError:
+                offer_deal = True
+
+            logging.debug(f"offer_deal: {offer_deal}")
             order_report, conv_history = self.patch_normal_request(unique_id,
                                                                    transcription,
-                                                                   offer_deal=bool(json.loads(self.deal_cache.get(
-                                                                       f'deal_accepted_{unique_id}'))
-                                                                   ))
-
+                                                                   offer_deal=offer_deal)
 
         upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
 
@@ -294,7 +321,7 @@ class AudioView(APIView):
                                  model_report,
                                  conversation_history="",
                                  deal=deal)
-        conv_history = f"User: {transcription}\nModel: {model_response}\n"
+        conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         deal_offered = True
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
@@ -311,38 +338,40 @@ class AudioView(APIView):
             'human_response': True
         }
 
-        return order_report, f"User: {transcription}\nHuman: {response_transcription}\n"
+        return order_report, f"Customer: {transcription}\nHuman: {response_transcription}\n"
 
     def process_and_format_deal(
             self, unique_id: uuid.UUID, transcription: str
     ) -> (list[dict] and str) or (Response and None):
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
-        deal_report, order_report = None, None
+        deal_report, order_report = self.formatted_deal(deal_data['deal_object']), None
+
+        if isinstance(deal_report, Response):
+            return deal_report, None
+
         if len(transcription) > 4:
             formatted_transcription = split_order(transcription)
-            deal_report = self.formatted_deal(deal_data['deal_object'])
+            # edge case to avoid double ordering of deal
+            logging.debug(f"formatted_transcription before remove_duplicate_deal: {formatted_transcription}")
+            self.remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
+            logging.debug(f"formatted_transcription after remove_duplicate_deal: {formatted_transcription}")
             order_report, model_report = make_order_report(formatted_transcription,
                                                            self.connection_pool,
                                                            self.embedding_cache,
                                                            aws_connected=True)
             order_report.extend(deal_report)
-        else:
-            deal_report = self.formatted_deal(deal_data['deal_object'])
 
-        if isinstance(deal_report, Response):
-            return deal_report, None
         model_response = conv_ai(transcription,
                                  str(order_report) if order_report else str(deal_report),
                                  conversation_history=str(self.conversation_cache.get(
                                      f"conversation_history_{unique_id}")) + "CUSTOMER JUST ACCEPTED DEAL")
 
-        conv_history = f"User: {transcription}\nModel: {model_response}\n"
+        conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
 
-        # empty cache since deal is accepted
-        self.deal_cache.flushdb()
+        self.deal_cache.delete(f"deal_history_{unique_id}")
         return order_report, conv_history
 
     def patch_normal_request(
@@ -366,7 +395,7 @@ class AudioView(APIView):
                                      f"conversation_history_{unique_id}"),
                                  deal=deal)
         deal_offered = True
-        conv_history = f"User: {transcription}\nModel: {model_response}\n"
+        conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
 
