@@ -292,6 +292,26 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
+
+    def test_patch_request_with_deal_cache_get_method_throwing_exception_correctly_assigns_offer_deal_and_returns_200(
+            self
+    ) -> None:
+        # Arrange
+        data = {
+            "file_path": "test.wav",
+            "unique_id": "test"
+        }
+        self.mock_deal_client.get = MagicMock(return_value=Exception)
+
+        # Act
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('file_path' in response.json())
+        self.assertTrue('unique_id' in response.json())
+        self.assertTrue('json_order' in response.json())
+
     @patch(speech_to_text_path + '.speech.Recognizer')
     def test_patch_sends_successful_response_when_user_accepts_deal_and_nothing_else_and_deal_is_coffee_item(
             self, mock_google_transcribe
