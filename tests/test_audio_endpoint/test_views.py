@@ -347,7 +347,7 @@ class AudioEndpointTestCase(TestCase):
             '    "deal_accepted": "foo",'
             '    "deal_object": {'
             '        "CoffeeItem": {'
-            '            "item_name": "black coffee",'
+            '            "item_name": "latte",'
             '            "quantity": [1],'
             '            "price": [2.0],'
             '            "cart_action": "insertion"'
