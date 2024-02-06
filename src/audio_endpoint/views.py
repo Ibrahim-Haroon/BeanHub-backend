@@ -51,7 +51,7 @@ class AudioView(APIView):
     ) -> redis.Redis:  # pragma: no cover
         while True:
             try:
-                redis_client = redis.StrictRedis(host=env('REDIS-HOST'), port=env('REDIS-PORT'), db=0)
+                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=0)
                 logging.debug("Connected to conversation history")
                 return redis_client
             except redis.exceptions.ConnectionError:
@@ -64,7 +64,7 @@ class AudioView(APIView):
     ) -> redis.Redis:  # pragma: no cover
         while True:
             try:
-                redis_client = redis.StrictRedis(host=env('REDIS-HOST'), port=env('REDIS-PORT'), db=1)
+                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=1)
                 logging.debug("Connected to embedding cache")
                 return redis_client
             except redis.exceptions.ConnectionError:
@@ -77,7 +77,7 @@ class AudioView(APIView):
     ) -> redis.Redis:  # pragma: no cover
         while True:
             try:
-                redis_client = redis.StrictRedis(host=env('REDIS-HOST'), port=env('REDIS-PORT'), db=2)
+                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=2)
                 logging.debug("Connected to deal history")
                 return redis_client
             except redis.exceptions.ConnectionError:
