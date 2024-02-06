@@ -3,6 +3,15 @@ version: '3.9'
 services:
   django:
     image: beanhub-backend:latest
+    container_name: beanhub-server
     build: .
     ports:
       - "8000:8000"
+    depends_on:
+      - redis
+  redis:
+      image: redis:latest
+      container_name: redis-server
+      command: redis-server /usr/local/etc/redis/redis.conf
+      volumes:
+        - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
