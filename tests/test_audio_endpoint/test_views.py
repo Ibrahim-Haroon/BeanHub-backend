@@ -50,7 +50,9 @@ class AudioEndpointTestCase(TestCase):
             "DJANGO_STATIC_URL": "test",
             "DJANGO_DEFAULT_AUTO_FIELD": "test",
             "DJANGO_DEFAULT_FILE_STORAGE": "test",
-            "DJANGO_INTERNAL_IPS": "test"
+            "DJANGO_INTERNAL_IPS": "test",
+            "REDIS_HOST": "test",
+            "REDIS_PORT": "test"
         })
         self.mock_env.start()
 
