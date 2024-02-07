@@ -56,7 +56,7 @@ add_ons_pattern = (
 
 milk_pattern = (
     r'\b(whole milk|two percent milk|one percent milk|skim milk|almond milk|oat milk|'
-    r'soy milk|coconut milk|half and half|heavy cream|cream)\b'
+    r'soy milk|coconut milk|half and half|heavy cream|cream)s?\b'
 )
 
 common_allergies = (
