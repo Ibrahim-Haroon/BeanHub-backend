@@ -1,9 +1,7 @@
-import os
 import time
-import httpx
 import logging
-import asyncio
 from os import path
+from openai import OpenAI
 from os import getenv as env
 from dotenv import load_dotenv
 from src.django_beanhub.settings import DEBUG
@@ -27,101 +25,66 @@ prompt = """
         """
 
 
-async def get_openai_response(
-        client, model, messages, api_key, max_tokens: int | None = None
-) -> dict: # pragma: no cover
-    try:
-        response = await client.post(
-            "https://api.openai.com/v1/chat/completions",
-            json={"model": model, "messages": messages, "max_tokens": max_tokens, "n": 1},
-            headers={"Authorization": f"Bearer {api_key}"}
-        )
-
-        return response.json()
-    except Exception as e:
-        logging.error(f"*****TIME OUT*******\nError: {e}")
-        return {"choices": [{"message": {"content": "Added to your order! Anything else?"}}]}
-
-
-async def conv_ai_async(
-        transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
-        api_key: str = None, max_tokens: int | None = None, print_token_usage: bool = False
-) -> str:
-    if api_key is None:
-        api_key = os.environ['OPENAI_API_KEY']
-
-    async with httpx.AsyncClient() as client:
-        response = await get_openai_response(
-            client,
-            "gpt-3.5-turbo-1106",
-            [
-                {
-                    "role": "system",
-                    "content": (f"{role} and all previous conversation history: {conversation_history}."
-                                if deal is None
-                                else f"{role} and all previous conversation history: {conversation_history} "
-                                     f"and remember to upsell customer with deal: {deal}"
-                                ),
-                },
-                {
-                    "role": "user",
-                    "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"
-                }
-            ],
-            api_key,
-            max_tokens
-        )
-        if print_token_usage:
-            print(f"Prompt tokens ({response['usage']['prompt_tokens']}) + "
-                  f"Completion tokens ({response['usage']['completion_tokens']}) = "
-                  f"Total tokens ({response['usage']['total_tokens']})")
-
-        return response['choices'][0]['message']['content']
-
-
 def conv_ai(
         transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
-        api_key: str = None, max_tokens: int = 200, print_token_usage: bool = False
+        api_key: str = None, max_tokens: int = 200
 ) -> str:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
 
     start_time = time.time()
-    response = loop.run_until_complete(
-        conv_ai_async(transcription, order_report, conversation_history, deal, api_key, max_tokens, print_token_usage))
+    if api_key:
+        client = OpenAI(api_key=api_key)
+    else:
+        client = OpenAI(api_key=api_key)
+
+    response = client.chat.completions.create(
+        model='gpt-3.5-turbo',
+        messages=[
+            {
+                "role": "system",
+                "content": (f"{role} and all previous conversation history: {conversation_history}."
+                            if deal is None
+                            else f"{role} and all previous conversation history: {conversation_history} "
+                                 f"and remember to upsell customer with deal: {deal}"
+                            ),
+            },
+            {
+                "role": "user",
+                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"
+            }
+        ],
+        max_tokens=max_tokens,
+        stream=True
+    )
+
+    for chunk in response:
+        yield chunk.choices[0].delta.content
+
     logging.debug(f"conv_ai time: {time.time() - start_time}")
-
-    loop.close()
-
-    return response
 
 
 def main(
 
-) -> str:  # pragma: no cover
+) -> None:  # pragma: no cover
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
     with open(key_path) as api_key:
         key = api_key.readline().strip()
 
     start_time = time.time()
-    response = conv_ai(
-        transcription="Can I get one smoothie please",
-        order_report="""
+    for _ in conv_ai(
+            transcription="Can I get one smoothie please",
+            order_report="""
                    ([{'BeverageItem': {'item_name': 'smoothie', 'quantity': [1], 'price': [5.0], 'temp': 'regular',
                     'add_ons': [], 'sweeteners': [], 'num_calories': ['(200,200)'], 'size': 'regular',
                      'cart_action': 'insertion', 'common_allergies_in_item': ['Nuts, Dairy, Soy, Gluten']}}], '')
 
                             """,
-        conversation_history="",
-        deal="Get a glazed donut for $1 more",
-        api_key=key,
-        print_token_usage=True)
+            conversation_history="",
+            deal="Get a glazed donut for $1 more",
+            api_key=key):
+        print(_)
     print(f"conv_ai time: {time.time() - start_time}")
-    print(response)
-    return response
 
 
 if __name__ == "__main__":  # pragma: no cover
