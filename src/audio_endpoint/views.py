@@ -312,10 +312,16 @@ class AudioView(APIView):
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
-        model_response = conv_ai(transcription,
-                                 model_report,
-                                 conversation_history="",
-                                 deal=deal)
+
+        model_response = []
+        for model_response_chunk in conv_ai(transcription,
+                                            model_report,
+                                            conversation_history="",
+                                            deal=deal):
+            # TODO: stream response as audio bytes to client
+            model_response.append(model_response_chunk)
+
+        model_response = ''.join(model_response)
         conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         deal_offered = True
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
@@ -355,11 +361,15 @@ class AudioView(APIView):
                                                            aws_connected=True)
             order_report.extend(deal_report)
 
-        model_response = conv_ai(transcription,
-                                 str(order_report) if order_report else str(deal_report),
-                                 conversation_history=str(self.conversation_cache.get(
-                                     f"conversation_history_{unique_id}")) + "CUSTOMER JUST ACCEPTED DEAL")
+        model_response = []
+        for model_response_chunk in conv_ai(transcription,
+                                            str(order_report) if order_report else str(deal_report),
+                                            conversation_history=str(self.conversation_cache.get(
+                                                f"conversation_history_{unique_id}")) + "CUSTOMER JUST ACCEPTED DEAL"):
+            # TODO: stream response as audio bytes to client
+            model_response.append(model_response_chunk)
 
+        model_response = ''.join(model_response)
         conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
         response_audio_thread.start()
@@ -382,11 +392,16 @@ class AudioView(APIView):
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
-        model_response = conv_ai(transcription,
-                                 model_report,
-                                 conversation_history=self.conversation_cache.get(
-                                     f"conversation_history_{unique_id}"),
-                                 deal=deal)
+        model_response = []
+        for model_response_chunk in conv_ai(transcription,
+                                            model_report,
+                                            conversation_history=self.conversation_cache.get(
+                                                f"conversation_history_{unique_id}"),
+                                            deal=deal):
+            # TODO: stream response as audio bytes to client
+            model_response.append(model_response_chunk)
+
+        model_response = ''.join(model_response)
         deal_offered = True
         conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
