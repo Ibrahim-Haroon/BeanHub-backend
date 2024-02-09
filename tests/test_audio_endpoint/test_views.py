@@ -107,11 +107,9 @@ class AudioEndpointTestCase(TestCase):
         self.mock_openai_embedding_api_get_deal = patch('src.vector_db.get_deal.openai_embedding_api')
         self.mock_openai_embedding_api_get_deal.start().return_value = [0.1, 0.2, 0.3]
 
-        self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
-        self.mock_openai_response.start().return_value.json.return_value = {
-            "choices": [{"message": {"content": "mocked response"}}],
-            "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
-        }
+        self.mock_openai_stream = patch('src.audio_endpoint.views.conv_ai')
+        self.mock_openai_stream_gen = self.mock_openai_stream.start()
+        self.mock_openai_stream_gen.side_effect = self.mock_streaming_response
 
         mock_response = MagicMock()
         mock_response.content = b'mock response'
@@ -129,6 +127,10 @@ class AudioEndpointTestCase(TestCase):
     ) -> None:
         patch.stopall()
         super().tearDown()
+
+    @staticmethod
+    def mock_streaming_response(*args, **kwargs):
+        yield 'foo'
 
     def test_post_without_file_path_throws_400_error_code(
             self

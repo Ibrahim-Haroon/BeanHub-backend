@@ -68,7 +68,7 @@ class URLsTestCase(TestCase):
         self.mock_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
 
         self.mock_deal_client = MagicMock()
-        mock_deal_data = '{"deal_accepted": "foo", "deal_offered": "foo", "deal_object": {}}'
+        mock_deal_data = '{"deal_accepted": "foo", "deal_object": {}}'
         self.mock_deal_client.get = MagicMock(return_value=mock_deal_data)
         self.mock_deal_client.setex = MagicMock()
         self.mock_deal_client.append = MagicMock()
@@ -109,11 +109,9 @@ class URLsTestCase(TestCase):
         self.mock_openai_embedding_api_get_deal = patch('src.vector_db.get_deal.openai_embedding_api')
         self.mock_openai_embedding_api_get_deal.start().return_value = [0.1, 0.2, 0.3]
 
-        self.mock_openai_response = patch('src.ai_integration.conversational_ai.get_openai_response')
-        self.mock_openai_response.start().return_value.json.return_value = {
-            "choices": [{"message": {"content": "mocked response"}}],
-            "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
-        }
+        self.mock_openai_stream = patch('src.audio_endpoint.views.conv_ai')
+        self.mock_openai_stream_gen = self.mock_openai_stream.start()
+        self.mock_openai_stream_gen.side_effect = self.mock_streaming_response
 
         mock_response = MagicMock()
         mock_response.content = b'mock response'
@@ -131,6 +129,10 @@ class URLsTestCase(TestCase):
     ) -> None:
         patch.stopall()
         super().tearDown()
+
+    @staticmethod
+    def mock_streaming_response(*args, **kwargs):
+        yield 'foo'
 
     def test_audio_view_url_is_resolves_to_AudioView_class(
             self
