@@ -28,7 +28,7 @@ prompt = """
 def conv_ai(
         transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
         api_key: str = None, max_tokens: int = 200
-) -> str:
+) -> str:  # pragma: no cover
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
 
