@@ -149,31 +149,6 @@ class AudioView(APIView):
 
         return transcription
 
-    def get_response_audio(
-            self, transcription: str
-    ) -> None:
-        tts_time = time.time()
-        self.response_audio = openai_text_to_speech_api(transcription)
-        logging.debug(f"tts time: {time.time() - tts_time}")
-
-    def upload_file(
-            self, unique_id: uuid.UUID = None
-    ) -> None:
-        res_audio_path = '/tmp/res_audio.wav'
-        audio_write_time = time.time()
-        with open(res_audio_path, 'wb') as f:
-            while not self.response_audio:
-                # wait 1 ms for response_audio to be set
-                time.sleep(0.001)
-            f.write(self.response_audio)
-        logging.debug(f"audio_write time: {time.time() - audio_write_time}")
-
-        upload_time = time.time()
-        self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
-        logging.debug(f"upload_file time: {time.time() - upload_time}")
-
-        return
-
     @swagger_auto_schema(
         operation_description=
         """
@@ -213,10 +188,7 @@ class AudioView(APIView):
         else:
             order_report, conv_history, deal_object, deal_offered = self.post_normal_request(unique_id, transcription)
 
-        upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
-
         response_data = {
-            'file_path': f"result_{unique_id}.wav",
             'unique_id': str(unique_id),
             'json_order': order_report
         }
@@ -235,7 +207,6 @@ class AudioView(APIView):
 
         if response_data:
             logging.debug(f"total time: {time.time() - start_time}")
-            upload_thread.start()
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
@@ -292,20 +263,16 @@ class AudioView(APIView):
                                                                    transcription,
                                                                    offer_deal=offer_deal)
 
-        upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
-
         self.conversation_cache.append(key=f"conversation_history_{unique_id}",
                                        value=conv_history)
 
         response_data = {
-            'file_path': f"result_{unique_id}.wav",
             'unique_id': str(unique_id),
             'json_order': order_report
         }
 
         if response_data:
             logging.debug(f"total time: {time.time() - start_time}")
-            upload_thread.start()
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
@@ -436,7 +403,12 @@ class AudioView(APIView):
                                             deal=deal):
             self.kafka_producer.produce(self.kafka_topic,
                                         key=str(unique_id).encode(),
-                                        value=model_response_chunk.encode())
+                                        value=model_response_chunk.encode() if model_response_chunk else None)
             self.kafka_producer.poll(0)
             model_response.append(model_response_chunk)
+
+        self.kafka_producer.produce(self.kafka_topic,
+                                    key=str(unique_id).encode(),
+                                    value=("!COMPLETE!").encode())
+        self.kafka_producer.poll(0)
         self.kafka_producer.flush()
