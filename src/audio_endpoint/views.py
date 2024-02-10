@@ -23,6 +23,7 @@ from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api, record_until_silence, return_as_wav
+from confluent_kafka import Producer
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -36,6 +37,8 @@ class AudioView(APIView):
             self, *args, **kwargs
     ):
         super().__init__(**kwargs)
+        self.kafka_producer = self.get_kafka_producer()
+        self.kafka_topic = env('KAFKA_TOPIC')
         self.bucket_name = env('S3_BUCKET_NAME')
         self.conversation_cache = self.connect_to_redis_temp_conversation_cache()
         self.deal_cache = self.connect_to_redis_temp_deal_cache()
@@ -83,6 +86,15 @@ class AudioView(APIView):
             except redis.exceptions.ConnectionError:
                 logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
+
+    def get_kafka_producer(
+            self
+    ) -> Producer:
+        if not hasattr(self, 'kafka_producer'):
+            self.kafka_producer = Producer({
+                'bootstrap.servers': env('KAFKA_BROKER_URL'),  # Add your Kafka broker URL to your .env file
+            })
+        return self.kafka_producer
 
     @staticmethod
     def formatted_deal(
@@ -301,31 +313,28 @@ class AudioView(APIView):
     def post_normal_request(
             self, unique_id: uuid.UUID, transcription: str, offer_deal: bool = True
     ) -> list[dict] and str and dict and bool:
-        deal_object = None
+        deal_object, deal, model_response = None, None, []
         formatted_transcription = split_order(transcription)
         order_report, model_report = make_order_report(formatted_transcription,
                                                        self.connection_pool,
                                                        self.embedding_cache,
                                                        aws_connected=True)
-        deal = None
+
         if offer_deal and len(order_report) > 0:
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
 
-        model_response = []
-        for model_response_chunk in conv_ai(transcription,
-                                            model_report,
-                                            conversation_history="",
-                                            deal=deal):
-            # TODO: stream response as audio bytes to client
-            model_response.append(model_response_chunk)
+        kafka_thread = threading.Thread(target=self.kafka_stream, args=(transcription,
+                                                                        model_report,
+                                                                        "",
+                                                                        deal,
+                                                                        unique_id,
+                                                                        model_response))
+        kafka_thread.start()
 
-        model_response = ''.join(model_response)
-        conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
         deal_offered = True
-        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
-        response_audio_thread.start()
+        conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
 
         return order_report, conv_history, deal_object, deal_offered
 
@@ -347,6 +356,7 @@ class AudioView(APIView):
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
         deal_report, order_report = self.formatted_deal(deal_data['deal_object']), None
+        model_response = []
 
         if isinstance(deal_report, Response):
             return deal_report, None
@@ -355,24 +365,26 @@ class AudioView(APIView):
             formatted_transcription = split_order(transcription)
             # edge case to avoid double ordering of deal
             self.remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
-            order_report, model_report = make_order_report(formatted_transcription,
-                                                           self.connection_pool,
-                                                           self.embedding_cache,
-                                                           aws_connected=True)
+            order_report, _ = make_order_report(formatted_transcription,
+                                                self.connection_pool,
+                                                self.embedding_cache,
+                                                aws_connected=True)
             order_report.extend(deal_report)
 
-        model_response = []
-        for model_response_chunk in conv_ai(transcription,
-                                            str(order_report) if order_report else str(deal_report),
-                                            conversation_history=str(self.conversation_cache.get(
-                                                f"conversation_history_{unique_id}")) + "CUSTOMER JUST ACCEPTED DEAL"):
-            # TODO: stream response as audio bytes to client
-            model_response.append(model_response_chunk)
+        old_conv_history = self.conversation_cache.get(
+            f"conversation_history_{unique_id} + 'CUSTOMER JUST ACCEPTED DEAL'"
+        )
+        kafka_thread = threading.Thread(target=self.kafka_stream, args=(transcription,
+                                                                        str(order_report)
+                                                                        if order_report
+                                                                        else str(deal_report),
+                                                                        old_conv_history,
+                                                                        None,
+                                                                        unique_id,
+                                                                        model_response))
+        kafka_thread.start()
 
-        model_response = ''.join(model_response)
-        conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
-        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
-        response_audio_thread.start()
+        conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
 
         self.deal_cache.delete(f"deal_history_{unique_id}")
         return order_report, conv_history
@@ -380,32 +392,30 @@ class AudioView(APIView):
     def patch_normal_request(
             self, unique_id: uuid.UUID, transcription: str, offer_deal: bool = True
     ) -> list[dict] and str:
-        deal_object, deal_offered = None, False
+        deal_object, deal_offered, deal, model_response = None, False, None, []
         formatted_transcription = split_order(transcription)
 
         order_report, model_report = make_order_report(formatted_transcription,
                                                        self.connection_pool,
                                                        self.embedding_cache,
                                                        aws_connected=True)
-        deal = None
+
         if offer_deal and len(order_report) > 0:
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
-        model_response = []
-        for model_response_chunk in conv_ai(transcription,
-                                            model_report,
-                                            conversation_history=self.conversation_cache.get(
-                                                f"conversation_history_{unique_id}"),
-                                            deal=deal):
-            # TODO: stream response as audio bytes to client
-            model_response.append(model_response_chunk)
 
-        model_response = ''.join(model_response)
+        old_conv_history = self.conversation_cache.get(f"conversation_history_{unique_id}")
+        kafka_thread = threading.Thread(target=self.kafka_stream, args=(transcription,
+                                                                        model_report,
+                                                                        old_conv_history,
+                                                                        deal,
+                                                                        unique_id,
+                                                                        model_response))
+        kafka_thread.start()
+
         deal_offered = True
-        conv_history = f"Customer: {transcription}\nModel: {model_response}\n"
-        response_audio_thread = threading.Thread(target=self.get_response_audio, args=(model_response,))
-        response_audio_thread.start()
+        conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
 
         deal_data = {
             "deal_offered": deal_offered,
@@ -415,3 +425,18 @@ class AudioView(APIView):
                                value=json.dumps(deal_data))
 
         return order_report, conv_history
+
+    def kafka_stream(
+            self, transcription: str, model_report, conversation_history: str, deal: str,
+            unique_id: uuid.UUID, model_response: list[str]
+    ) -> None:
+        for model_response_chunk in conv_ai(transcription,
+                                            model_report,
+                                            conversation_history=conversation_history,
+                                            deal=deal):
+            self.kafka_producer.produce(self.kafka_topic,
+                                        key=str(unique_id).encode(),
+                                        value=model_response_chunk.encode())
+            self.kafka_producer.poll(0)
+            model_response.append(model_response_chunk)
+        self.kafka_producer.flush()
