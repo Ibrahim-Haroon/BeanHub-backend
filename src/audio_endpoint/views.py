@@ -24,7 +24,6 @@ from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api, record_until_silence, return_as_wav
 
-
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
 
@@ -426,18 +425,44 @@ class AudioView(APIView):
             self, transcription: str, model_report, conversation_history: str, deal: str,
             unique_id: uuid.UUID, model_response: list[str]
     ) -> None:
+        first_message_recorded = False
+
         for model_response_chunk in conv_ai(transcription,
                                             model_report,
                                             conversation_history=conversation_history,
                                             deal=deal):
+
             self.kafka_producer.produce(self.kafka_topic,
                                         key=str(unique_id).encode(),
-                                        value=model_response_chunk.encode() if model_response_chunk else None)
+                                        value=model_response_chunk.encode() if model_response_chunk else None,
+                                        callback=lambda err, msg: self.acked(err, msg, unique_id)
+                                        if not first_message_recorded else None)
+
             self.kafka_producer.poll(0)
             model_response.append(model_response_chunk)
+            first_message_recorded = True
 
         self.kafka_producer.produce(self.kafka_topic,
                                     key=str(unique_id).encode(),
-                                    value=("!COMPLETE!").encode())
+                                    value="!COMPLETE!".encode(),
+                                    callback=lambda err, msg: self.acked(err, msg, unique_id)
+                                    if not first_message_recorded else None)
         self.kafka_producer.poll(0)
         self.kafka_producer.flush()
+
+    def acked(self, err, msg, unique_id) -> None:
+        if err is not None:
+            logging.debug(f"Failed to deliver message: {err}")
+        else:
+            self.record_kafka_message_offset(msg.topic(), msg.partition(), msg.offset(), unique_id)
+
+    def record_kafka_message_offset(self, topic, partition, offset, unique_id) -> None:
+        key = f"kafka_message_offset_{unique_id}"
+
+        if not self.conversation_cache.exists(key):
+            record = {
+                'topic': topic,
+                'partition': partition,
+                'offset': offset
+            }
+            self.conversation_cache.set(key, json.dumps([record]))
