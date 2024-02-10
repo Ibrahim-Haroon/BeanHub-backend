@@ -3,7 +3,7 @@ import json
 import pytest
 from typing import Final
 from django.test import TestCase
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
@@ -35,6 +35,7 @@ class AudioEndpointTestCase(TestCase):
             "DJANGO_ADMIN_URL": "test",
             "DJANGO_ROOT_URL": "test",
             "DJANGO_AUDIO_ENDPOINT_URL": "test",
+            "DJANGO_AUDIO_STREAM_URL": "test",
             "DJANGO_SWAGGER_URL": "test",
             "DJANGO_REDOC_URL": "test",
             "APP_AUDIO_ENDPOINT_URL": "test",
@@ -52,9 +53,17 @@ class AudioEndpointTestCase(TestCase):
             "DJANGO_DEFAULT_FILE_STORAGE": "test",
             "DJANGO_INTERNAL_IPS": "test",
             "REDIS_HOST": "test",
-            "REDIS_PORT": "test"
+            "REDIS_PORT": "test",
+            'KAFKA_BROKER_URL': "127.0.0.2",
+            'KAFKA_TOPIC': "test"
         })
         self.mock_env.start()
+
+        self.mock_kafka_producer_class = patch('src.audio_endpoint.views.AudioView.get_kafka_producer', autospec=True)
+        self.mock_kafka_producer = self.mock_kafka_producer_class.start()
+        self.mock_kafka_producer.return_value.produce = MagicMock()
+        self.mock_kafka_producer.return_value.poll = MagicMock()
+        self.mock_kafka_producer.return_value.flush = MagicMock()
 
         self.mock_conv_client = MagicMock()
         self.mock_conv_client.setex = MagicMock()
@@ -72,16 +81,16 @@ class AudioEndpointTestCase(TestCase):
         self.mock_deal_client.append = MagicMock()
         self.mock_deal_client.flushdb = MagicMock()
 
-        patcher_conv = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_conversation_cache',
-                             return_value=self.mock_conv_client)
-        patcher_embedding = patch('src.audio_endpoint.views.AudioView.connect_to_redis_embedding_cache',
-                                  return_value=self.mock_embedding_client)
-        patcher_deal = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_deal_cache',
-                             return_value=self.mock_deal_client)
+        patch_conv = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_conversation_cache',
+                           return_value=self.mock_conv_client)
+        patch_embedding = patch('src.audio_endpoint.views.AudioView.connect_to_redis_embedding_cache',
+                                return_value=self.mock_embedding_client)
+        patch_deal = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_deal_cache',
+                           return_value=self.mock_deal_client)
 
-        patcher_conv.start()
-        patcher_embedding.start()
-        patcher_deal.start()
+        patch_conv.start()
+        patch_embedding.start()
+        patch_deal.start()
 
         self.mock_s3 = patch('src.audio_endpoint.views.boto3.client')
         self.mock_s3.start().return_value = MagicMock()
@@ -110,12 +119,6 @@ class AudioEndpointTestCase(TestCase):
         self.mock_openai_stream = patch('src.audio_endpoint.views.conv_ai')
         self.mock_openai_stream_gen = self.mock_openai_stream.start()
         self.mock_openai_stream_gen.side_effect = self.mock_streaming_response
-
-        mock_response = MagicMock()
-        mock_response.content = b'mock response'
-        self.mock_openai_tts = patch(text_to_speech_path + '.OpenAI')
-        self.mock_openai_tts = self.mock_openai_tts.start()
-        self.mock_openai_tts.return_value.audio.speech.create.return_value = mock_response
 
         self.mock_db_instance = patch('src.audio_endpoint.views.psycopg2.connect').start()
         mock_cursor = MagicMock()
@@ -160,7 +163,6 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
@@ -170,7 +172,7 @@ class AudioEndpointTestCase(TestCase):
             "mocked_response_transcription")
            )
     @patch('src.audio_endpoint.views.return_as_wav', return_value=b'mocked_audio_data')
-    def test_post_returns_correct_response__when_human_requested_function_returns_true(
+    def test_post_returns_correct_response_when_human_requested_function_returns_true(
             self, mock_return_as_wav, mock_record_until_silence, mock_human_requested
     ) -> None:
         # Arrange
@@ -201,7 +203,6 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
@@ -244,7 +245,6 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
@@ -292,10 +292,8 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
-
 
     def test_patch_request_with_deal_cache_get_method_throwing_exception_correctly_assigns_offer_deal_and_returns_200(
             self
@@ -312,7 +310,6 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
@@ -352,7 +349,6 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
@@ -392,7 +388,6 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
@@ -456,6 +451,5 @@ class AudioEndpointTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('file_path' in response.json())
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
