@@ -1,14 +1,9 @@
 import os
-import json
 import pytest
-from typing import Final
 from django.test import TestCase
 from mock import patch, MagicMock, mock_open
 from django.urls import resolve, reverse
 from src.audio_stream.views import AudioStreamView
-
-speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
-text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
 
 
 @pytest.mark.skip(reason="Need to run with django test not pytest")
