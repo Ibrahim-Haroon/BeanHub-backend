@@ -2,11 +2,13 @@ import time
 import json
 import redis
 import logging
+from drf_yasg import openapi
 from os import getenv as env
 from dotenv import load_dotenv
 from rest_framework.views import APIView
 from src.django_beanhub.settings import DEBUG
 from django.http import StreamingHttpResponse
+from drf_yasg.utils import swagger_auto_schema
 from confluent_kafka import Consumer, KafkaError, TopicPartition, OFFSET_BEGINNING
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 
@@ -112,6 +114,26 @@ class AudioStreamView(APIView):
             consumer.close()
             logging.debug("Consumer closed")
 
+    @swagger_auto_schema(
+        operation_description=
+        """
+        Stream audio bytes from Kafka topic which are produced from conversational AI model in audio_endpoint.
+        """,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'unique_id': openapi.Schema(type=openapi.TYPE_STRING,
+                                            description='ID given from audio_endpoint PATCH request. '
+                                                        'Needed for verification.'),
+            },
+        ),
+        responses={
+            200: 'OK',
+            400: 'Bad Request',
+            404: 'Not Found',
+            500: 'Internal Error',
+        },
+    )
     def post(
             self, response
     ) -> StreamingHttpResponse:
