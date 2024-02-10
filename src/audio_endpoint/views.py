@@ -92,7 +92,7 @@ class AudioView(APIView):
     ) -> Producer:
         if not hasattr(self, 'kafka_producer'):
             self.kafka_producer = Producer({
-                'bootstrap.servers': env('KAFKA_BROKER_URL'),  # Add your Kafka broker URL to your .env file
+                'bootstrap.servers': env('KAFKA_BROKER_URL'),
             })
         return self.kafka_producer
 
@@ -149,6 +149,24 @@ class AudioView(APIView):
 
         return transcription
 
+    def upload_file(
+            self, unique_id: uuid.UUID = None
+    ) -> None:
+        res_audio_path = '/tmp/res_audio.wav'
+        audio_write_time = time.time()
+        with open(res_audio_path, 'wb') as f:
+            while not self.response_audio:
+                # wait 1 ms for response_audio to be set
+                time.sleep(0.001)
+            f.write(self.response_audio)
+        logging.debug(f"audio_write time: {time.time() - audio_write_time}")
+
+        upload_time = time.time()
+        self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
+        logging.debug(f"upload_file time: {time.time() - upload_time}")
+
+        return
+
     @swagger_auto_schema(
         operation_description=
         """
@@ -180,10 +198,11 @@ class AudioView(APIView):
             return Response({'error': 'file_path not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         deal_object, deal_offered = None, False
-        unique_id = uuid.uuid4()
+        unique_id, _human_requested = uuid.uuid4(), False
         transcription = self.get_transcription(response.data['file_path'])
 
         if human_requested(transcription):
+            _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
             order_report, conv_history, deal_object, deal_offered = self.post_normal_request(unique_id, transcription)
@@ -192,6 +211,9 @@ class AudioView(APIView):
             'unique_id': str(unique_id),
             'json_order': order_report
         }
+
+        if _human_requested:
+            response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         self.conversation_cache.setex(name=f"conversation_history_{unique_id}",
                                       time=600,  # 10 minutes
@@ -241,7 +263,7 @@ class AudioView(APIView):
         if 'file_path' not in response.data or 'unique_id' not in response.data:
             return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        unique_id = response.data['unique_id']
+        unique_id, _human_requested = response.data['unique_id'], False
         transcription = self.get_transcription(response.data['file_path'])
 
         if accepted_deal(transcription):
@@ -250,7 +272,11 @@ class AudioView(APIView):
             if isinstance(order_report, Response):
                 return order_report
         elif human_requested(transcription):
+            _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
+
+            upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
+            upload_thread.start()
         else:
             try:
                 offer_deal = bool(json.loads(self.deal_cache.get(
@@ -270,6 +296,9 @@ class AudioView(APIView):
             'unique_id': str(unique_id),
             'json_order': order_report
         }
+
+        if _human_requested:
+            response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         if response_data:
             logging.debug(f"total time: {time.time() - start_time}")
