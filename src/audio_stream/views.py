@@ -112,10 +112,10 @@ class AudioStreamView(APIView):
             consumer.close()
             logging.debug("Consumer closed")
 
-    def get(
-            self, request, *args, **kwargs
+    def post(
+            self, response
     ) -> StreamingHttpResponse:
-        if 'unique_id' not in request.data:
+        if 'unique_id' not in response.data:
             return StreamingHttpResponse('Unique ID not provided', status=400)
 
-        return StreamingHttpResponse(self.consume_message(request.data['unique_id']), content_type='audio/wav')
+        return StreamingHttpResponse(self.consume_message(response.data['unique_id']), content_type='audio/wav')
