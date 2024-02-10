@@ -43,9 +43,10 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'src.audio_endpoint',
+    'src.audio_stream',
     'corsheaders',
     'debug_toolbar',
-    'drf_yasg',  # Added 'drf_yasg' here
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
