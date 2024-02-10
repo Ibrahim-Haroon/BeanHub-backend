@@ -25,17 +25,17 @@ class URLsTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_kafka_producer_class = patch('src.audio_endpoint.views.AudioView.get_kafka_producer', autospec=True)
-        self.mock_kafka_producer = self.mock_kafka_producer_class.start()
-        self.mock_kafka_producer.return_value.produce = MagicMock()
-        self.mock_kafka_producer.return_value.poll = MagicMock()
-        self.mock_kafka_producer.return_value.flush = MagicMock()
+        self.mock_kafka_consumer_class = patch('confluent_kafka.Consumer', autospec=True)
+        self.mock_kafka_consumer = self.mock_kafka_consumer_class.start()
+        self.mock_kafka_consumer.return_value.assign = MagicMock()
+        self.mock_kafka_consumer.return_value.subscribe = MagicMock()
+        self.mock_kafka_consumer.return_value.poll = MagicMock()
+        self.mock_kafka_consumer.return_value.close = MagicMock()
 
         self.mock_conv_client = MagicMock()
-        self.mock_conv_client.setex = MagicMock()
-        self.mock_conv_client.append = MagicMock()
+        self.mock_conv_client.get = MagicMock()
 
-        patch_conv = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_conversation_cache',
+        patch_conv = patch('src.audio_stream.views.AudioStreamView.connect_to_redis_temp_conversation_cache',
                            return_value=self.mock_conv_client)
 
 
@@ -46,10 +46,6 @@ class URLsTestCase(TestCase):
     ) -> None:
         patch.stopall()
         super().tearDown()
-
-    @staticmethod
-    def mock_streaming_response(*args, **kwargs):
-        yield 'foo'
 
     def test_audio_stream_url_is_resolves_to_AudioStreamView_class(
             self
