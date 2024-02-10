@@ -148,3 +148,4 @@ asyncio==3.4.3
 pathlib==1.0.1
 drf-yasg
 async_timeout==4.0.3
+confluent_kafka==2.3.0
