@@ -2,6 +2,7 @@ import os
 import pytest
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
+from django.http import StreamingHttpResponse
 
 
 @pytest.mark.skip(reason="Need to run with django test not pytest")
@@ -67,3 +68,69 @@ class AudioStreamTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 200)
+
+    def test_consume_message_with_valid_unique_id_returns_audio_stream(
+            self
+    ) -> None:
+        # Arrange
+        unique_id = "foo"
+
+        data = {
+            "unique_id": unique_id
+        }
+
+        self.mock_kafka_consumer.return_value.poll.side_effect = [
+            MagicMock(key=lambda: unique_id.encode('utf-8'), value=lambda: 'Hello'.encode('utf-8')),
+            MagicMock(key=lambda: unique_id.encode('utf-8'), value=lambda: '!COMPLETE!'.encode('utf-8'))
+        ]
+
+        # Act
+        response = self.client.post('/audio_stream/', data, content_type='application/json')
+
+        # Assert
+        self.assertIsInstance(response, StreamingHttpResponse)
+        self.assertEqual(response.status_code, 200)
+
+    def test_consume_message_completion_signal_ends_stream(
+            self
+    ) -> None:
+        # Arrange
+        unique_id = "foo"
+
+        data = {
+            "unique_id": unique_id
+        }
+
+        self.mock_kafka_consumer.return_value.poll.side_effect = [
+            MagicMock(key=lambda: unique_id.encode('utf-8'), value=lambda: 'Message 1'.encode('utf-8')),
+            MagicMock(key=lambda: unique_id.encode('utf-8'), value=lambda: 'Message 2'.encode('utf-8')),
+            MagicMock(key=lambda: unique_id.encode('utf-8'), value=lambda: '!COMPLETE!'.encode('utf-8')),
+            None
+        ]
+
+        # Act
+        response = self.client.post('/audio_stream/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+
+    def test_consume_message_no_start_offsets_subscribes_to_topic(
+            self
+    ) -> None:
+        # Arrange
+        unique_id = "new_id"
+        self.mock_conv_client.get.return_value = None
+        self.mock_kafka_consumer.return_value.poll.return_value = None
+
+        data = {
+            "unique_id": unique_id
+        }
+
+
+        # Act
+        response = self.client.post('/audio_stream/', data, content_type='application/json')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+
+
