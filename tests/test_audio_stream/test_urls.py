@@ -15,17 +15,22 @@ class URLsTestCase(TestCase):
         self.mock_env = patch.dict(os.environ, {
             "REDIS_HOST": "test",
             "REDIS_PORT": "test",
-            'KAFKA_BROKER_URL': "127.0.0.2",
-            'KAFKA_TOPIC': "test"
+            'RABBITMQ_HOST': "test",
         })
         self.mock_env.start()
 
-        self.mock_kafka_consumer_class = patch('confluent_kafka.Consumer', autospec=True)
-        self.mock_kafka_consumer = self.mock_kafka_consumer_class.start()
-        self.mock_kafka_consumer.return_value.assign = MagicMock()
-        self.mock_kafka_consumer.return_value.subscribe = MagicMock()
-        self.mock_kafka_consumer.return_value.poll = MagicMock()
-        self.mock_kafka_consumer.return_value.close = MagicMock()
+        self.mock_pika_connection = patch('src.audio_stream.views.BlockingConnection').start()
+        self.mock_pika_connection_parameters = patch('src.audio_stream.views.ConnectionParameters').start()
+
+        self.mock_pika_channel = MagicMock()
+
+        self.mock_pika_channel.queue_declare = MagicMock()
+        self.mock_pika_channel.basic_consume = MagicMock()
+        self.mock_pika_channel.start_consuming = MagicMock()
+        self.mock_pika_channel.queue_delete = MagicMock()
+
+        self.mock_pika_connection.start()
+        self.mock_pika_connection_parameters.start()
 
         self.mock_conv_client = MagicMock()
         self.mock_conv_client.get = MagicMock()
