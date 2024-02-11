@@ -24,20 +24,6 @@ class AudioStreamView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.max_buffer_size = 15
-        self.conversation_cache = self.connect_to_redis_temp_conversation_cache()
-
-    @staticmethod
-    def connect_to_redis_temp_conversation_cache(
-
-    ) -> redis.Redis:  # pragma: no cover
-        while True:
-            try:
-                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=0)
-                logging.debug("Connected to conversation history")
-                return redis_client
-            except redis.exceptions.ConnectionError:
-                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
-                time.sleep(5)
 
     def stream_audio(
             self, unique_id
