@@ -112,7 +112,7 @@ def test_get_item_returns_false_when_given_invalid_params(
 def test_get_item_throws_correct_exception_when_queue_empty(
         mocker, mock_components
 ) -> None:
-    # Mock the queue to raise queue.Empty
+    # Arrange
     mock_queue = MagicMock(spec=queue.Queue)
     mock_queue.get.side_effect = queue.Empty
 
@@ -123,7 +123,7 @@ def test_get_item_throws_correct_exception_when_queue_empty(
         ["mydb", "myuser", "mypassword", "localhost", "port"]]
     db = as_csv_file(database_info)
 
-    # Call the function under test
+    # Act
     error_message, success_flag = get_item(order="test", api_key="test_key", database_csv_file=db)
 
     # Assertions
