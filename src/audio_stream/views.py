@@ -1,15 +1,16 @@
 import time
-import json
 import redis
 import logging
+import threading
 from drf_yasg import openapi
 from os import getenv as env
+from queue import Queue, Empty
 from dotenv import load_dotenv
 from rest_framework.views import APIView
 from src.django_beanhub.settings import DEBUG
 from django.http import StreamingHttpResponse
 from drf_yasg.utils import swagger_auto_schema
-from confluent_kafka import Consumer, KafkaError, TopicPartition, OFFSET_BEGINNING
+from pika import BlockingConnection, ConnectionParameters
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
@@ -37,82 +38,47 @@ class AudioStreamView(APIView):
                 logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
 
-    @staticmethod
-    def on_assign(consumer, partitions):
-        for partition in partitions:
-            partition.offset = OFFSET_BEGINNING
-        consumer.assign(partitions)
-
-    def get_start_offsets(self, unique_id):
-        offset_data = self.conversation_cache.get(f"kafka_message_offset_{unique_id}")
-        if not offset_data:
-            return []
-
-        records = json.loads(offset_data.decode('utf-8'))
-
-        return [TopicPartition(record['topic'], record['partition'], record['offset'] + 1) for record in records]
-
-    def consume_message(
+    def stream_audio(
             self, unique_id
     ) -> bytes or None:
-        consumer = Consumer({
-            'bootstrap.servers': env('KAFKA_BROKER_URL'),
-            'group.id': 'audio_stream_group',
-            'auto.offset.reset': 'earliest'
-        })
+        message_queue, text_buffer = Queue(), []
+        threading.Thread(target=self.consume_messages, args=(unique_id, message_queue), daemon=True).start()
 
-        kafka_topic = env('KAFKA_TOPIC')
-        start_offsets = self.get_start_offsets(unique_id)
-
-        if start_offsets:
-            logging.debug(f"Assigning start offsets: {start_offsets}")
-            consumer.assign(start_offsets)
-        else:
-            logging.debug("No start offsets found. Subscribing to topic...")
-            consumer.subscribe([kafka_topic], on_assign=self.on_assign)
-
-        text_buffer = []
-
-        try:
-            while True:
-                msg = consumer.poll(1.0)
-                if msg is None:
-                    logging.debug("No message received")
-                    continue
-                if msg.error():
-                    if msg.error().code() == KafkaError._PARTITION_EOF:
-                        logging.debug(f"End of partition reached {msg.topic()} [{msg.partition()}] at offset {msg.offset()}")
-                        continue
-                    elif msg.error().code() != KafkaError.NO_ERROR:
-                        logging.debug(f"Error: {msg.error()}")
-                        break
-
-                if msg.key() is None or msg.value() is None:
-                    logging.debug("key or value empty. Skipping...")
-                    continue
-
-                if msg.key().decode('utf-8') == unique_id:
-                    text = msg.value().decode('utf-8')
-                    logging.debug(f"Received message: {text}")
-                    if text == '!COMPLETE!':
-                        logging.debug("Received completion message.")
-                        if text_buffer:
-                            logging.debug("Buffer not empty. Generating audio...")
-                            audio_bytes = openai_text_to_speech_api(''.join(text_buffer))
-                            yield audio_bytes
-                        break
-
-                    text_buffer.append(text)
-                    logging.debug("Appended to buffer")
-
-                    if len(text_buffer) >= self.max_buffer_size:
-                        logging.debug("Buffer full. Generating audio...")
+        while True:
+            try:
+                audio_content: str = message_queue.get(timeout=10)
+                if audio_content == '!COMPLETE!':
+                    if text_buffer:
                         audio_bytes = openai_text_to_speech_api(''.join(text_buffer))
                         yield audio_bytes
-                        text_buffer.clear()
-        finally:
-            consumer.close()
-            logging.debug("Consumer closed")
+                    break
+
+                text_buffer.append(audio_content)
+
+                if len(text_buffer) > self.max_buffer_size:
+                    audio_bytes = openai_text_to_speech_api(''.join(text_buffer))
+                    yield audio_bytes
+                    text_buffer.clear()
+
+            except Empty:
+                break
+
+    @staticmethod
+    def consume_messages(
+            unique_id, message_queue
+    ) -> None:
+        connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
+        channel = connection.channel()
+
+        channel_queue = f"audio_stream_{unique_id}"
+        channel.queue_declare(queue=channel_queue)
+
+        def callback(ch, method, properties, body):
+            message_queue.put(body.decode('utf-8'))
+
+        channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
+        channel.start_consuming()
+
 
     @swagger_auto_schema(
         operation_description=
@@ -140,4 +106,4 @@ class AudioStreamView(APIView):
         if 'unique_id' not in response.data:
             return StreamingHttpResponse('Unique ID not provided', status=400)
 
-        return StreamingHttpResponse(self.consume_message(response.data['unique_id']), content_type='audio/wav')
+        return StreamingHttpResponse(self.stream_audio(response.data['unique_id']), content_type='audio/wav')
