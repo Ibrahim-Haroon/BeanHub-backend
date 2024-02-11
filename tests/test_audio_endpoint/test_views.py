@@ -54,16 +54,20 @@ class AudioEndpointTestCase(TestCase):
             "DJANGO_INTERNAL_IPS": "test",
             "REDIS_HOST": "test",
             "REDIS_PORT": "test",
-            'KAFKA_BROKER_URL': "127.0.0.2",
-            'KAFKA_TOPIC': "test"
+            'RABBITMQ_HOST': "test",
         })
         self.mock_env.start()
 
-        self.mock_kafka_producer_class = patch('src.audio_endpoint.views.AudioView.get_kafka_producer', autospec=True)
-        self.mock_kafka_producer = self.mock_kafka_producer_class.start()
-        self.mock_kafka_producer.return_value.produce = MagicMock()
-        self.mock_kafka_producer.return_value.poll = MagicMock()
-        self.mock_kafka_producer.return_value.flush = MagicMock()
+        self.mock_pika_connection = patch('src.audio_endpoint.views.BlockingConnection').start()
+        self.mock_pika_connection_parameters = patch('src.audio_endpoint.views.ConnectionParameters').start()
+
+        self.mock_pika_channel = MagicMock()
+
+        self.mock_pika_channel.queue_declare = MagicMock()
+        self.mock_pika_channel.basic_publish = MagicMock()
+
+        self.mock_pika_connection.start()
+        self.mock_pika_connection_parameters.start()
 
         self.mock_conv_client = MagicMock()
         self.mock_conv_client.setex = MagicMock()
