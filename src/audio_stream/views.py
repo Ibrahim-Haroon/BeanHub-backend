@@ -1,6 +1,4 @@
-import time
 import uuid
-import redis
 import logging
 import threading
 from drf_yasg import openapi
