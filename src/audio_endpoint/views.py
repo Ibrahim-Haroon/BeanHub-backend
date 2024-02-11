@@ -2,7 +2,6 @@ import json
 import os
 import uuid
 import time
-from pika import BlockingConnection, ConnectionParameters
 import redis
 import boto3
 import logging
@@ -21,6 +20,7 @@ from drf_yasg.utils import swagger_auto_schema
 from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
+from pika import BlockingConnection, ConnectionParameters, BasicProperties
 from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
 from src.ai_integration.speech_to_text_api import google_cloud_speech_api, record_until_silence, return_as_wav
 
@@ -416,21 +416,26 @@ class AudioView(APIView):
         return order_report, conv_history
 
     def rabbitmq_stream(
-            self, transcription: str, model_report, conversation_history: str, deal: str,
+            self, transcription: str, model_report: str, conversation_history: str, deal: str,
             unique_id: uuid.UUID, model_response: list[str]
     ) -> None:
         channel_queue = f"audio_stream_{unique_id}"
 
-        self.rabbitmq_channel.queue_declare(queue=channel_queue)
+        self.rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
 
         for model_response_chunk in conv_ai(transcription,
                                             model_report,
                                             conversation_history=conversation_history,
                                             deal=deal):
+
             if model_response_chunk:
                 self.rabbitmq_channel.basic_publish(exchange='',
                                                     routing_key=channel_queue,
-                                                    body=model_response_chunk)
+                                                    body=model_response_chunk,
+                                                    properties=BasicProperties(
+                                                        delivery_mode=2,  # make message persistent
+                                                    ))
+                logging.info(f"Successfully published message to {channel_queue}")
 
                 model_response.append(model_response_chunk)
 
