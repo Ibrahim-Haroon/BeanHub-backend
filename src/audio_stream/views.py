@@ -1,4 +1,3 @@
-import uuid
 import logging
 import threading
 from drf_yasg import openapi
@@ -21,10 +20,10 @@ load_dotenv()
 class AudioStreamView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.max_buffer_size = 15
+        self.max_buffer_size: int = 15
 
     def stream_audio(
-            self, unique_id
+            self, unique_id: str
     ) -> bytes or None:
         message_queue, text_buffer = Queue(), []
         threading.Thread(target=self.consume_messages, args=(unique_id, message_queue), daemon=True).start()
@@ -52,7 +51,7 @@ class AudioStreamView(APIView):
 
     @staticmethod
     def consume_messages(
-            unique_id: uuid.UUID, message_queue
+            unique_id: str, message_queue: Queue
     ) -> None:
         connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
         channel = connection.channel()
@@ -68,7 +67,7 @@ class AudioStreamView(APIView):
 
     @staticmethod
     def delete_rabbitmq_queue(
-            unique_id: uuid.UUID
+            unique_id: str
     ) -> None:
         connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
         channel = connection.channel()
@@ -99,10 +98,11 @@ class AudioStreamView(APIView):
             500: 'Internal Error',
         },
     )
-    def post(
-            self, response
+    def get(
+            self, request, *args, **kwargs
     ) -> StreamingHttpResponse:
-        if 'unique_id' not in response.data:
+        unique_id = request.query_params.get('unique_id')
+        if not unique_id:
             return StreamingHttpResponse('Unique ID not provided', status=400)
 
-        return StreamingHttpResponse(self.stream_audio(response.data['unique_id']), content_type='audio/wav')
+        return StreamingHttpResponse(self.stream_audio(unique_id), content_type='audio/wav')
