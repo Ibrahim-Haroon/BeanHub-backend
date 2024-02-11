@@ -3,7 +3,7 @@ import json
 import pytest
 from typing import Final
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
 text_to_speech_path: Final[str] = 'src.ai_integration.text_to_speech_api'
@@ -110,6 +110,21 @@ class AudioEndpointTestCase(TestCase):
         self.mock_google_cloud.start().return_value = mock_recognizer_instance
         expected_transcription = "One black coffee"
         mock_recognizer_instance.recognize_google.return_value = expected_transcription
+
+        self.mock_deepgram_file = patch('builtins.open', new_callable=mock_open, read_data='fake_deepgram_api_key')
+        self.mock_deepgram_file.start()
+
+        self.mock_deepgram_class = patch(speech_to_text_path + '.Deepgram')
+        mock_deepgram_instance = MagicMock()
+        self.mock_deepgram_class.start().return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'this is a test'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
 
         self.mock_speech = patch(speech_to_text_path + '.speech.AudioFile')
         self.mock_speech.start().return_value = MagicMock()
@@ -356,9 +371,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    @patch(speech_to_text_path + '.speech.Recognizer')
-    def test_that_patch_returns_200_success_response_when_customer_accepts_deal_and_orders_another_item_in_same_request(
-            self, mock_google_transcribe
+    @patch(speech_to_text_path + '.Deepgram')
+    def test_patch_sends_successful_response_when_user_accepts_deal_and_deal_is_coffee_item(
+            self, mock_deepgram
     ) -> None:
         # Arrange
         data = {
@@ -371,7 +386,7 @@ class AudioEndpointTestCase(TestCase):
             '    "deal_accepted": "foo",'
             '    "deal_object": {'
             '        "CoffeeItem": {'
-            '            "item_name": "latte",'
+            '            "item_name": "black coffee",'
             '            "quantity": [1],'
             '            "price": [2.0],'
             '            "cart_action": "insertion"'
@@ -380,12 +395,18 @@ class AudioEndpointTestCase(TestCase):
             '}'
         )
 
-        mock_google_instance = MagicMock()
-        mock_google_transcribe.return_value = mock_google_instance
-        mock_google_transcription = "yes and one latte please"
-        mock_google_instance.recognize_google.return_value = mock_google_transcription
+        self.mock_deal_client.get = MagicMock(return_value=mock_deal_data)
 
-        self.mock_deal_client.get = MagicMock(side_effect=[mock_deal_data, json.dumps(False)])
+        mock_deepgram_instance = MagicMock()
+        mock_deepgram.return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'yes'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
 
         # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
@@ -395,9 +416,9 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('unique_id' in response.json())
         self.assertTrue('json_order' in response.json())
 
-    @patch(speech_to_text_path + '.speech.Recognizer')
+    @patch(speech_to_text_path + '.Deepgram')
     def test_patch_sends_400_error_response_when_user_deal_invalid(
-            self, mock_google_transcribe
+            self, mock_deepgram
     ) -> None:
         # Arrange
         data = {
@@ -405,10 +426,16 @@ class AudioEndpointTestCase(TestCase):
             "unique_id": "test",
         }
 
-        mock_google_instance = MagicMock()
-        mock_google_transcribe.return_value = mock_google_instance
-        mock_google_transcription = "yes"
-        mock_google_instance.recognize_google.return_value = mock_google_transcription
+        mock_deepgram_instance = MagicMock()
+        mock_deepgram.return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'yes'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
 
         # Act
         response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
