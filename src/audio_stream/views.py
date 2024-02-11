@@ -1,4 +1,5 @@
 import time
+import uuid
 import redis
 import logging
 import threading
@@ -63,9 +64,11 @@ class AudioStreamView(APIView):
             except Empty:
                 break
 
+        self.delete_rabbitmq_queue(unique_id)
+
     @staticmethod
     def consume_messages(
-            unique_id, message_queue
+            unique_id: uuid.UUID, message_queue
     ) -> None:
         connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
         channel = connection.channel()
@@ -79,6 +82,18 @@ class AudioStreamView(APIView):
         channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
         channel.start_consuming()
 
+    @staticmethod
+    def delete_rabbitmq_queue(
+            unique_id: uuid.UUID
+    ) -> None:
+        connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
+        channel = connection.channel()
+
+        channel_queue = f"audio_stream_{unique_id}"
+        try:
+            channel.queue_delete(queue=channel_queue)
+        except Exception as e:
+            logging.debug(f"Failed to delete queue {channel_queue}: {e}")
 
     @swagger_auto_schema(
         operation_description=
