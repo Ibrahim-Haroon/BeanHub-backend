@@ -32,15 +32,6 @@ class URLsTestCase(TestCase):
         self.mock_pika_connection.start()
         self.mock_pika_connection_parameters.start()
 
-        self.mock_conv_client = MagicMock()
-        self.mock_conv_client.get = MagicMock()
-
-        patch_conv = patch('src.audio_stream.views.AudioStreamView.connect_to_redis_temp_conversation_cache',
-                           return_value=self.mock_conv_client)
-
-
-        patch_conv.start()
-
     def tearDown(
             self
     ) -> None:
@@ -72,27 +63,11 @@ class URLsTestCase(TestCase):
             self
     ) -> None:
         # Arrange
-        data = {
-            'unique_id': 'foo_id'
-        }
+        unique_id = "foo-unique-id"
+        url = reverse('audio-stream') + f'?unique_id={unique_id}'
 
         # Act
-        response = self.client.post('/audio_stream/', data, content_type='application/json')
-
-        # Assert
-        self.assertEqual(response.status_code, 200)
-
-    def test_audio_stream_url_accessible_by_name_get_request(
-            self
-    ) -> None:
-        # Arrange
-        data = {
-            'unique_id': 'foo_id'
-        }
-        url = reverse('audio-stream')
-
-        # Act
-        response = self.client.post(url, data, content_type='application/json')
+        response = self.client.get(url)
 
         # Assert
         self.assertEqual(response.status_code, 200)
