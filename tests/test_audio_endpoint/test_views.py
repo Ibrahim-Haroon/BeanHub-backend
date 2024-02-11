@@ -372,7 +372,7 @@ class AudioEndpointTestCase(TestCase):
         self.assertTrue('json_order' in response.json())
 
     @patch(speech_to_text_path + '.Deepgram')
-    def test_patch_sends_successful_response_when_user_accepts_deal_and_deal_is_coffee_item(
+    def test_that_patch_returns_200_success_response_when_customer_accepts_deal_and_orders_another_item_in_same_request(
             self, mock_deepgram
     ) -> None:
         # Arrange
@@ -386,7 +386,7 @@ class AudioEndpointTestCase(TestCase):
             '    "deal_accepted": "foo",'
             '    "deal_object": {'
             '        "CoffeeItem": {'
-            '            "item_name": "black coffee",'
+            '            "item_name": "latte",'
             '            "quantity": [1],'
             '            "price": [2.0],'
             '            "cart_action": "insertion"'
@@ -402,7 +402,7 @@ class AudioEndpointTestCase(TestCase):
         nova_response = {
             'results': {
                 'channels': [
-                    {'alternatives': [{'transcript': 'yes'}]}
+                    {'alternatives': [{'transcript': 'yes and one latte please'}]}
                 ]
             }
         }
