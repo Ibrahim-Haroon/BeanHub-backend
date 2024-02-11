@@ -71,7 +71,7 @@ class AudioStreamView(APIView):
         channel = connection.channel()
 
         channel_queue = f"audio_stream_{unique_id}"
-        channel.queue_declare(queue=channel_queue)
+        channel.queue_declare(queue=channel_queue, durable=True)
 
         def callback(ch, method, properties, body):
             message_queue.put(body.decode('utf-8'))
