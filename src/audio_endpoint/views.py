@@ -2,6 +2,7 @@ import json
 import os
 import uuid
 import time
+from pika import BlockingConnection, ConnectionParameters
 import redis
 import boto3
 import logging
@@ -12,7 +13,6 @@ from os import getenv as env
 from drf_yasg import openapi
 from dotenv import load_dotenv
 from rest_framework import status
-from confluent_kafka import Producer
 from rest_framework.views import APIView
 from src.vector_db.get_deal import get_deal
 from rest_framework.response import Response
@@ -36,10 +36,10 @@ class AudioView(APIView):
             self, *args, **kwargs
     ):
         super().__init__(**kwargs)
-        self.kafka_producer = self.get_kafka_producer()
-        self.kafka_topic = env('KAFKA_TOPIC')
         self.bucket_name = env('S3_BUCKET_NAME')
         self.conversation_cache = self.connect_to_redis_temp_conversation_cache()
+        self.rabbitmq_connection = BlockingConnection(ConnectionParameters(env('RABBITMQ_HOST')))
+        self.rabbitmq_channel = self.rabbitmq_connection.channel()
         self.deal_cache = self.connect_to_redis_temp_deal_cache()
         self.embedding_cache = self.connect_to_redis_embedding_cache()
         self.s3 = boto3.client('s3')
@@ -85,15 +85,6 @@ class AudioView(APIView):
             except redis.exceptions.ConnectionError:
                 logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
                 time.sleep(5)
-
-    def get_kafka_producer(
-            self
-    ) -> Producer:
-        if not hasattr(self, 'kafka_producer'):
-            self.kafka_producer = Producer({
-                'bootstrap.servers': env('KAFKA_BROKER_URL'),
-            })
-        return self.kafka_producer
 
     @staticmethod
     def formatted_deal(
@@ -203,6 +194,9 @@ class AudioView(APIView):
         if human_requested(transcription):
             _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
+
+            upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,), daemon=True)
+            upload_thread.start()
         else:
             order_report, conv_history, deal_object, deal_offered = self.post_normal_request(unique_id, transcription)
 
@@ -210,9 +204,6 @@ class AudioView(APIView):
             'unique_id': str(unique_id),
             'json_order': order_report
         }
-
-        if _human_requested:
-            response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         self.conversation_cache.setex(name=f"conversation_history_{unique_id}",
                                       time=600,  # 10 minutes
@@ -225,6 +216,9 @@ class AudioView(APIView):
         self.deal_cache.setex(name=f"deal_history_{unique_id}",
                               time=600,  # 10 minutes
                               value=json.dumps(deal_data))
+
+        if _human_requested:
+            response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         if response_data:
             logging.debug(f"total time: {time.time() - start_time}")
@@ -274,7 +268,7 @@ class AudioView(APIView):
             _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
 
-            upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,))
+            upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,), daemon=True)
             upload_thread.start()
         else:
             try:
@@ -320,13 +314,13 @@ class AudioView(APIView):
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
 
-        kafka_thread = threading.Thread(target=self.kafka_stream, args=(transcription,
-                                                                        model_report,
-                                                                        "",
-                                                                        deal,
-                                                                        unique_id,
-                                                                        model_response))
-        kafka_thread.start()
+        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream, args=(transcription,
+                                                                              model_report,
+                                                                              "",
+                                                                              deal,
+                                                                              unique_id,
+                                                                              model_response), daemon=True)
+        rabbitmq_thread.start()
 
         deal_offered = True
         conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
@@ -369,15 +363,15 @@ class AudioView(APIView):
         old_conv_history = self.conversation_cache.get(
             f"conversation_history_{unique_id} + 'CUSTOMER JUST ACCEPTED DEAL'"
         )
-        kafka_thread = threading.Thread(target=self.kafka_stream, args=(transcription,
-                                                                        str(order_report)
-                                                                        if order_report
-                                                                        else str(deal_report),
-                                                                        old_conv_history,
-                                                                        None,
-                                                                        unique_id,
-                                                                        model_response))
-        kafka_thread.start()
+        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream, args=(transcription,
+                                                                              str(order_report)
+                                                                              if order_report
+                                                                              else str(deal_report),
+                                                                              old_conv_history,
+                                                                              None,
+                                                                              unique_id,
+                                                                              model_response), daemon=True)
+        rabbitmq_thread.start()
 
         conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
 
@@ -401,13 +395,13 @@ class AudioView(APIView):
                                             embedding_cache=self.embedding_cache)
 
         old_conv_history = self.conversation_cache.get(f"conversation_history_{unique_id}")
-        kafka_thread = threading.Thread(target=self.kafka_stream, args=(transcription,
-                                                                        model_report,
-                                                                        old_conv_history,
-                                                                        deal,
-                                                                        unique_id,
-                                                                        model_response))
-        kafka_thread.start()
+        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream, args=(transcription,
+                                                                              model_report,
+                                                                              old_conv_history,
+                                                                              deal,
+                                                                              unique_id,
+                                                                              model_response), daemon=True)
+        rabbitmq_thread.start()
 
         deal_offered = True
         conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
@@ -421,48 +415,25 @@ class AudioView(APIView):
 
         return order_report, conv_history
 
-    def kafka_stream(
+    def rabbitmq_stream(
             self, transcription: str, model_report, conversation_history: str, deal: str,
             unique_id: uuid.UUID, model_response: list[str]
     ) -> None:
-        first_message_recorded = False
+        channel_queue = f"audio_stream_{unique_id}"
+
+        self.rabbitmq_channel.queue_declare(queue=channel_queue)
 
         for model_response_chunk in conv_ai(transcription,
                                             model_report,
                                             conversation_history=conversation_history,
                                             deal=deal):
+            if model_response_chunk:
+                self.rabbitmq_channel.basic_publish(exchange='',
+                                                    routing_key=channel_queue,
+                                                    body=model_response_chunk)
 
-            self.kafka_producer.produce(self.kafka_topic,
-                                        key=str(unique_id).encode(),
-                                        value=model_response_chunk.encode() if model_response_chunk else None,
-                                        callback=lambda err, msg: self.acked(err, msg, unique_id)
-                                        if not first_message_recorded else None)
+                model_response.append(model_response_chunk)
 
-            self.kafka_producer.poll(0)
-            model_response.append(model_response_chunk)
-            first_message_recorded = True
-
-        self.kafka_producer.produce(self.kafka_topic,
-                                    key=str(unique_id).encode(),
-                                    value="!COMPLETE!".encode(),
-                                    callback=lambda err, msg: self.acked(err, msg, unique_id)
-                                    if not first_message_recorded else None)
-        self.kafka_producer.poll(0)
-        self.kafka_producer.flush()
-
-    def acked(self, err, msg, unique_id) -> None:
-        if err is not None:
-            logging.debug(f"Failed to deliver message: {err}")
-        else:
-            self.record_kafka_message_offset(msg.topic(), msg.partition(), msg.offset(), unique_id)
-
-    def record_kafka_message_offset(self, topic, partition, offset, unique_id) -> None:
-        key = f"kafka_message_offset_{unique_id}"
-
-        if not self.conversation_cache.exists(key):
-            record = {
-                'topic': topic,
-                'partition': partition,
-                'offset': offset
-            }
-            self.conversation_cache.set(key, json.dumps([record]))
+        self.rabbitmq_channel.basic_publish(exchange='',
+                                            routing_key=channel_queue,
+                                            body='!COMPLETE!')
