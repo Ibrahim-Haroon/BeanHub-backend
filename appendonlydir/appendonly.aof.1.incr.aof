@@ -9864,3 +9864,42 @@ $30
 Customer: sure add it
 Model: 
 
+*2
+$6
+SELECT
+$1
+0
+*2
+$3
+DEL
+$57
+conversation_history_1cdb099e-5509-4426-9b56-f14c605ea8c4
+*5
+$3
+SET
+$57
+conversation_history_06c89958-e082-48c3-b124-f65b200a6662
+$113
+Customer: let me get a a latte with two pumps of caramel and also let me get an egg and cheese croissant
+Model: 
+
+$4
+PXAT
+$13
+1707706528176
+*2
+$6
+SELECT
+$1
+2
+*5
+$3
+SET
+$49
+deal_history_06c89958-e082-48c3-b124-f65b200a6662
+$145
+{"deal_offered": true, "deal_object": {"CoffeeItem": {"item_name": "black coffee", "quantity": [1], "price": [2.0], "cart_action": "insertion"}}}
+$4
+PXAT
+$13
+1707706528186
