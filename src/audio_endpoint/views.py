@@ -21,8 +21,8 @@ from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
 from pika import BlockingConnection, ConnectionParameters, BasicProperties
-from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
 from src.ai_integration.speech_to_text_api import nova_speech_api, record_until_silence, return_as_wav
+from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
 
 logging_level = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
