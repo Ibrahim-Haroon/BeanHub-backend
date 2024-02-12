@@ -118,6 +118,7 @@ class AudioStreamTestCase(TestCase):
         # Arrange
         view_instance = AudioStreamView().__new__(AudioStreamView)
         view_instance.max_buffer_size = 0
+        view_instance.queue_timeout = 1
         unique_id = "test-id-complete"
         mock_tts_api.return_value = b'final-audio-bytes'
         messages = ['final', '!COMPLETE!']
@@ -145,6 +146,7 @@ class AudioStreamTestCase(TestCase):
         # Arrange
         view_instance = AudioStreamView().__new__(AudioStreamView)
         view_instance.max_buffer_size = 0
+        view_instance.queue_timeout = 0
         unique_id = "test-id-complete"
         mock_tts_api.return_value = b'final-audio-bytes'
         messages = []
