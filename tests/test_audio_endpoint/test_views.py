@@ -169,13 +169,25 @@ class AudioEndpointTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'file_path not provided'})
 
+    @patch(speech_to_text_path + '.Deepgram')
     def test_post_with_file_path_returns_correct_response(
-            self
+            self, mock_deepgram
     ) -> None:
         # Arrange
         data = {
             "file_path": "test.wav"
         }
+
+        mock_deepgram_instance = MagicMock()
+        mock_deepgram.return_value = mock_deepgram_instance
+        nova_response = {
+            'results': {
+                'channels': [
+                    {'alternatives': [{'transcript': 'one black coffee'}]}
+                ]
+            }
+        }
+        mock_deepgram_instance.transcription.sync_prerecorded.return_value = nova_response
 
         # Act
         response = self.client.post('/audio_endpoint/', data, content_type='application/json')
@@ -260,7 +272,7 @@ class AudioEndpointTestCase(TestCase):
         }
 
         # Act
-        response = self.client.post('/audio_endpoint/', data, content_type='application/json')
+        response = self.client.patch('/audio_endpoint/', data, content_type='application/json')
 
         # Assert
         self.assertEqual(response.status_code, 200)
