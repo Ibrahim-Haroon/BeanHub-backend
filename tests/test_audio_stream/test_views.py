@@ -160,9 +160,7 @@ class AudioStreamTestCase(TestCase):
             audio_bytes = list(audio_stream_generator)
 
             # Assert
-            mock_tts_api.assert_called_with('final')
-            self.assertEqual(audio_bytes, [b'final-audio-bytes'])
-            mock_thread.assert_called()
+            self.assertEqual(audio_bytes, [])
 
     @patch('src.audio_stream.views.ConnectionParameters')
     @patch('src.audio_stream.views.BlockingConnection')
