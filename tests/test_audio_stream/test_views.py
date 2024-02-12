@@ -115,25 +115,51 @@ class AudioStreamTestCase(TestCase):
     def test_stream_audio_completes_on_complete_message(
             self, mock_tts_api, mock_thread
     ) -> None:
-        # Setup
+        # Arrange
         view_instance = AudioStreamView().__new__(AudioStreamView)
-        view_instance.max_buffer_size = 5
+        view_instance.max_buffer_size = 0
         unique_id = "test-id-complete"
         mock_tts_api.return_value = b'final-audio-bytes'
         messages = ['final', '!COMPLETE!']
 
-        # Mocking
         with patch('src.audio_stream.views.Queue') as mock_queue_class:
             mock_queue = queue.Queue()
             for msg in messages:
                 mock_queue.put(msg)
             mock_queue_class.return_value = mock_queue
 
-            # Exercise
+            # Act
             audio_stream_generator = view_instance.stream_audio(unique_id)
             audio_bytes = list(audio_stream_generator)
 
-            # Verify
+            # Assert
+            mock_tts_api.assert_called_with('final')
+            self.assertEqual(audio_bytes, [b'final-audio-bytes'])
+            mock_thread.assert_called()
+
+    @patch('src.audio_stream.views.threading.Thread')
+    @patch('src.audio_stream.views.openai_text_to_speech_api')
+    def test_stream_audio_completes_on_empty_queue(
+            self, mock_tts_api, mock_thread
+    ) -> None:
+        # Arrange
+        view_instance = AudioStreamView().__new__(AudioStreamView)
+        view_instance.max_buffer_size = 0
+        unique_id = "test-id-complete"
+        mock_tts_api.return_value = b'final-audio-bytes'
+        messages = []
+
+        with patch('src.audio_stream.views.Queue') as mock_queue_class:
+            mock_queue = queue.Queue()
+            for msg in messages:
+                mock_queue.put(msg)
+            mock_queue_class.return_value = mock_queue
+
+            # Act
+            audio_stream_generator = view_instance.stream_audio(unique_id)
+            audio_bytes = list(audio_stream_generator)
+
+            # Assert
             mock_tts_api.assert_called_with('final')
             self.assertEqual(audio_bytes, [b'final-audio-bytes'])
             mock_thread.assert_called()
