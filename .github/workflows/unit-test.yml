@@ -7,11 +7,8 @@ on:
       - 'requirements.txt'
       - '.github/workflows/unit-test.yml'
       
-  pull_request:
-    paths:
-      - '**.py'
-      - 'requirements.txt'
-      - '.github/workflows/unit-test.yml'
+  pull_request: {}
+
 
 jobs:
   build:
