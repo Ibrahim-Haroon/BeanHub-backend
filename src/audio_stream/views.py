@@ -21,6 +21,7 @@ class AudioStreamView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.max_buffer_size: int = 15
+        self.queue_timeout: int = 5
 
     def stream_audio(
             self, unique_id: str
@@ -30,7 +31,7 @@ class AudioStreamView(APIView):
 
         while True:
             try:
-                audio_content: str = message_queue.get(timeout=10)
+                audio_content: str = message_queue.get(timeout=self.queue_timeout)
                 if audio_content == '!COMPLETE!':
                     if text_buffer:
                         audio_bytes = openai_text_to_speech_api(''.join(text_buffer))
