@@ -9,9 +9,16 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+      - rabbitmq
   redis:
       image: redis:latest
       container_name: redis-server
       command: redis-server /usr/local/etc/redis/redis.conf
       volumes:
         - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq-server
+    ports:
+      - "5672:5672"
+      - "15672:15672"
