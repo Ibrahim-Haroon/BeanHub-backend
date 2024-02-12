@@ -435,7 +435,7 @@ class AudioView(APIView):
                                                     properties=BasicProperties(
                                                         delivery_mode=2,  # make message persistent
                                                     ))
-                logging.info(f"Successfully published message to {channel_queue}")
+                logging.debug(f"Successfully published message to {channel_queue}")
 
                 model_response.append(model_response_chunk)
 
