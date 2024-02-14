@@ -455,7 +455,7 @@ def accepted_deal(
 ) -> bool:  # pragma: no cover
     transcription = transcription.lower()
     pattern = r'\b(yes|yeah|sure|okay|ok|yup|yep|alright|fine|deal|k)\b'
-    return bool(re.search(pattern, transcription))
+    return bool(re.search(pattern, transcription[:4]))
 
 
 if __name__ == "__main__":  # pragma: no cover
