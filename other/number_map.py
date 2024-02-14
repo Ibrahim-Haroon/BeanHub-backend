@@ -4,7 +4,9 @@ Simple function to map a number to a string, for example:
 """
 
 
-def number_map(num: str) -> int:
+def number_map(
+        num: str
+) -> int:
     """
     @rtype: int
     @param num: string representation of a number
