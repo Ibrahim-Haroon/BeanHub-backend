@@ -259,7 +259,7 @@ class AudioView(APIView):
         unique_id, _human_requested = response.data['unique_id'], False
         transcription = self.get_transcription(response.data['file_path'])
 
-        if accepted_deal(transcription):
+        if accepted_deal(transcription) and self.deal_cache.get(f"deal_history_{unique_id}"):
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
             self.deal_cache.append(key=f'deal_accepted_{unique_id}', value=json.dumps(True))
             if isinstance(order_report, Response):
