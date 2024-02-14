@@ -1,7 +1,16 @@
+"""
+Simple function to map a number to a string, for example:
+    "one" -> 1
+"""
 
 
 def number_map(num: str) -> int:
-    map = {
+    """
+    @rtype: int
+    @param num: string representation of a number
+    @return: integer representation of the number
+    """
+    _number_map = {
         "one": 1,
         "two": 2,
         "three": 3,
@@ -31,4 +40,4 @@ def number_map(num: str) -> int:
         "bakers dozen": 13
     }
 
-    return map.get(num, 0x7FFFFFFF)
+    return _number_map.get(num, 0x7FFFFFFF)
