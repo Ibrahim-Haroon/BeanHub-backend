@@ -1,6 +1,9 @@
+"""
+This module is used to convert text to speech using OpenAI's API
+"""
 from os import path
-from openai import OpenAI
 from os import getenv as env
+from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -38,15 +41,21 @@ def openai_text_to_speech_api(
 def main(
         text: str
 ) -> int:  # pragma: no cover
+    """
+
+    @param text: text from input file
+    @return: 0 if successful
+    """
     openai_text_to_speech_api(text)
 
     return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    input_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "input")
+    input_file_path = path.join(path.dirname(path.realpath(__file__)),
+                                "../IO", "input")
 
-    with open(input_file_path, 'r') as in_file:
-        istream = " ".join(in_file.readlines())
+    with open(input_file_path, 'r', encoding='utf-8') as in_file:
+        ISTREAM = " ".join(in_file.readlines())
 
-    main(istream)
+    main(ISTREAM)
