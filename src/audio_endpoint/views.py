@@ -1,36 +1,45 @@
+"""
+This file contains the AudioView class which is a subclass of APIView.
+It is responsible for handling all requests and responses for the audio endpoint.
+Details can be found on swagger documentation.
+"""
 import json
 import os
 import uuid
 import time
+import tempfile
+import logging
+import threading
+from os import getenv as env
 import redis
 import boto3
-import logging
-import tempfile
-import threading
 import psycopg2.pool
-from os import getenv as env
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.views import APIView
-from src.vector_db.get_deal import get_deal
 from rest_framework.response import Response
+from pika import BlockingConnection, ConnectionParameters, BasicProperties
+from src.vector_db.get_deal import get_deal
 from src.django_beanhub.settings import DEBUG
-from drf_yasg.utils import swagger_auto_schema
 from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
-from pika import BlockingConnection, ConnectionParameters, BasicProperties
-from src.ai_integration.speech_to_text_api import nova_speech_api, record_until_silence, return_as_wav
-from src.ai_integration.fine_tuned_nlp import split_order, make_order_report, human_requested, accepted_deal
+from src.ai_integration.speech_to_text_api import nova_speech_api, record_until_silence, return_as_wav  # pylint: disable=C0301
+from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_report, human_requested, accepted_deal  # pylint: disable=C0301
 
-logging_level = logging.DEBUG if DEBUG else logging.INFO
-logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv()
 
 
+# pylint: disable=R0902, W0613
 class AudioView(APIView):
+    """
+    This class is a subclass of APIView and is responsible for handling all requests and responses
+    """
 
     def __init__(
             self, *args, **kwargs
@@ -51,9 +60,17 @@ class AudioView(APIView):
     def connect_to_redis_temp_conversation_cache(
 
     ) -> redis.Redis:  # pragma: no cover
+        """
+        @rtype: redis.StrictRedis
+        @return: redis client
+        """
         while True:
             try:
-                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=0)
+                redis_client = redis.StrictRedis(
+                    host=env('REDIS_HOST'),
+                    port=env('REDIS_PORT'),
+                    db=0
+                )
                 logging.debug("Connected to conversation history")
                 return redis_client
             except redis.exceptions.ConnectionError:
@@ -64,9 +81,17 @@ class AudioView(APIView):
     def connect_to_redis_embedding_cache(
 
     ) -> redis.Redis:  # pragma: no cover
+        """
+        @rtype: redis.StrictRedis
+        @return: redis client
+        """
         while True:
             try:
-                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=1)
+                redis_client = redis.StrictRedis(
+                    host=env('REDIS_HOST'),
+                    port=env('REDIS_PORT'),
+                    db=1
+                )
                 logging.debug("Connected to embedding cache")
                 return redis_client
             except redis.exceptions.ConnectionError:
@@ -77,9 +102,17 @@ class AudioView(APIView):
     def connect_to_redis_temp_deal_cache(
 
     ) -> redis.Redis:  # pragma: no cover
+        """
+        @rtype: redis.StrictRedis
+        @return: redis client
+        """
         while True:
             try:
-                redis_client = redis.StrictRedis(host=env('REDIS_HOST'), port=env('REDIS_PORT'), db=2)
+                redis_client = redis.StrictRedis(
+                    host=env('REDIS_HOST'),
+                    port=env('REDIS_PORT'),
+                    db=2
+                )
                 logging.debug("Connected to deal history")
                 return redis_client
             except redis.exceptions.ConnectionError:
@@ -90,6 +123,11 @@ class AudioView(APIView):
     def formatted_deal(
             order: dict
     ) -> list[dict] | Response:
+        """
+        @rtype: list[dict] | Response
+        @param order: order from deal cache
+        @return: formatted deal to include all the attributes the frontend needs
+        """
         item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
         common_attributes = {'size': 'regular', 'temp': 'regular', 'add_ons': [], 'sweeteners': []}
 
@@ -108,6 +146,12 @@ class AudioView(APIView):
     def remove_duplicate_deal(
             deal: dict, orders: list[str]
     ) -> None:
+        """
+        @rtype: None
+        @param deal: deal from deal cache
+        @param orders: looks through transcription and removes any orders that are in the deal
+        @return: None because orders is modified in place
+        """
         item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
         order_to_remove = None
 
@@ -125,11 +169,17 @@ class AudioView(APIView):
     def get_transcription(
             self, file_path: str
     ) -> str:
+        """
+        @rtype: str
+        @param file_path: path to save the audio file from s3 bucket
+        @return: audio file from s3 bucket
+        """
+        # pylint: disable=R1732
         temp_file = tempfile.NamedTemporaryFile(delete=False)
         try:
             start_time = time.time()
             self.s3.download_file(self.bucket_name, file_path, temp_file.name)
-            logging.debug(f"download_file time: {time.time() - start_time}")
+            logging.debug("download_file time: %s", time.time() - start_time)
 
             temp_file.close()
 
@@ -142,6 +192,11 @@ class AudioView(APIView):
     def upload_file(
             self, unique_id: uuid.UUID = None
     ) -> None:
+        """
+        @rtype: None
+        @param unique_id: identifier to upload file under
+        @return: Nothing
+        """
         res_audio_path = '/tmp/res_audio.wav'
         audio_write_time = time.time()
         with open(res_audio_path, 'wb') as f:
@@ -149,22 +204,21 @@ class AudioView(APIView):
                 # wait 1 ms for response_audio to be set
                 time.sleep(0.001)
             f.write(self.response_audio)
-        logging.debug(f"audio_write time: {time.time() - audio_write_time}")
+        logging.debug("audio_write time: %s", time.time() - audio_write_time)
 
         upload_time = time.time()
         self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
-        logging.debug(f"upload_file time: {time.time() - upload_time}")
-
-        return
+        logging.debug("upload_file time: %s", time.time() - upload_time)
 
     @swagger_auto_schema(
         operation_description=
         """
-        Initial request from client. Expects file_path which is location of audio file (.wav) on s3 bucket. Creates a 
-        unique id to manage conversation history and as security method in PATCH for verification. Then a transcription
-        is generated and formatted. After a order report is generated along with a model report which contains more
-        details such as allergins. Finally response is created with conversational AI, converted to speech (.wav), and
-        written to s3 bucket.
+        Initial request from client. Expects file_path which is location of audio file (.wav)
+        on s3 bucket. Creates a unique id to manage conversation history and as security method
+        in PATCH for verification. Then a transcription is generated and formatted. After a order
+        report is generated along with a model report which contains more details such as allergins.
+        Finally response is created with conversational AI, converted to speech (.wav), and written
+        to s3 bucket.
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -180,8 +234,9 @@ class AudioView(APIView):
             500: 'Internal Error',
         },
     )
+    # pylint: disable=C0116
     def post(
-            self, response, format=None
+            self, response
     ) -> Response:
         start_time = time.time()
         if 'file_path' not in response.data:
@@ -195,10 +250,15 @@ class AudioView(APIView):
             _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
 
-            upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,), daemon=True)
+            upload_thread = threading.Thread(
+                target=self.upload_file,
+                args=(unique_id,),
+                daemon=True
+            )
             upload_thread.start()
         else:
-            order_report, conv_history, deal_object, deal_offered = self.post_normal_request(unique_id, transcription)
+            res = self.post_normal_request(unique_id, transcription)
+            order_report, conv_history, deal_object, deal_offered = res
 
         response_data = {
             'unique_id': str(unique_id),
@@ -221,25 +281,27 @@ class AudioView(APIView):
             response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         if response_data:
-            logging.debug(f"total time: {time.time() - start_time}")
+            logging.debug("total time: %s", time.time() - start_time)
             return Response(response_data, status=status.HTTP_200_OK)
-        else:
-            return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
         operation_description=
         """
-        All updates from client. Expects file_path which is location of audio file (.wav) on s3 bucket and unique id to
-        load conversation history. Then generates transcription and formatted. After a order report is generated along
-        with a model report which contains more details such as allergins. Finally response is created with
-        conversational AI (conversation history passed here), converted to speech (.wav), and written to s3 bucket.
+        All updates from client. Expects file_path which is location of audio file (.wav)
+        on s3 bucket and unique id to load conversation history. Then generates transcription
+        and formatted. After a order report is generated along with a model report which contains
+        more details such as allergins. Finally response is created with conversational AI
+        (conversation history passed here), converted to speech (.wav), and written to s3 bucket.
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
                 'file_path': openapi.Schema(type=openapi.TYPE_STRING,
                                             description='Path to the audio file on s3 bucket'),
-                'unique_id': openapi.Schema(type=openapi.TYPE_STRING, description='UUID generated from initial POST'),
+                'unique_id': openapi.Schema(type=openapi.TYPE_STRING,
+                                            description='UUID generated from initial POST'),
             },
         ),
         responses={
@@ -249,12 +311,14 @@ class AudioView(APIView):
             500: 'Internal Error',
         },
     )
+    # pylint: disable=C0116
     def patch(
-            self, response, format=None
+            self, response
     ) -> Response:
         start_time = time.time()
         if 'file_path' not in response.data or 'unique_id' not in response.data:
-            return Response({'error': 'file_path or unique_id not provided'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'file_path or unique_id not provided'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         unique_id, _human_requested = response.data['unique_id'], False
         transcription = self.get_transcription(response.data['file_path'])
@@ -268,7 +332,11 @@ class AudioView(APIView):
             _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
 
-            upload_thread = threading.Thread(target=self.upload_file, args=(unique_id,), daemon=True)
+            upload_thread = threading.Thread(
+                target=self.upload_file,
+                args=(unique_id,),
+                daemon=True
+            )
             upload_thread.start()
         else:
             try:
@@ -294,16 +362,23 @@ class AudioView(APIView):
             response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         if response_data:
-            logging.debug(f"total time: {time.time() - start_time}")
+            logging.debug("total time: %s", time.time() - start_time)
             return Response(response_data, status=status.HTTP_200_OK)
-        else:
-            return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
 
     def post_normal_request(
             self, unique_id: uuid.UUID, transcription: str, offer_deal: bool = True
     ) -> list[dict] and str and dict and bool:
+        """
+        @rtype: list[dict] and str and dict and bool
+        @param unique_id: identifier to manage conversation history
+        @param transcription: string of audio file
+        @param offer_deal: flag to offer deal
+        @return: order_report, conv_history, deal_object, deal_offered
+        """
         deal_object, deal, model_response = None, None, []
-        formatted_transcription = split_order(transcription)
+        formatted_transcription = split_transcription(transcription)
         order_report, model_report = make_order_report(formatted_transcription,
                                                        self.connection_pool,
                                                        self.embedding_cache,
@@ -314,12 +389,13 @@ class AudioView(APIView):
                                             connection_pool=self.connection_pool,
                                             embedding_cache=self.embedding_cache)
 
-        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream, args=(transcription,
-                                                                              model_report,
-                                                                              "",
-                                                                              deal,
-                                                                              unique_id,
-                                                                              model_response), daemon=True)
+        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream,
+                                           args=(transcription,
+                                                 model_report,
+                                                 "",
+                                                 deal,
+                                                 unique_id,
+                                                 model_response), daemon=True)
         rabbitmq_thread.start()
 
         deal_offered = True
@@ -330,6 +406,12 @@ class AudioView(APIView):
     def transfer_control_to_human(
             self, unique_id: uuid.UUID, transcription: str
     ) -> dict and str:
+        """
+        @rtype: dict and str
+        @param unique_id: identifier to manage conversation history
+        @param transcription: string of audio file
+        @return: order report and conversation history
+        """
         human_response, response_transcription = record_until_silence()
         self.response_audio = return_as_wav(human_response)
         self.upload_file(unique_id)
@@ -342,6 +424,12 @@ class AudioView(APIView):
     def process_and_format_deal(
             self, unique_id: uuid.UUID, transcription: str
     ) -> (list[dict] and str) or (Response and None):
+        """
+        @rtype: (list[dict] and str) or (Response and None)
+        @param unique_id: identifier to manage conversation history
+        @param transcription: string of audio file
+        @return: order report and conversation history  or response and None
+        """
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
         deal_report, order_report = self.formatted_deal(deal_data['deal_object']), None
@@ -351,7 +439,7 @@ class AudioView(APIView):
             return deal_report, None
 
         if len(transcription) > 4:
-            formatted_transcription = split_order(transcription)
+            formatted_transcription = split_transcription(transcription)
             # edge case to avoid double ordering of deal
             self.remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
             order_report, _ = make_order_report(formatted_transcription,
@@ -363,14 +451,15 @@ class AudioView(APIView):
         old_conv_history = self.conversation_cache.get(
             f"conversation_history_{unique_id} + 'CUSTOMER JUST ACCEPTED DEAL'"
         )
-        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream, args=(transcription,
-                                                                              str(order_report)
-                                                                              if order_report
-                                                                              else str(deal_report),
-                                                                              old_conv_history,
-                                                                              None,
-                                                                              unique_id,
-                                                                              model_response), daemon=True)
+        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream,
+                                           args=(transcription,
+                                                 str(order_report)
+                                                 if order_report
+                                                 else str(deal_report),
+                                                 old_conv_history,
+                                                 None,
+                                                 unique_id,
+                                                 model_response), daemon=True)
         rabbitmq_thread.start()
 
         conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
@@ -381,8 +470,15 @@ class AudioView(APIView):
     def patch_normal_request(
             self, unique_id: uuid.UUID, transcription: str, offer_deal: bool = True
     ) -> list[dict] and str:
+        """
+        @rtype: list[dict] and str
+        @param unique_id: identifier to manage conversation history
+        @param transcription: string of audio file
+        @param offer_deal: flag to offer deal
+        @return: order_report and conversation history
+        """
         deal_object, deal_offered, deal, model_response = None, False, None, []
-        formatted_transcription = split_order(transcription)
+        formatted_transcription = split_transcription(transcription)
 
         order_report, model_report = make_order_report(formatted_transcription,
                                                        self.connection_pool,
@@ -395,12 +491,13 @@ class AudioView(APIView):
                                             embedding_cache=self.embedding_cache)
 
         old_conv_history = self.conversation_cache.get(f"conversation_history_{unique_id}")
-        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream, args=(transcription,
-                                                                              model_report,
-                                                                              old_conv_history,
-                                                                              deal,
-                                                                              unique_id,
-                                                                              model_response), daemon=True)
+        rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream,
+                                           args=(transcription,
+                                                 model_report,
+                                                 old_conv_history,
+                                                 deal,
+                                                 unique_id,
+                                                 model_response), daemon=True)
         rabbitmq_thread.start()
 
         deal_offered = True
@@ -415,10 +512,21 @@ class AudioView(APIView):
 
         return order_report, conv_history
 
+    # pylint: disable=R0913
     def rabbitmq_stream(
             self, transcription: str, model_report: str, conversation_history: str, deal: str,
             unique_id: uuid.UUID, model_response: list[str]
     ) -> None:
+        """
+        @rtype: None
+        @param transcription: string of audio file
+        @param model_report: string of order report
+        @param conversation_history: string of redis cache
+        @param deal: most relevant deal
+        @param unique_id: identifier to stream and conversation history
+        @param model_response: pass by reference to build conversation history
+        @return: None
+        """
         channel_queue = f"audio_stream_{unique_id}"
 
         self.rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
@@ -435,7 +543,7 @@ class AudioView(APIView):
                                                     properties=BasicProperties(
                                                         delivery_mode=2,  # make message persistent
                                                     ))
-                logging.debug(f"Successfully published message to {channel_queue}")
+                logging.debug("Successfully published message to %s", channel_queue)
 
                 model_response.append(model_response_chunk)
 

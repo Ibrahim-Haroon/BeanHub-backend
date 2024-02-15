@@ -1,3 +1,7 @@
+"""
+This file is used to define the URL patterns for the audio app.
+"""
+# pylint: disable=all
 from django.urls import path
 from .views import AudioView
 from os import getenv as env
