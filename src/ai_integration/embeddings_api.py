@@ -1,7 +1,10 @@
+"""
+script to parse menu and deals csv and get embeddings for menu items to be used by database queries
+"""
 import math
 from os import path
-import pandas as pd
 from os import getenv as env
+import pandas as pd
 from dotenv import load_dotenv
 from langchain.embeddings import OpenAIEmbeddings
 
@@ -39,8 +42,8 @@ def get_item_quantity(
     item_quantity = row
     if isinstance(item_quantity, float) and math.isnan(item_quantity):
         return 0x7fffffff
-    else:
-        return int(item_quantity)
+
+    return int(item_quantity)
 
 
 
@@ -56,8 +59,8 @@ def get_common_allergin(
     common_allergin = row
     if isinstance(common_allergin, float) and math.isnan(common_allergin):
         return "none"
-    else:
-        return str(common_allergin)
+
+    return str(common_allergin)
 
 
 def get_calorie_range(
@@ -67,15 +70,16 @@ def get_calorie_range(
 
     @rtype: tuple[int, int]
     @param row: object from pandas dataframe
-    @return: if object has set calories then tuple of min, min, else return tuple of min and max calories
+    @return: if object has set calories then tuple of min, min,
+    else return tuple of min and max calories
     """
     calorie_range = row.split('-')
     min_cal = calorie_range[0]
     if len(calorie_range) == 1:
         return min_cal, min_cal
-    else:
-        max_cal = calorie_range[1]
-        return min_cal, max_cal
+
+    max_cal = calorie_range[1]
+    return min_cal, max_cal
 
 
 def parse_menu_csv(
@@ -160,7 +164,7 @@ def main(
     @param key_path: api key for OpenAI
     @return: 0 for success
     """
-    with open(key_path) as api_key:
+    with open(key_path, encoding='utf-8') as api_key:
         key = api_key.readline().strip()
 
     menu = parse_menu_csv()
@@ -174,7 +178,6 @@ def main(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
+    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                              "other", "openai_api_key.txt")
     main(key_file_path)
-
-
