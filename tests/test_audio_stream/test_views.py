@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock, ANY
 from django.urls import reverse
 from django.http import StreamingHttpResponse
 import queue
-
+from pika.exceptions import ChannelError, ConnectionClosed
 from src.audio_stream.views import AudioStreamView
 
 
@@ -176,7 +176,9 @@ class AudioStreamTestCase(TestCase):
         mock_channel = MagicMock()
         mock_connection.return_value.channel.return_value = mock_channel
 
-        def on_message_callback_simulator(queue, on_message_callback, auto_ack):
+        def on_message_callback_simulator(
+                queue, on_message_callback, auto_ack
+        ) -> None:
             for msg in test_messages:
                 on_message_callback(None, None, None, msg)
 
@@ -200,7 +202,9 @@ class AudioStreamTestCase(TestCase):
     @patch('src.audio_stream.views.ConnectionParameters')
     @patch('src.audio_stream.views.BlockingConnection')
     @patch('src.audio_stream.views.logging.debug')
-    def test_delete_rabbitmq_queue_successfully(self, mock_logging, mock_connection, mock_connection_params):
+    def test_delete_rabbitmq_queue_successfully(
+            self, mock_logging, mock_connection, mock_connection_params
+    ) -> None:
         # Arrange
         unique_id = "test-id"
         mock_channel = MagicMock()
@@ -216,12 +220,36 @@ class AudioStreamTestCase(TestCase):
     @patch('src.audio_stream.views.ConnectionParameters')
     @patch('src.audio_stream.views.BlockingConnection')
     @patch('src.audio_stream.views.logging.debug')
-    def test_delete_rabbitmq_queue_handles_exception(self, mock_logging, mock_connection, mock_connection_params):
+    def test_delete_rabbitmq_queue_handles_channel_error_exception(
+            self, mock_logging, mock_connection, mock_connection_params
+    ) -> None:
         # Arrange
         unique_id = "test-id"
         mock_channel = MagicMock()
         mock_connection.return_value.channel.return_value = mock_channel
-        mock_channel.queue_delete.side_effect = Exception("Test exception")
+        mock_channel.queue_delete.side_effect = ChannelError("test")
+
+        # Act
+        AudioStreamView.delete_rabbitmq_queue(unique_id)
+
+        # Assert
+        mock_channel.queue_delete.assert_called_once_with(queue=f"audio_stream_{unique_id}")
+        mock_logging.assert_called_once()
+
+    @patch('src.audio_stream.views.ConnectionParameters')
+    @patch('src.audio_stream.views.BlockingConnection')
+    @patch('src.audio_stream.views.logging.debug')
+    def test_delete_rabbitmq_queue_handles_connection_closed_exception(
+            self, mock_logging, mock_connection, mock_connection_params
+    ) -> None:
+        # Arrange
+        unique_id = "test-id"
+        mock_channel = MagicMock()
+        mock_connection.return_value.channel.return_value = mock_channel
+        mock_channel.queue_delete.side_effect = ConnectionClosed(
+            reply_text="test",
+            reply_code=404
+        )
 
         # Act
         AudioStreamView.delete_rabbitmq_queue(unique_id)
