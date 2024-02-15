@@ -1,25 +1,36 @@
-from openai import OpenAI
+"""
+This script demonstrates how to call a function from ChatGPT.
+"""
 import json
+from openai import OpenAI
 
 
 def hello_world(
         append_string
 ) -> str:
+    """
+    @rtype: str
+    @param append_string: The string to append to the hello world message
+    @return: Hello World! appended with the string
+    """
     hello = "Hello World! " + append_string
     return hello
 
 
 # Set up your OpenAI API key and organization
-api_key = "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"
-client = OpenAI(api_key=api_key)
+API_KEY = "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"
+client = OpenAI(api_key=API_KEY)
 
-
-# Define your function
 
 # Define your ChatGPT function
+# pylint: disable=unused-argument
 def call_chat_gpt_with_functions(
         append_string
 ) -> None:
+    """
+    @rtype: None
+    @param append_string: The string to append to the hello world message
+    """
     messages = [
         {
             "role": "system",
@@ -27,8 +38,9 @@ def call_chat_gpt_with_functions(
         },
         {
             "role": "user",
-            "content": "Hello, I am a user, I would like to call the hello world function passing the string 'It's "
-                       "about time!' to it.",
+            "content": "Hello, I am a user, I would like to call the"
+                       " hello world function passing the string 'It's"
+                       " about time!' to it.",
         },
     ]
 
