@@ -1,6 +1,7 @@
 """
 This module is used to convert text to speech using OpenAI's API
 """
+# pylint: disable=R0801
 from os import path
 from os import getenv as env
 from openai import OpenAI
