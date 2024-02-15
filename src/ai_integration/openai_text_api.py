@@ -1,8 +1,11 @@
+"""
+This file is used to interact with the OpenAI API for text generation.
+"""
 import sys
 from os import path
+from os import getenv as env
 from tqdm import tqdm
 from openai import OpenAI
-from os import getenv as env
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -61,9 +64,10 @@ def main(
     @param prompts: str = list of questions for gpt
     @return: 0 if successful
     """
-    key_file_path = path.join(path.dirname(path.realpath(__file__)), "../../other/" + "openai_api_key.txt")
-    with open(key_file_path) as api_key:
-        key = api_key.readline().strip()
+    key_file_path = path.join(path.dirname(path.realpath(__file__)),
+                              "../../other/" + "openai_api_key.txt")
+    with open(key_file_path, encoding='utf-8') as api_key:
+        _ = api_key.readline().strip()
 
     for prompt in tqdm(prompts):
         prompt = prompt.strip()
@@ -76,11 +80,15 @@ def main(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    input_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "input.txt")
-    output_file_path = path.join(path.dirname(path.realpath(__file__)), "../IO", "output.txt")
+    input_file_path = path.join(path.dirname(path.realpath(__file__)),
+                                "../IO", "input.txt")
+    output_file_path = path.join(path.dirname(path.realpath(__file__)),
+                                 "../IO", "output.txt")
 
-    sys.stdin = open(input_file_path, 'r')
-    sys.stdout = open(output_file_path, 'w')
+    with open(input_file_path, 'r', encoding='utf-8') as f:
+        sys.stdin = f
+    with open(output_file_path, 'w', encoding='utf-8') as f:
+        sys.stdout = f
 
     istream = []
 
