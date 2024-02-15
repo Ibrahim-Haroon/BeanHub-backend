@@ -1,11 +1,14 @@
+"""
+Script to use simpletransformers to fine-tune BERT for Named Entity Recognition (NER) task.
+"""
 import os
-import pandas as pd
 from io import StringIO
+import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
-from simpletransformers.ner import NERModel, NERArgs
 from sklearn.model_selection import train_test_split
-from other.red import inputRED
+from simpletransformers.ner import NERModel, NERArgs
+from other.red import input_red
 
 
 def load_data(
@@ -19,16 +22,19 @@ def load_data(
     @return: formatted dataset which is parsable by transformer
     """
     if csv_file is None:
-        data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "other/datasets", "ner_dataset.csv")
+        data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..",
+                                 "other/datasets", "ner_dataset.csv")
         data = pd.read_csv(data_path)
     elif isinstance(csv_file, StringIO):
         data = pd.read_csv(csv_file)
     else:
-        raise SystemExit(f"Must either use default csv file path or pass in a csv file, got {type(csv_file)}.")
+        raise SystemExit(f"Must either use default csv file path or pass in a csv file,"
+                         f" got {type(csv_file)}.")
 
     data["sentence_number"] = LabelEncoder().fit_transform(data["sentence_number"])
 
-    data.rename(columns={"sentence_number": "sentence_id", "word": "words", "tag": "labels"}, inplace=True)
+    data.rename(columns={"sentence_number": "sentence_id", "word": "words", "tag": "labels"},
+                inplace=True)
     data["labels"] = data["labels"].str.upper()
 
     if display_data:
@@ -76,14 +82,26 @@ def separate_into_test_and_train(
     @param data: formatted dataset
     @return: dataset split into train (80% original) and test (20% original)
     """
-    X = data[["sentence_id", "words"]]
-    Y = data["labels"]
+    x = data[["sentence_id", "words"]]
+    y = data["labels"]
 
     # 80% training, 20% test
-    x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
-    train_data = pd.DataFrame({"sentence_id": x_train["sentence_id"], "words": x_train["words"], "labels": y_train})
-    test_data = pd.DataFrame({"sentence_id": x_test["sentence_id"], "words": x_test["words"], "labels": y_test})
+    train_data = pd.DataFrame(
+        {
+            "sentence_id": x_train["sentence_id"],
+            "words": x_train["words"],
+            "labels": y_train
+        }
+    )
+    test_data = pd.DataFrame(
+        {
+            "sentence_id": x_test["sentence_id"],
+            "words": x_test["words"],
+            "labels": y_test
+        }
+    )
 
     return train_data, test_data
 
@@ -96,13 +114,14 @@ def fine_tune_ner_bert(
     @param model_save_path: if you want to change default save path of `other/genai_models/`
     @return: boolean to know training was success
     """
-    if (inputRED("ARE YOU SURE YOU WANT TO DELETE AND REFINE BERT: ") != "YES"):
+    if input_red("ARE YOU SURE YOU WANT TO DELETE AND REFINE BERT: ") != "YES":
         return False
-    else:
-        if (str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants"):
-            return False
 
-    save_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "other/genai_models/")
+    if str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants":
+        return False
+
+    save_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..",
+                             "other/genai_models/")
     data = load_data()
 
     if data.empty:
@@ -114,7 +133,11 @@ def fine_tune_ner_bert(
         return False
 
 
-    model = NERModel('bert', 'bert-base-cased', labels=__labels__(data), args=__args__(), use_cuda=False)
+    model = NERModel('bert',
+                     'bert-base-cased',
+                     labels=__labels__(data),
+                     args=__args__(),
+                     use_cuda=False)
 
     model.train_model(train, eval_data=test, acc=accuracy_score)
 
@@ -123,7 +146,7 @@ def fine_tune_ner_bert(
     else:
         model.save_model(save_path, model=model.model)
 
-    result, model_outputs, preds_list = model.eval_model(test)
+    result, _, _ = model.eval_model(test)
 
     print(result)
 
@@ -133,6 +156,10 @@ def fine_tune_ner_bert(
 def main(
 
 ) -> int:
+    """
+    @rtype: int
+    @return: 0 if successful
+    """
     fine_tune_ner_bert()
 
     return 0
