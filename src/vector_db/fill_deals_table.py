@@ -2,7 +2,7 @@ import psycopg2
 from os import path
 from tqdm import tqdm
 from io import StringIO
-from other.red import inputRED
+from other.red import input_red
 from pgvector.psycopg2 import register_vector
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
@@ -23,7 +23,7 @@ def fill_deals_table(
     @return: true if successfully created and filled table
     """
 
-    if (inputRED() != "YES"):
+    if (input_red() != "YES"):
         return False
     else:
         if (str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants"):
