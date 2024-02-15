@@ -3,7 +3,6 @@ This module contains functions that correct the quantities of items in an order.
 if customer orders "A black coffee with cream and sugar", the function will correct set quantity
 of cream and sugar to 1 if the customer did not specify a quantity.
 """
-
 import re
 from other.number_map import number_map
 from other.regex_patterns import (

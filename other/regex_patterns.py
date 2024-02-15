@@ -1,7 +1,6 @@
 """
 regex patterns for splitting orders
 """
-
 from typing import Final
 
 
