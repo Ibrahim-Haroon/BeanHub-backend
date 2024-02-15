@@ -1,24 +1,35 @@
+"""
+This module is responsible for retrieving the closest embedding to a given order
+ and returning the corresponding attributes of the item:
+    - item_name
+    - item_quantity
+    - common_allergin
+    - num_calories
+    - price
+"""
+# pylint: disable=R0801
 import time
 import json
 import queue
-import redis
 import logging
-import psycopg2
 import threading
-import numpy as np
 from os import path
-import psycopg2.pool
 from io import StringIO
+import psycopg2
+import psycopg2.pool
+import numpy as np
+import redis
 from pgvector.psycopg2 import register_vector
 from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.embeddings_api import openai_embedding_api
 from src.vector_db.aws_database_auth import connection_string
 from src.django_beanhub.settings import DEBUG
 
-logging_level = logging.DEBUG if DEBUG else logging.INFO
-logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
+# pylint: disable=R0914, R0915
 def get_item(
         order: str, api_key: str = None, connection_pool=None, embedding_cache: redis.Redis = None,
         database_csv_file: StringIO = None
@@ -86,7 +97,8 @@ def get_item(
         embedding = return_queue.get(timeout=5)
     except queue.Empty:
         logging.debug("queue empty")
-        return "Error, return_queue.get turned into a deadlock. Check the `get_embedding` function", False
+        return ("Error, return_queue.get turned into a deadlock."
+                " Check the `get_embedding` function"), False
 
     execute_time = time.time()
     cur.execute(""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
@@ -117,8 +129,13 @@ def get_item(
 def main(
 
 ) -> int:  # pragma: no cover
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
-    with open(key_path) as api_key:
+    """
+    @rtype: int
+    @return: 0 if successful
+    """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                         "other", "openai_api_key.txt")
+    with open(key_path, encoding='utf-8') as api_key:
         key = api_key.readline().strip()
 
     connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
@@ -126,7 +143,12 @@ def main(
     get_secret()
 
     total_time = time.time()
-    res = get_item(order="cappuccino", api_key=key, embedding_cache=None, connection_pool=connection_pool)
+    res = get_item(
+        order="cappuccino",
+        api_key=key,
+        embedding_cache=None,
+        connection_pool=connection_pool
+    )
     print(f"total time: {time.time() - total_time}")
 
     print(res)
@@ -137,7 +159,7 @@ def main(
 if __name__ == "__main__":  # pragma: no cover
     main()
 
-
+# pylint: disable=W0105
 '''
 If ever change to hnsw index, use this code:
     cur.execute(f"""

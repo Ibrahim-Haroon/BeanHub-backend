@@ -1,10 +1,15 @@
-import psycopg2
+"""
+This module contains the function fill_products_table which is used to
+fill the products table in the database with menu csv file.
+"""
+from os import path
 from io import StringIO
+import psycopg2
 from tqdm import tqdm
-from other.red import input_red
 from pgvector.psycopg2 import register_vector
+from other.red import input_red
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.embeddings_api import *
+from src.ai_integration.embeddings_api import openai_embedding_api, parse_menu_csv
 from src.vector_db.aws_database_auth import connection_string
 
 
@@ -19,15 +24,16 @@ def fill_products_table(
     @param data: all the menu items which have to be embedded and inserted in DB
     @param key: key for OpenAI auth
     @param aws_csv_file:  used for unit tests and if you want to pass in own AWS authentication
-    @param database_csv_file: used for unit tests and if you want to pass in own database authentication
+    @param database_csv_file: used for unit tests and
+    if you want to pass in own database authentication
     @return: true if successfully created and filled table
     """
 
-    if (input_red() != "YES"):
+    if input_red() != "YES":
         return False
-    else:
-        if (str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants"):
-            return False
+
+    if str(input("Enter the passkey to confirm: ")) != "beanKnowsWhatBeanWants":
+        return False
 
     get_secret(aws_csv_file if not None else None)
     db_connection = psycopg2.connect(connection_string(database_csv_file if not None else None))
@@ -64,7 +70,8 @@ def fill_products_table(
     """)
 
     for item in tqdm(data):
-        num_calories = (int(item["MenuItem"]["num_calories"][0]), int(item["MenuItem"]["num_calories"][1]))
+        num_calories = (int(item["MenuItem"]["num_calories"][0]),
+                        int(item["MenuItem"]["num_calories"][1]))
         item_name = item["MenuItem"]["item_name"].lower()
 
         cur.execute("""
@@ -94,8 +101,13 @@ def fill_products_table(
 def main(
 
 ) -> int:  # pragma: no cover
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
-    with open(key_path) as api_key:
+    """
+    @rtype: int
+    @return: 0 if successfully filled table
+    """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                         "other", "openai_api_key.txt")
+    with open(key_path, encoding='utf-8') as api_key:
         key = api_key.readline().strip()
 
     menu = parse_menu_csv()
@@ -107,7 +119,7 @@ def main(
 if __name__ == "__main__":  # pragma: no cover
     main()
 
-
+# pylint: disable=W0105
 '''
 If ever want to use hnsw instead of ivfflat, use this code:
     cur.execute(f"""CREATE INDEX ON embeddings
