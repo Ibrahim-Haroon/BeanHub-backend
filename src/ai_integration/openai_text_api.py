@@ -1,6 +1,7 @@
 """
 This file is used to interact with the OpenAI API for text generation.
 """
+# pylint: disable=R0801
 import sys
 from os import path
 from os import getenv as env
