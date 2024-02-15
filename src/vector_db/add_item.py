@@ -1,7 +1,12 @@
-import psycopg2
+"""
+Currently unused, but will be used to add individual items to the database
+"""
+# pylint: disable=R0801
 from io import StringIO
+from os import path
+import psycopg2
 from src.vector_db.aws_sdk_auth import get_secret
-from src.ai_integration.embeddings_api import *
+from src.ai_integration.embeddings_api import openai_embedding_api
 from src.vector_db.aws_database_auth import connection_string
 
 
@@ -12,7 +17,17 @@ def add_item(
     """
 
     @rtype: boolean
-    @param item: new menu item to insert ex. {"MenuItem": {"itemName": "new_item", "item_quantity": "5", "common_allergin": "peanuts","num_calories": "250", "price": 1.25} }
+    @param item: new menu item to insert ex.
+                {
+                    "MenuItem":
+                    {
+                        "itemName": "new_item",
+                        "item_quantity": "5",
+                        "common_allergin": "peanuts",
+                        "num_calories": "250",
+                        "price": 1.25
+                   }
+               }
     @param key: auth key for OpenAI
     @param aws_csv_file: SDK auth for AWS
     @param database_csv_file: auth to manager AWS RDS and PostgreSQL database
@@ -46,8 +61,12 @@ def add_item(
 def main(
 
 ) -> int:  # pragma: no cover
+    """
+    @rtype: int
+    @return: 0 for success
+    """
     key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "api_key")
-    with open(key_path) as api_key:
+    with open(key_path, encoding="utf-8") as api_key:
         key = api_key.readline().strip()
 
     item = {"MenuItem": {"itemName": "glaze_donut",

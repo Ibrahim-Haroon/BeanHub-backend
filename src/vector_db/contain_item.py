@@ -1,12 +1,15 @@
-import psycopg2
+"""
+This module contains the function to check if an item is in stock and if the quantity is available.
+"""
 import json
 from os import path
 from io import StringIO
+import psycopg2
+import numpy as np
+from pgvector.psycopg2 import register_vector
 from src.vector_db.aws_sdk_auth import get_secret
 from src.ai_integration.embeddings_api import openai_embedding_api
 from src.vector_db.aws_database_auth import connection_string
-from pgvector.psycopg2 import register_vector
-import numpy as np
 
 
 def contains_quantity(
@@ -35,7 +38,7 @@ def contains_quantity(
     embedding = openai_embedding_api(order, key if key else None)
     register_vector(db_connection)
 
-    cur.execute(f""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
+    cur.execute(""" SELECT id, item_name, item_quantity, common_allergin, num_calories, price
                             FROM products
                             ORDER BY embeddings <-> %s limit 1;""",
                 (np.array(embedding),))
@@ -50,13 +53,18 @@ def contains_quantity(
 def main(
 
 ) -> int:  # pragma: no cover
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
-    with open(key_path) as api_key:
+    """
+    @rtype: int
+    @return: 0 if successful
+    """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                         "other", "openai_api_key.txt")
+    with open(key_path, encoding='uft-8') as api_key:
         key = api_key.readline().strip()
 
     res = contains_quantity(order="cappuccino", quantity=7, key=key)
 
-    print(True if res else False)
+    print(bool(res))
 
     return 0
 

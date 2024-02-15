@@ -1,9 +1,13 @@
-import boto3
-import pandas as pd
+"""
+This file is used to get the AWS secret from the AWS Secrets Manager.
+"""
+# pylint: disable=R0801
 from os import path
-from io import StringIO
 from os import getenv as env
+from io import StringIO
+import pandas as pd
 from dotenv import load_dotenv
+import boto3
 from botocore.exceptions import ClientError
 
 load_dotenv()
@@ -17,14 +21,21 @@ def get_secret(
     @purpose: SDK for AWS
     @rtype: dict
     @param csv_file: used for unit tests and if you want to pass in own AWS authentication
-    @return: ex. {"username":"username","password":"pass","engine":"engine","host":"host","port":5432,"dbname":"name","dbInstanceIdentifier":"db-id"}
+    @return: ex. {
+                    "username":"username",
+                    "password":"pass",
+                    "host":"host",
+                    "port":5432,
+                    "dbname":"name",
+                    "dbInstanceIdentifier":"db-id"
+                }
     """
-    secret_file_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "aws-info.csv")
+    secret_file_path = path.join(path.dirname(path.realpath(__file__)),
+                                 "../..", "other", "aws-info.csv")
     try:
         df = pd.read_csv(secret_file_path)
     except FileNotFoundError:
         df = pd.DataFrame()
-        pass
 
     if (csv_file is None and
         env('AWS_ACCESS_KEY_ID') and
@@ -43,7 +54,8 @@ def get_secret(
         elif isinstance(csv_file, StringIO):
             df = pd.read_csv(csv_file)
         else:
-            raise SystemExit(f"Must either use default csv file path or pass in a csv file, got {type(csv_file)}.")
+            raise SystemExit(f"Must either use default csv file path or pass in a csv file,"
+                             f" got {type(csv_file)}.")
 
         row = df.iloc[0]
 

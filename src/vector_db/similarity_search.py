@@ -1,11 +1,16 @@
-import psycopg2
+"""
+This module contains the function `similarity_search` which is used to search
+for the most similar embeddings to a given order. Currently unused.
+"""
+from os import path
 from io import StringIO
-from src.vector_db.aws_sdk_auth import get_secret
+import psycopg2
+import numpy as np
 from pgvector.psycopg2 import register_vector
-from src.ai_integration.embeddings_api import *
+from src.vector_db.aws_sdk_auth import get_secret
+from src.ai_integration.embeddings_api import openai_embedding_api
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.fine_tuned_nlp import ner_transformer
-import numpy as np
 
 
 def similarity_search(
@@ -52,8 +57,13 @@ def similarity_search(
 def main(
 
 ) -> int:  # pragma: no cover
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
-    with open(key_path) as api_key:
+    """
+    @rtype: int
+    @return: 0 if successful
+    """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                         "other", "openai_api_key.txt")
+    with open(key_path, encoding='utf-8') as api_key:
         key = api_key.readline().strip()
 
     similarity_search(order="dummy", key=key)

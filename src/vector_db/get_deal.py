@@ -1,27 +1,33 @@
+"""
+This module contains the function `get_deal` which is used to
+retrieve the closest embedding from the database
+"""
+# pylint: disable=R0801
 import time
 import json
 import queue
-import redis
 import logging
-import psycopg2
 import threading
-import numpy as np
-from os import path
-import psycopg2.pool
 from io import StringIO
-from src.django_beanhub.settings import DEBUG
+from os import path
+import psycopg2
+import psycopg2.pool
+import numpy as np
+import redis
 from pgvector.psycopg2 import register_vector
+from src.django_beanhub.settings import DEBUG
 from src.vector_db.aws_sdk_auth import get_secret
 from src.vector_db.aws_database_auth import connection_string
 from src.ai_integration.embeddings_api import openai_embedding_api
 
-logging_level = logging.DEBUG if DEBUG else logging.INFO
-logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
+# pylint: disable=R0914, R0915
 def get_deal(
-        order: dict, api_key: str = None, connection_pool=None, embedding_cache: redis.Redis = None,
-        database_csv_file: StringIO = None
+        order: dict, api_key: str = None, connection_pool=None,
+        embedding_cache: redis.Redis = None, database_csv_file: StringIO = None
 ) -> str and dict and bool:
     """
 
@@ -31,7 +37,8 @@ def get_deal(
     @param connection_pool:
     @param embedding_cache: cache to reduce number of calls to OpenAI API
     @param database_csv_file: AWS RDS and PostgreSQL auth
-    @return: Closest embedding along, object that can be used by frontend, a boolean flag to mark successful retrieval
+    @return: Closest embedding along, object that can be used by frontend,
+    a boolean flag to mark successful retrieval
     """
     if not order:
         return None, None, False
@@ -97,7 +104,8 @@ def get_deal(
         embedding = return_queue.get(timeout=5)
     except queue.Empty:
         logging.debug("queue empty")
-        return "Error, return_queue.get turned into a deadlock. Check the `get_embedding` function", None, False
+        return ("Error, return_queue.get turned into a deadlock."
+                " Check the `get_embedding` function"), None, False
 
     execute_time = time.time()
     cur.execute(""" SELECT deal, item_type, item_name, item_quantity, price
@@ -125,8 +133,7 @@ def get_deal(
     deal = result[0][0]
     item_type: str = result[0][1]
     item_name: str = result[0][2]
-    # item_quantity: int = result[0][3]
-    item_price = (result[0][4])
+    item_price = result[0][4]
 
     deal_object = {
         item_type: {
@@ -143,8 +150,13 @@ def get_deal(
 def main(
 
 ) -> int:  # pragma: no cover
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
-    with open(key_path) as api_key:
+    """
+    @rtype: int
+    @return: 0 if successful
+    """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                         "other", "openai_api_key.txt")
+    with open(key_path, encoding='utf-8') as api_key:
         key = api_key.readline().strip()
 
     order = {
@@ -170,6 +182,7 @@ if __name__ == "__main__":  # pragma: no cover
     main()
 
 
+# pylint: disable=W0105
 '''
 If ever change to hnsw index, use this code:
     cur.execute(f"""
