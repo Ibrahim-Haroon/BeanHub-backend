@@ -1,10 +1,13 @@
+"""
+This file contains various speech to text APIs and a function to record audio from the microphone.
+"""
 import io
 import time
 import wave
 import logging
-import whisper
 from os import path
 from os import getenv as env
+import whisper
 from deepgram import Deepgram
 from dotenv import load_dotenv
 from pydub import AudioSegment
@@ -13,8 +16,8 @@ from src.django_beanhub.settings import DEBUG
 
 load_dotenv()
 
-logging_level = logging.DEBUG if DEBUG else logging.INFO
-logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def google_cloud_speech_api(
@@ -41,17 +44,17 @@ def google_cloud_speech_api(
     transcribed_audio = ""
 
     with speech.AudioFile(source) as audio_source:
-        audio = recognizer.record(audio_source)
+        _audio_ = recognizer.record(audio_source)
 
         try:
-            transcribed_audio = recognizer.recognize_google(audio)
+            transcribed_audio = recognizer.recognize_google(_audio_)
         except speech.UnknownValueError:
             print("Google Speech Recognition could not understand audio")
             return "None"
         except speech.RequestError as e:
-            print("Could not request results from Google Speech Recognition service; {0}".format(e))
+            print(f"Could not request results from Google Speech Recognition service; {e}")
 
-    logging.debug(f"google_cloud_speech time: {time.time() - start_time}")
+    logging.debug("google_cloud_speech time: %s", time.time() - start_time)
 
     return transcribed_audio
 
@@ -67,14 +70,15 @@ def nova_speech_api(
     """
     key = env("DEEPGRAM_API_KEY")
     if not key:
-        key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "deepgram_api_key.txt")
-        with open(key_path) as api_key:
+        key_path = path.join(path.dirname(path.realpath(__file__)),
+                             "../..", "other", "deepgram_api_key.txt")
+        with open(key_path, encoding='utf-8') as api_key:
             key = api_key.readline().strip()
 
     start_time = time.time()
     dg = Deepgram(key)
 
-    MIMETYPE = 'audio/wav'
+    mime_type = 'audio/wav'
 
     options = {
         'punctuate': False,
@@ -83,10 +87,10 @@ def nova_speech_api(
     }
 
     with open(source, 'rb') as f:
-        audio = {"buffer": f, "mimetype": MIMETYPE}
-        response = dg.transcription.sync_prerecorded(audio, options)
+        _audio_ = {"buffer": f, "mimetype": mime_type}
+        response = dg.transcription.sync_prerecorded(_audio_, options)
 
-    logging.debug(f"nova_speech time: {time.time() - start_time}")
+    logging.debug("nova_speech time: %s", time.time() - start_time)
     return response['results']['channels'][0]['alternatives'][0]['transcript']
 
 
@@ -110,7 +114,7 @@ def whisper_speech_api(
 
     transcription = model.transcribe(source)
 
-    logging.debug(f"whisper_speech time: {time.time() - start_time}")
+    logging.debug("whisper_speech time: %s", time.time() - start_time)
     return transcription['text']
 
 
@@ -133,18 +137,18 @@ def whisper_multi_speech_api(
     start_time = time.time()
     model = whisper.load_model("small")
 
-    audio = whisper.load_audio(source)
-    audio = whisper.pad_or_trim(audio)
+    _audio_ = whisper.load_audio(source)
+    _audio_ = whisper.pad_or_trim(_audio_)
 
-    mel = whisper.log_mel_spectrogram(audio).to(model.device)
+    mel = whisper.log_mel_spectrogram(_audio_).to(model.device)
 
     _, probs = model.detect_language(mel)
-    logging.debug(f"Detected language: {max(probs, key=probs.get)}")
+    logging.debug("Detected language: %s", max(probs, key=probs.get))
 
     options = whisper.DecodingOptions()
     result = whisper.decode(model, mel, options)
 
-    logging.debug(f"whisper_multi_speech time: {time.time() - start_time}")
+    logging.debug("whisper_multi_speech time: %s", time.time() - start_time)
     return result.text
 
 
@@ -198,8 +202,14 @@ def record_until_silence(
 def return_as_wav(
         audio_data: bytes
 ) -> bytes:
+    """
+    @rtype: bytes
+    @param audio_data: audio data to convert
+    @return: bytes of wav audio data
+    """
     buffer = io.BytesIO()
 
+    # pylint: disable=E1101
     with wave.open(buffer, 'wb') as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)
