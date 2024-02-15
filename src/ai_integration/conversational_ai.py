@@ -1,34 +1,47 @@
+"""
+script to get conversational ai response from gpt model
+"""
 import time
 import logging
 from os import path
-from openai import OpenAI
 from os import getenv as env
+from openai import OpenAI
 from dotenv import load_dotenv
 from src.django_beanhub.settings import DEBUG
 
-logging_level = logging.DEBUG if DEBUG else logging.INFO
-logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv()
 
-role = """
+ROLE = """
         You are a fast food drive-thru worker at Aroma Joe's. Response should be formed solely based on
         on order details and conversation history. Don't add items to cart if cart action is # question # and check all
         attributes of the order details, such as quantity, price, num_calories, allergies, etc. If the customer asks a
         question
        """
 
-prompt = """
+PROMPT = """
         Give a response (ex. "Added to your cart! Is there anything else you'd like to order today?"
                         but make your own and somewhat personalize per order to sound normal) given transcription
                         and order details gathered from the database:
         """
 
 
+# pylint: disable=too-many-arguments
 def conv_ai(
         transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
         api_key: str = None, max_tokens: int = 200
 ) -> str:  # pragma: no cover
+    """
+    @rtype: str
+    @param transcription: complete transcription of the customer's order
+    @param order_report: parsed order details from the transcription
+    @param conversation_history: all previous conversation history
+    @param deal: most relevant deal to offer customer
+    @param api_key: openi api key
+    @param max_tokens: control the length of the response
+    """
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
 
@@ -43,32 +56,41 @@ def conv_ai(
         messages=[
             {
                 "role": "system",
-                "content": (f"{role} and all previous conversation history: {conversation_history}."
+                "content": (f"{ROLE} and all previous conversation history: "
+                            f"{conversation_history}."
                             if deal is None
-                            else f"{role} and all previous conversation history: {conversation_history} "
+                            else f"{ROLE} and all previous conversation history:"
+                                 f" {conversation_history} "
                                  f"and remember to upsell customer with deal: {deal}"
                             ),
             },
             {
                 "role": "user",
-                "content": f"{prompt}\ntranscription: {transcription} + order details: {order_report}"
+                "content": f"{PROMPT}\n"
+                           f"transcription: {transcription}"
+                           f" + order details: {order_report}"
             }
         ],
         max_tokens=max_tokens,
         stream=True
     )
 
-    for chunk in response:
+    for chunk in response:  # pylint: disable=E1133
         yield chunk.choices[0].delta.content
 
-    logging.debug(f"conv_ai time: {time.time() - start_time}")
+    logging.debug("conv_ai time: %s", (time.time() - start_time))
 
 
 def main(
 
 ) -> None:  # pragma: no cover
-    key_path = path.join(path.dirname(path.realpath(__file__)), "../..", "other", "openai_api_key.txt")
-    with open(key_path) as api_key:
+    """
+    @rtype: None
+    @return: 0 if successful
+    """
+    key_path = path.join(path.dirname(path.realpath(__file__)), "../..",
+                         "other", "openai_api_key.txt")
+    with open(key_path, encoding='utf-8') as api_key:
         key = api_key.readline().strip()
 
     start_time = time.time()
