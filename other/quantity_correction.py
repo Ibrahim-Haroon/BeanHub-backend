@@ -7,9 +7,9 @@ of cream and sugar to 1 if the customer did not specify a quantity.
 import re
 from other.number_map import number_map
 from other.regex_patterns import (
-    size_pattern, coffee_pattern, quantity_pattern, temperature_pattern, sweetener_pattern,
-    flavor_pattern, beverage_pattern, food_pattern, bakery_pattern, add_ons_pattern,
-    milk_pattern, common_allergies
+    SIZE_PATTERN, COFFEE_PATTERN, QUANTITY_PATTERN, TEMPERATURE_PATTERN, SWEETENER_PATTERN,
+    FLAVOR_PATTERN, BEVERAGE_PATTERN, FOOD_PATTERN, BAKERY_PATTERN, ADD_ONS_PATTERN,
+    MILK_PATTERN, COMMON_ALLERGIES_PATTERN
 )
 
 
@@ -22,20 +22,20 @@ def split_order(
     @return: list of items in the order, split by the pattern
     """
     split_pattern = (
-            r'(?:' + size_pattern +
-            '|' + coffee_pattern +
-            '|' + quantity_pattern +
-            '|' + temperature_pattern +
+            r'(?:' + SIZE_PATTERN +
+            '|' + COFFEE_PATTERN +
+            '|' + QUANTITY_PATTERN +
+            '|' + TEMPERATURE_PATTERN +
             '|' + 'cheese' +
-            '|' + sweetener_pattern +
-            '|' + flavor_pattern +
-            '|' + beverage_pattern +
-            '|' + food_pattern +
-            '|' + bakery_pattern +
-            '|' + add_ons_pattern +
-            '|' + milk_pattern +
-            '|' + common_allergies +
-            '|' + sweetener_pattern + r')'
+            '|' + SWEETENER_PATTERN +
+            '|' + FLAVOR_PATTERN +
+            '|' + BEVERAGE_PATTERN +
+            '|' + FOOD_PATTERN +
+            '|' + BAKERY_PATTERN +
+            '|' + ADD_ONS_PATTERN +
+            '|' + MILK_PATTERN +
+            '|' + COMMON_ALLERGIES_PATTERN +
+            '|' + SWEETENER_PATTERN + r')'
     )
 
     result = re.split(split_pattern, order)
