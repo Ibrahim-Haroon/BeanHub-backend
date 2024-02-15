@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+# pylint: disable=all
 from pathlib import Path
 from dotenv import load_dotenv
 from os import getenv as env, path

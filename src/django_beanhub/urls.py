@@ -29,7 +29,7 @@ from drf_yasg import openapi
 load_dotenv()
 
 
-schema_view = get_schema_view(
+SchemaView = get_schema_view(
    openapi.Info(
       title="BeanHub API",
       default_version='v1',
@@ -40,18 +40,32 @@ schema_view = get_schema_view(
 )
 
 
+# pylint: disable=W0613
 def root_view(
         request
 ) -> HttpResponse:  # pragma: no cover
+    """
+    @rtype: HttpResponse
+    @param request: request object
+    @return: response for root view
+    """
     return HttpResponse("Hello! You're at the root of the BeanHub server.")
 
 
 urlpatterns = [
-    path(env('DJANGO_DEBUG_URL', default='__debug__/'), include("debug_toolbar.urls")),
-    path(env('DJANGO_ADMIN_URL', default="admin/"), admin.site.urls),
-    path(env('DJANGO_ROOT_URL', default=''), root_view, name='root'),
-    path(env('DJANGO_AUDIO_ENDPOINT_URL', default='audio_endpoint/'), include('src.audio_endpoint.urls')),
-    path(env('DJANGO_AUDIO_STREAM_URL', default='audio_stream/'), include('src.audio_stream.urls')),
-    path(env('DJANGO_SWAGGER_URL', default='swagger/'), schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path(env('DJANGO_REDOC_URL', default='redoc/'), schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path(env('DJANGO_DEBUG_URL', default='__debug__/'),
+         include("debug_toolbar.urls")),
+    path(env('DJANGO_ADMIN_URL', default="admin/"),
+         admin.site.urls),
+    path(env('DJANGO_ROOT_URL', default=''),
+         root_view, name='root'),
+    path(env('DJANGO_AUDIO_ENDPOINT_URL',
+             default='audio_endpoint/'),
+         include('src.audio_endpoint.urls')),
+    path(env('DJANGO_AUDIO_STREAM_URL', default='audio_stream/'),
+         include('src.audio_stream.urls')),
+    path(env('DJANGO_SWAGGER_URL', default='swagger/'),
+         SchemaView.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path(env('DJANGO_REDOC_URL', default='redoc/'),
+         SchemaView.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
