@@ -1,23 +1,30 @@
+"""
+This file is used to streaming audio bytes to client end over http
+"""
 import logging
 import threading
-from drf_yasg import openapi
 from os import getenv as env
 from queue import Queue, Empty
 from dotenv import load_dotenv
-from rest_framework.views import APIView
-from src.django_beanhub.settings import DEBUG
-from django.http import StreamingHttpResponse
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.views import APIView
+from django.http import StreamingHttpResponse
+from pika.exceptions import ChannelError, ConnectionClosed
 from pika import BlockingConnection, ConnectionParameters
+from src.django_beanhub.settings import DEBUG
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 
-logging_level = logging.DEBUG if DEBUG else logging.INFO
-logging.basicConfig(level=logging_level, format='%(asctime)s:%(levelname)s:%(message)s')
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv()
 
 
 class AudioStreamView(APIView):
+    """
+    This call implements the consume logic and streaming over http
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.max_buffer_size: int = 15
@@ -26,8 +33,17 @@ class AudioStreamView(APIView):
     def stream_audio(
             self, unique_id: str
     ) -> bytes or None:
+        """
+        @rtype: bytes or None
+        @param unique_id: identifier to find correct channel to consume from
+        @return: yields audio bytes
+        """
         message_queue, text_buffer = Queue(), []
-        threading.Thread(target=self.consume_messages, args=(unique_id, message_queue), daemon=True).start()
+        threading.Thread(
+            target=self.consume_messages,
+            args=(unique_id, message_queue),
+            daemon=True
+        ).start()
 
         while True:
             try:
@@ -54,12 +70,19 @@ class AudioStreamView(APIView):
     def consume_messages(
             unique_id: str, message_queue: Queue
     ) -> None:
+        """
+        @rtype: None
+        @param unique_id: identifier to find correct channel
+        @param message_queue: rabbitmq stream to consume from
+        @return: Nothing
+        """
         connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
         channel = connection.channel()
 
         channel_queue = f"audio_stream_{unique_id}"
         channel.queue_declare(queue=channel_queue, durable=True)
 
+        # pylint: disable=W0613
         def callback(ch, method, properties, body):
             message_queue.put(body.decode('utf-8'))
 
@@ -70,25 +93,35 @@ class AudioStreamView(APIView):
     def delete_rabbitmq_queue(
             unique_id: str
     ) -> None:
+        """
+        @rtype: None
+        @param unique_id: identifier used to find correct channel queue to delete
+        @return: None
+        """
         connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
         channel = connection.channel()
 
         channel_queue = f"audio_stream_{unique_id}"
         try:
             channel.queue_delete(queue=channel_queue)
-        except Exception as e:
-            logging.debug(f"Failed to delete queue {channel_queue}: {e}")
+        except ChannelError as e:
+            logging.debug("Failed to delete queue %s: ChannelError: %s", channel_queue, e)
+        except ConnectionClosed as e:
+            logging.debug("Failed to delete queue %s: ConnectionClosed: %s", channel_queue, e)
 
     @swagger_auto_schema(
         operation_description=
         """
-        Stream audio bytes from Kafka topic which are produced from conversational AI model in audio_endpoint.
+        Stream audio bytes from Kafka topic which are produced
+        from conversational AI model in audio_endpoint.
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
                 'unique_id': openapi.Schema(type=openapi.TYPE_STRING,
-                                            description='ID given from audio_endpoint PATCH request. '
+                                            description='ID given from'
+                                                        'audio_endpoint'
+                                                        ' PATCH request. '
                                                         'Needed for verification.'),
             },
         ),
@@ -99,6 +132,7 @@ class AudioStreamView(APIView):
             500: 'Internal Error',
         },
     )
+    # pylint: disable=C0116, W0613
     def get(
             self, request, *args, **kwargs
     ) -> StreamingHttpResponse:
