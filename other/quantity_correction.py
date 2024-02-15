@@ -1,3 +1,9 @@
+"""
+This module contains functions that correct the quantities of items in an order. For example,
+if customer orders "A black coffee with cream and sugar", the function will correct set quantity
+of cream and sugar to 1 if the customer did not specify a quantity.
+"""
+
 import re
 from other.number_map import number_map
 from other.regex_patterns import (
@@ -7,7 +13,14 @@ from other.regex_patterns import (
 )
 
 
-def split_order(order: str) -> list[str]:
+def split_order(
+        order: str
+) -> list[str]:
+    """
+    @rtype: list[str]
+    @param order: human-readable order
+    @return: list of items in the order, split by the pattern
+    """
     split_pattern = (
             r'(?:' + size_pattern +
             '|' + coffee_pattern +
@@ -34,6 +47,12 @@ def split_order(order: str) -> list[str]:
 def correct_coffee_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
+    """
+    @rtype: list[str]
+    @param order_details: dictionary of the coffee order
+    @param original_order: original order
+    @return: quantity of each item in the order even if the customer did not specify a quantity
+    """
     updated_quantities = []
     order = split_order(original_order)
 
@@ -60,6 +79,12 @@ def correct_coffee_order_quantities(
 def correct_beverage_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
+    """
+    @rtype: list[str]
+    @param order_details: dictionary of the beverage order
+    @param original_order: original order
+    @return: quantity of each item in the order even if the customer did not specify a quantity
+    """
     updated_quantities = []
     order = split_order(original_order)
 
@@ -85,6 +110,12 @@ def correct_beverage_order_quantities(
 def correct_food_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
+    """
+    @rtype: list[str]
+    @param order_details: dictionary of the food order
+    @param original_order: original order
+    @return: quantity of each item in the order even if the customer did not specify a quantity
+    """
     updated_quantities = []
     order = split_order(original_order)
 
@@ -108,6 +139,12 @@ def correct_food_order_quantities(
 def correct_bakery_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
+    """
+    @rtype: list[str]
+    @param order_details: dictionary of the bakery order
+    @param original_order: original order
+    @return: quantity of each item in the order even if the customer did not specify a quantity
+    """
     updated_quantities = []
     order = split_order(original_order)
 
@@ -126,4 +163,3 @@ def correct_bakery_order_quantities(
                 updated_quantities.append('1')
 
     return updated_quantities
-
