@@ -25,6 +25,9 @@ class AudioStreamView(APIView):
     """
     This call implements the consume logic and streaming over http
     """
+    connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
+    channel = connection.channel()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.max_buffer_size: int = 15
@@ -66,9 +69,9 @@ class AudioStreamView(APIView):
 
         self.delete_rabbitmq_queue(unique_id)
 
-    @staticmethod
+
     def consume_messages(
-            unique_id: str, message_queue: Queue
+            self, unique_id: str, message_queue: Queue
     ) -> None:
         """
         @rtype: None
@@ -76,18 +79,15 @@ class AudioStreamView(APIView):
         @param message_queue: rabbitmq stream to consume from
         @return: Nothing
         """
-        connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
-        channel = connection.channel()
-
         channel_queue = f"audio_stream_{unique_id}"
-        channel.queue_declare(queue=channel_queue, durable=True)
+        self.channel.queue_declare(queue=channel_queue, durable=True)
 
         # pylint: disable=W0613
         def callback(ch, method, properties, body):
             message_queue.put(body.decode('utf-8'))
 
-        channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
-        channel.start_consuming()
+        self.channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
+        self.channel.start_consuming()
 
     @staticmethod
     def delete_rabbitmq_queue(
