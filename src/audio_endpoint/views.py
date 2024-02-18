@@ -358,6 +358,9 @@ class AudioView(APIView):
             'json_order': order_report
         }
 
+        # delete each time since a new one will be offered per PATCH
+        self.deal_cache.delete(f"deal_history_{unique_id}")
+
         if _human_requested:
             response_data.update({'file_path': f"result_{unique_id}.wav"})
 
@@ -464,7 +467,6 @@ class AudioView(APIView):
 
         conv_history = f"Customer: {transcription}\nModel: {''.join(model_response)}\n"
 
-        self.deal_cache.delete(f"deal_history_{unique_id}")
         return order_report, conv_history
 
     def patch_normal_request(
