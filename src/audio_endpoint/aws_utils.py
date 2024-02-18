@@ -5,6 +5,10 @@ import logging
 import boto3
 from src.ai_integration.speech_to_text_api import nova_speech_api
 import uuid
+from src.django_beanhub.settings import DEBUG
+
+LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def get_transcription(
