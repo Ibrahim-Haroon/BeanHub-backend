@@ -7,11 +7,9 @@ import json
 import os
 import uuid
 import time
-import tempfile
 import logging
 import threading
 from os import getenv as env
-import redis
 import boto3
 import psycopg2.pool
 from drf_yasg import openapi
@@ -24,9 +22,12 @@ from pika import BlockingConnection, ConnectionParameters, BasicProperties
 from src.vector_db.get_deal import get_deal
 from src.django_beanhub.settings import DEBUG
 from src.vector_db.aws_sdk_auth import get_secret
+import src.audio_endpoint.redis_connections as redis
+from src.audio_endpoint.aws_utils import get_transcription, upload_file
 from src.ai_integration.conversational_ai import conv_ai
 from src.vector_db.aws_database_auth import connection_string
-from src.ai_integration.speech_to_text_api import nova_speech_api, record_until_silence, return_as_wav  # pylint: disable=C0301
+from src.audio_endpoint.order_processing_utils import remove_duplicate_deal, formatted_deal
+from src.ai_integration.speech_to_text_api import record_until_silence, return_as_wav  # pylint: disable=C0301
 from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_report, human_requested, accepted_deal  # pylint: disable=C0301
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
@@ -40,175 +41,29 @@ class AudioView(APIView):
     """
     This class is a subclass of APIView and is responsible for handling all requests and responses
     """
+    ####################
+    ## AWS CONNECTION ##
+    get_secret()
+    s3 = boto3.client('s3')
+    bucket_name = env('S3_BUCKET_NAME')
+    ######################
+    ## REDIS CONNECTION ##
+    conversation_cache = redis.connect_to_redis_temp_conversation_cache()
+    deal_cache = redis.connect_to_redis_temp_deal_cache()
+    embedding_cache = redis.connect_to_redis_embedding_cache()
+    #########################
+    ## RABBITMQ CONNECTION ##
+    rabbitmq_connection = BlockingConnection(ConnectionParameters(env('RABBITMQ_HOST')))
+    rabbitmq_channel = rabbitmq_connection.channel()
+    ###########################
+    ## POSTGRESQL CONNECTION ##
+    connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
+    ###########################
 
     def __init__(
             self, *args, **kwargs
     ):
         super().__init__(**kwargs)
-        self.bucket_name = env('S3_BUCKET_NAME')
-        self.conversation_cache = self.connect_to_redis_temp_conversation_cache()
-        self.rabbitmq_connection = BlockingConnection(ConnectionParameters(env('RABBITMQ_HOST')))
-        self.rabbitmq_channel = self.rabbitmq_connection.channel()
-        self.deal_cache = self.connect_to_redis_temp_deal_cache()
-        self.embedding_cache = self.connect_to_redis_embedding_cache()
-        self.s3 = boto3.client('s3')
-        self.connection_pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
-        self.response_audio = None
-        get_secret()
-
-    @staticmethod
-    def connect_to_redis_temp_conversation_cache(
-
-    ) -> redis.Redis:  # pragma: no cover
-        """
-        @rtype: redis.StrictRedis
-        @return: redis client
-        """
-        while True:
-            try:
-                redis_client = redis.StrictRedis(
-                    host=env('REDIS_HOST'),
-                    port=env('REDIS_PORT'),
-                    db=0
-                )
-                logging.debug("Connected to conversation history")
-                return redis_client
-            except redis.exceptions.ConnectionError:
-                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
-                time.sleep(5)
-
-    @staticmethod
-    def connect_to_redis_embedding_cache(
-
-    ) -> redis.Redis:  # pragma: no cover
-        """
-        @rtype: redis.StrictRedis
-        @return: redis client
-        """
-        while True:
-            try:
-                redis_client = redis.StrictRedis(
-                    host=env('REDIS_HOST'),
-                    port=env('REDIS_PORT'),
-                    db=1
-                )
-                logging.debug("Connected to embedding cache")
-                return redis_client
-            except redis.exceptions.ConnectionError:
-                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
-                time.sleep(5)
-
-    @staticmethod
-    def connect_to_redis_temp_deal_cache(
-
-    ) -> redis.Redis:  # pragma: no cover
-        """
-        @rtype: redis.StrictRedis
-        @return: redis client
-        """
-        while True:
-            try:
-                redis_client = redis.StrictRedis(
-                    host=env('REDIS_HOST'),
-                    port=env('REDIS_PORT'),
-                    db=2
-                )
-                logging.debug("Connected to deal history")
-                return redis_client
-            except redis.exceptions.ConnectionError:
-                logging.debug("Failed to connect to Redis. Retrying in 5 seconds...")
-                time.sleep(5)
-
-    @staticmethod
-    def formatted_deal(
-            order: dict
-    ) -> list[dict] | Response:
-        """
-        @rtype: list[dict] | Response
-        @param order: order from deal cache
-        @return: formatted deal to include all the attributes the frontend needs
-        """
-        item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
-        common_attributes = {'size': 'regular', 'temp': 'regular', 'add_ons': [], 'sweeteners': []}
-
-        for item_type in ['CoffeeItem', 'BeverageItem']:
-            if item_type in order:
-                order[item_type].update(common_attributes)
-                if item_type == 'CoffeeItem':
-                    order[item_type]['milk_type'] = 'regular'
-
-        if not any(item_type in order for item_type in item_types):
-            return Response({'error': 'item_type not found'}, status=status.HTTP_400_BAD_REQUEST)
-
-        return [order]
-
-    @staticmethod
-    def remove_duplicate_deal(
-            deal: dict, orders: list[str]
-    ) -> None:
-        """
-        @rtype: None
-        @param deal: deal from deal cache
-        @param orders: looks through transcription and removes any orders that are in the deal
-        @return: None because orders is modified in place
-        """
-        item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
-        order_to_remove = None
-
-        for item_type in item_types:
-            if item_type in deal:
-                item_name = deal[item_type]['item_name']
-                for order in orders:
-                    if item_name in order:
-                        order_to_remove = order
-                        break
-
-        if order_to_remove:
-            orders.remove(order_to_remove)
-
-    def get_transcription(
-            self, file_path: str
-    ) -> str:
-        """
-        @rtype: str
-        @param file_path: path to save the audio file from s3 bucket
-        @return: audio file from s3 bucket
-        """
-        # pylint: disable=R1732
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
-        try:
-            start_time = time.time()
-            self.s3.download_file(self.bucket_name, file_path, temp_file.name)
-            logging.debug("download_file time: %s", time.time() - start_time)
-
-            temp_file.close()
-
-            transcription = nova_speech_api(temp_file.name)
-        finally:
-            os.remove(temp_file.name)
-
-        return transcription
-
-    def upload_file(
-            self, unique_id: uuid.UUID = None
-    ) -> None:
-        """
-        @rtype: None
-        @param unique_id: identifier to upload file under
-        @return: Nothing
-        """
-        res_audio_path = '/tmp/res_audio.wav'
-        audio_write_time = time.time()
-        with open(res_audio_path, 'wb') as f:
-            while not self.response_audio:
-                # wait 1 ms for response_audio to be set
-                time.sleep(0.001)
-            f.write(self.response_audio)
-        logging.debug("audio_write time: %s", time.time() - audio_write_time)
-
-        upload_time = time.time()
-        self.s3.upload_file(res_audio_path, self.bucket_name, f"result_{unique_id}.wav")
-        logging.debug("upload_file time: %s", time.time() - upload_time)
 
     @swagger_auto_schema(
         operation_description=
@@ -244,18 +99,11 @@ class AudioView(APIView):
 
         deal_object, deal_offered = None, False
         unique_id, _human_requested = uuid.uuid4(), False
-        transcription = self.get_transcription(response.data['file_path'])
+        transcription = get_transcription(self.s3, self.bucket_name, response.data['file_path'])
 
         if human_requested(transcription):
             _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
-
-            upload_thread = threading.Thread(
-                target=self.upload_file,
-                args=(unique_id,),
-                daemon=True
-            )
-            upload_thread.start()
         else:
             res = self.post_normal_request(unique_id, transcription)
             order_report, conv_history, deal_object, deal_offered = res
@@ -321,7 +169,7 @@ class AudioView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         unique_id, _human_requested = response.data['unique_id'], False
-        transcription = self.get_transcription(response.data['file_path'])
+        transcription = get_transcription(self.s3, self.bucket_name, response.data['file_path'])
 
         if accepted_deal(transcription) and self.deal_cache.get(f"deal_history_{unique_id}"):
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
@@ -331,13 +179,6 @@ class AudioView(APIView):
         elif human_requested(transcription):
             _human_requested = True
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
-
-            upload_thread = threading.Thread(
-                target=self.upload_file,
-                args=(unique_id,),
-                daemon=True
-            )
-            upload_thread.start()
         else:
             try:
                 offer_deal = not bool(json.loads(self.deal_cache.get(
@@ -416,8 +257,8 @@ class AudioView(APIView):
         @return: order report and conversation history
         """
         human_response, response_transcription = record_until_silence()
-        self.response_audio = return_as_wav(human_response)
-        self.upload_file(unique_id)
+        response_audio = return_as_wav(human_response)
+        upload_file(self.s3, self.bucket_name, unique_id, response_audio)
         order_report = {
             'human_response': True
         }
@@ -435,7 +276,7 @@ class AudioView(APIView):
         """
         deal_data = self.deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
-        deal_report, order_report = self.formatted_deal(deal_data['deal_object']), None
+        deal_report, order_report = formatted_deal(deal_data['deal_object']), None
         model_response = []
 
         if isinstance(deal_report, Response):
@@ -444,7 +285,7 @@ class AudioView(APIView):
         if len(transcription) > 4:
             formatted_transcription = split_transcription(transcription)
             # edge case to avoid double ordering of deal
-            self.remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
+            remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
             order_report, _ = make_order_report(formatted_transcription,
                                                 self.connection_pool,
                                                 self.embedding_cache,
