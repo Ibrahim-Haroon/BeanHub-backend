@@ -340,7 +340,7 @@ class AudioView(APIView):
             upload_thread.start()
         else:
             try:
-                offer_deal = bool(json.loads(self.deal_cache.get(
+                offer_deal = not bool(json.loads(self.deal_cache.get(
                     f'deal_accepted_{unique_id}')
                 ))
             except TypeError:
