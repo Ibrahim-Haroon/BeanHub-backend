@@ -5,6 +5,11 @@ services:
     image: beanhub-backend:latest
     container_name: beanhub-server
     build: .
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     ports:
       - "8000:8000"
     depends_on:
@@ -14,11 +19,21 @@ services:
       image: redis:latest
       container_name: redis-server
       command: redis-server /usr/local/etc/redis/redis.conf
+      healthcheck:
+        test: [ "CMD", "redis-cli", "ping" ]
+        interval: 30s
+        timeout: 10s
+        retries: 3
       volumes:
         - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
   rabbitmq:
     image: rabbitmq:latest
     container_name: rabbitmq-server
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 30s
+      retries: 5
     ports:
       - "5672:5672"
       - "15672:15672"
