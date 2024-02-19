@@ -3,31 +3,32 @@ This file is used to streaming audio bytes to client end over http
 """
 import logging
 import threading
-from os import getenv as env
 from queue import Queue, Empty
-from dotenv import load_dotenv
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 from django.http import StreamingHttpResponse
 from pika.exceptions import ChannelError, ConnectionClosed
-from pika import BlockingConnection, ConnectionParameters
 from src.django_beanhub.settings import DEBUG
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
+from django.apps import apps
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
-load_dotenv()
+app_config = apps.get_app_config('audio_stream')
+
+#########################
+## RABBITMQ CONNECTION ##
+rabbitmq_connection = app_config.rabbitmq_connection
+rabbitmq_channel = app_config.rabbitmq_channel
+#########################
 
 
 class AudioStreamView(APIView):
     """
     This call implements the consume logic and streaming over http
     """
-    connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
-    channel = connection.channel()
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.max_buffer_size: int = 15
@@ -69,9 +70,9 @@ class AudioStreamView(APIView):
 
         self.delete_rabbitmq_queue(unique_id)
 
-
+    @staticmethod
     def consume_messages(
-            self, unique_id: str, message_queue: Queue
+            unique_id: str, message_queue: Queue
     ) -> None:
         """
         @rtype: None
@@ -80,14 +81,14 @@ class AudioStreamView(APIView):
         @return: Nothing
         """
         channel_queue = f"audio_stream_{unique_id}"
-        self.channel.queue_declare(queue=channel_queue, durable=True)
+        rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
 
         # pylint: disable=W0613
         def callback(ch, method, properties, body):
             message_queue.put(body.decode('utf-8'))
 
-        self.channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
-        self.channel.start_consuming()
+        rabbitmq_channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
+        rabbitmq_channel.start_consuming()
 
     @staticmethod
     def delete_rabbitmq_queue(
@@ -98,12 +99,9 @@ class AudioStreamView(APIView):
         @param unique_id: identifier used to find correct channel queue to delete
         @return: None
         """
-        connection = BlockingConnection(ConnectionParameters(host=env('RABBITMQ_HOST')))
-        channel = connection.channel()
-
         channel_queue = f"audio_stream_{unique_id}"
         try:
-            channel.queue_delete(queue=channel_queue)
+            rabbitmq_channel.queue_delete(queue=channel_queue)
         except ChannelError as e:
             logging.debug("Failed to delete queue %s: ChannelError: %s", channel_queue, e)
         except ConnectionClosed as e:
