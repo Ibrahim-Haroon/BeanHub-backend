@@ -21,6 +21,19 @@ class AudioEndpointConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "src.audio_endpoint"
 
+    def __init__(
+            self, app_name, app_module
+    ) -> None:
+        super().__init__(app_name, app_module)
+        self.s3 = None
+        self.bucket_name = None
+        self.conversation_cache = None
+        self.deal_cache = None
+        self.embedding_cache = None
+        self.rabbitmq_connection = None
+        self.rabbitmq_channel = None
+        self.connection_pool = None
+
     def ready(
             self
     ) -> None:

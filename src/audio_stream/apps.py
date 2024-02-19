@@ -16,6 +16,13 @@ class AudioStreamConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "src.audio_stream"
 
+    def __init__(
+            self, app_name, app_module
+    ) -> None:
+        super().__init__(app_name, app_module)
+        self.rabbitmq_connection = None
+        self.rabbitmq_channel = None
+
     def ready(
             self
     ) -> None:
