@@ -71,8 +71,8 @@ def connect_to_rabbitmq(
             ))
             logging.debug("Connected to RabbitMQ successfully.")
             return connection
-        except ConnectionClosed:
-            print("Failed to connect to RabbitMQ. Retrying...")
+        except Exception as e:
+            logging.error("Failed to connect to RabbitMQ. Retrying...")
             time.sleep(2)
 
 
