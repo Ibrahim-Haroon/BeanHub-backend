@@ -24,8 +24,8 @@ def connect_to_rabbitmq(
             connection = BlockingConnection(ConnectionParameters(
                 env('RABBITMQ_HOST'),
             ))
-        except ConnectionClosed:
-            print("Failed to connect to RabbitMQ. Retrying...")
+        except Exception as e:
+            logging.error("Failed to connect to RabbitMQ. Retrying...")
             time.sleep(2)
 
     return connection
