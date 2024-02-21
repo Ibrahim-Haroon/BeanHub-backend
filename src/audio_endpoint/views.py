@@ -11,7 +11,6 @@ import threading
 from django.apps import apps
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -26,8 +25,6 @@ from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_re
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
-
-load_dotenv()
 
 app_config = apps.get_app_config('audio_endpoint')
 
