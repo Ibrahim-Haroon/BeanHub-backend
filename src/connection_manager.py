@@ -18,7 +18,7 @@ logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(mes
 load_dotenv()
 
 
-class ConnectionManager():  # pragma: no cover
+class ConnectionManager():
     """
     This class is used to manage connections to external services such as RabbitMQ, PostgreSQL, etc.
     """
@@ -197,3 +197,8 @@ class ConnectionManager():  # pragma: no cover
             except psycopg2.Error:
                 logging.debug("Failed to connect to PostgreSQL. Retrying...")
                 time.sleep(2)
+
+
+if __name__ == '__main__':
+    ConnectionManager.connect()
+    print("Connected to all services successfully.")
