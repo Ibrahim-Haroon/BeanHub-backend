@@ -229,6 +229,6 @@ class ConnectionManager():  # pragma: no cover
                 time.sleep(2)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     ConnectionManager.connect()
     print("Connected to all services successfully.")
