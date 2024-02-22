@@ -5,6 +5,7 @@ from typing import Final
 from django.test import TestCase
 from mock import patch, MagicMock, mock_open
 from django.urls import resolve, reverse
+from src.connection_manager import ConnectionManager
 from src.audio_endpoint.views import AudioView
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
@@ -60,52 +61,51 @@ class URLsTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_pika_connection = patch('src.audio_endpoint.views.BlockingConnection').start()
-        self.mock_pika_connection_parameters = patch('src.audio_endpoint.views.ConnectionParameters').start()
+        self.mock_connection_manager_instance = MagicMock()
 
-        self.mock_pika_channel = MagicMock()
+        # Mock AWS S3 connection
+        self.mock_s3_client = MagicMock()
+        self.mock_connection_manager_instance.s3.return_value = self.mock_s3_client
 
-        self.mock_pika_channel.queue_declare = MagicMock()
-        self.mock_pika_channel.basic_publish = MagicMock()
-
-        self.mock_pika_connection.start()
-        self.mock_pika_connection_parameters.start()
-
+        # Mock Redis caches with specific return values
+        # Conversation Cache
         self.mock_conv_client = MagicMock()
+        self.mock_conv_client.get.return_value = json.dumps({"conversation_id": "123", "messages": []})
         self.mock_conv_client.setex = MagicMock()
         self.mock_conv_client.append = MagicMock()
 
+        # Embedding Cache
         self.mock_embedding_client = MagicMock()
+        self.mock_embedding_client.get.return_value = json.dumps([0.1, 0.2, 0.3])
         self.mock_embedding_client.set = MagicMock()
         self.mock_embedding_client.exists = MagicMock(return_value=False)
-        self.mock_embedding_client.get = MagicMock(return_value=json.dumps([0.1, 0.2, 0.3]))
 
+        # Deal Cache
         self.mock_deal_client = MagicMock()
-        mock_deal_data = '{"deal_accepted": "foo", "deal_object": {}}'
-        self.mock_deal_client.get = MagicMock(return_value=mock_deal_data)
+        mock_deal_data = '{"deal_accepted": "true", "deal_object": {}}'
+        self.mock_deal_client.get.return_value = mock_deal_data
         self.mock_deal_client.setex = MagicMock()
         self.mock_deal_client.append = MagicMock()
         self.mock_deal_client.flushdb = MagicMock()
 
-        patch_conv = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_conversation_cache',
-                           return_value=self.mock_conv_client)
-        patch_embedding = patch('src.audio_endpoint.views.AudioView.connect_to_redis_embedding_cache',
-                                return_value=self.mock_embedding_client)
-        patch_deal = patch('src.audio_endpoint.views.AudioView.connect_to_redis_temp_deal_cache',
-                           return_value=self.mock_deal_client)
+        # Mock ConnectionManager to return specific cache clients
+        self.mock_connection_manager_instance.redis_cache.side_effect = lambda cache_name: {
+            'conversation': self.mock_conv_client,
+            'deal': self.mock_deal_client,
+            'embedding': self.mock_embedding_client
+        }[cache_name]
 
-        patch_conv.start()
-        patch_embedding.start()
-        patch_deal.start()
+        # Mock RabbitMQ connection and channel
+        self.mock_connection_manager_instance.rabbitmq_connection.return_value = MagicMock()
+        self.mock_connection_manager_instance.rabbitmq_channel.return_value = MagicMock()
 
-        self.mock_s3 = patch('src.audio_endpoint.views.boto3.client')
-        self.mock_s3.start().return_value = MagicMock()
+        # Mock PostgreSQL connection pool
+        self.mock_connection_manager_instance.connection_pool.return_value = MagicMock()
 
-        self.mock_connection_string = patch('src.audio_endpoint.views.connection_string')
-        self.mock_connection_string.start().return_value = MagicMock()
-
-        self.mock_boto3_session_client = patch('boto3.session.Session.client')
-        self.mock_boto3_session_client.start().return_value = MagicMock()
+        # Patch the ConnectionManager's connect method to return the mock instance
+        self.mock_connect = patch.object(ConnectionManager, 'connect',
+                                         return_value=self.mock_connection_manager_instance)
+        self.mock_connect.start()
 
         self.mock_google_cloud = patch(speech_to_text_path + '.speech.Recognizer')
         mock_recognizer_instance = MagicMock()
@@ -140,11 +140,6 @@ class URLsTestCase(TestCase):
         self.mock_openai_stream = patch('src.audio_endpoint.views.conv_ai')
         self.mock_openai_stream_gen = self.mock_openai_stream.start()
         self.mock_openai_stream_gen.side_effect = self.mock_streaming_response
-
-        self.mock_db_instance = patch('src.audio_endpoint.views.psycopg2.connect').start()
-        mock_cursor = MagicMock()
-        mock_cursor.fetchall.return_value = [(7, 'test', 6, 'test', '(60,120)', 10.0)]
-        self.mock_db_instance.return_value.cursor.return_value = mock_cursor
 
     def tearDown(
             self
