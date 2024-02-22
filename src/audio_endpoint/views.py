@@ -8,7 +8,6 @@ import uuid
 import time
 import logging
 import threading
-from django.apps import apps
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -22,28 +21,28 @@ from src.audio_endpoint.order_processing_utils import remove_duplicate_deal, for
 from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.speech_to_text_api import record_until_silence, return_as_wav  # pylint: disable=C0301
 from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_report, human_requested, accepted_deal  # pylint: disable=C0301
+from src.connection_manager import ConnectionManager
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
-app_config = apps.get_app_config('audio_endpoint')
-
+connections = ConnectionManager.connect()
 ####################
 ## AWS CONNECTION ##
-s3 = app_config.s3
-bucket_name = app_config.bucket_name
+s3 = connections.s3()
+bucket_name = connections.bucket_name()
 ######################
 ## REDIS CONNECTION ##
-conversation_cache = app_config.conversation_cache
-deal_cache = app_config.deal_cache
-embedding_cache = app_config.embedding_cache
+conversation_cache = connections.redis_cache('conversation')
+deal_cache = connections.redis_cache('deal')
+embedding_cache = connections.redis_cache('embedding')
 #########################
 ## RABBITMQ CONNECTION ##
-rabbitmq_connection = app_config.rabbitmq_connection
-rabbitmq_channel = app_config.rabbitmq_channel
+rabbitmq_connection = connections.rabbitmq_connection()
+rabbitmq_channel = connections.rabbitmq_channel()
 ###########################
 ## POSTGRESQL CONNECTION ##
-connection_pool = app_config.connection_pool
+connection_pool = connections.connection_pool()
 ###########################
 
 

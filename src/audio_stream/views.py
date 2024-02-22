@@ -11,17 +11,17 @@ from django.http import StreamingHttpResponse
 from pika.exceptions import ChannelError, ConnectionClosed
 from src.django_beanhub.settings import DEBUG
 from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
-from django.apps import apps
+from src.connection_manager import ConnectionManager
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
-app_config = apps.get_app_config('audio_stream')
 
+connections = ConnectionManager.connect()
 #########################
 ## RABBITMQ CONNECTION ##
-rabbitmq_connection = app_config.rabbitmq_connection
-rabbitmq_channel = app_config.rabbitmq_channel
+rabbitmq_connection = connections.rabbitmq_connection()
+rabbitmq_channel = connections.rabbitmq_channel()
 #########################
 
 
