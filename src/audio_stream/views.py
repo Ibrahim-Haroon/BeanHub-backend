@@ -27,7 +27,7 @@ class AudioStreamView(APIView):
         #########################
         ## RABBITMQ CONNECTION ##
         self._rabbitmq_connection = connections.rabbitmq_connection()
-        self._rabbitmq_channel = connections.rabbitmq_channel()
+        self._rabbitmq_channel = self._rabbitmq_connection.channel()
         #########################
         self.max_buffer_size: int = 15
         self.queue_timeout: int = 5

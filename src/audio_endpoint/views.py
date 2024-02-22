@@ -50,7 +50,7 @@ class AudioView(APIView):
         #########################
         ## RABBITMQ CONNECTION ##
         self.__rabbitmq_connection = connections.rabbitmq_connection()
-        self.__rabbitmq_channel = connections.rabbitmq_channel()
+        self.__rabbitmq_channel = self.__rabbitmq_connection.channel()
         ###########################
         ## POSTGRESQL CONNECTION ##
         self.__connection_pool = connections.connection_pool()
