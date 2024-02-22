@@ -1,8 +1,9 @@
 import os
 import pytest
 from django.test import TestCase
-from mock import patch, MagicMock, mock_open
+from mock import patch, MagicMock
 from django.urls import resolve, reverse
+from src.connection_manager import ConnectionManager
 from src.audio_stream.views import AudioStreamView
 
 
@@ -19,18 +20,20 @@ class URLsTestCase(TestCase):
         })
         self.mock_env.start()
 
-        self.mock_pika_connection = patch('src.audio_stream.views.BlockingConnection').start()
-        self.mock_pika_connection_parameters = patch('src.audio_stream.views.ConnectionParameters').start()
+        self.mock_connection_manager_instance = MagicMock()
 
-        self.mock_pika_channel = MagicMock()
+        self.mock_connection_manager_instance.rabbitmq_connection.return_value = MagicMock()
+        self.mock_connection_manager_instance.rabbitmq_channel.queue_declare = MagicMock()
+        self.mock_connection_manager_instance.rabbitmq_channel.basic_consume = MagicMock()
+        self.mock_connection_manager_instance.rabbitmq_channel.start_consuming = MagicMock()
+        self.mock_connection_manager_instance.rabbitmq_channel.queue_delete = MagicMock()
 
-        self.mock_pika_channel.queue_declare = MagicMock()
-        self.mock_pika_channel.basic_consume = MagicMock()
-        self.mock_pika_channel.start_consuming = MagicMock()
-        self.mock_pika_channel.queue_delete = MagicMock()
-
-        self.mock_pika_connection.start()
-        self.mock_pika_connection_parameters.start()
+        self.mock_connect = patch.object(
+            ConnectionManager,
+            'connect',
+            return_value=self.mock_connection_manager_instance
+        )
+        self.mock_connect.start()
 
     def tearDown(
             self
