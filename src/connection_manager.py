@@ -2,6 +2,7 @@ import time
 import logging
 import threading
 import redis
+from queue import Queue
 from src.vector_db.aws_database_auth import connection_string
 from src.vector_db.aws_sdk_auth import get_secret
 from os import getenv as env
@@ -16,6 +17,51 @@ LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv()
+
+
+class RabbitMQConnectionPool:  # pragma: no cover
+    """
+    This class is used to manage connections to RabbitMQ.
+    """
+    def __init__(
+            self, max_size
+    ) -> None:
+        self.connections = Queue(maxsize=max_size)
+        self.lock = threading.Lock()
+
+        for _ in range(max_size):
+            self.connections.put(self.create_new_connection())
+
+    @staticmethod
+    def create_new_connection(
+
+    ) -> pika.BlockingConnection:
+        """
+        @rtype: BlockingConnection
+        @return: new rabbitmq connection
+        """
+        while True:
+            try:
+                connection = pika.BlockingConnection(pika.ConnectionParameters(
+                    env('RABBITMQ_HOST'),
+                ))
+                logging.debug("Connected to RabbitMQ successfully.")
+                return connection
+            except Exception as e:
+                logging.error(f"Failed to connect to RabbitMQ {e}. Retrying...")
+                time.sleep(2)
+
+    def get_connection(
+            self
+    ) -> pika.BlockingConnection:
+        """
+        @rtype: BlockingConnection
+        @return: rabbitmq connection from pool (or new connection if pool is empty)
+        """
+        with self.lock:
+            if self.connections.empty():
+                return self.create_new_connection()
+            return self.connections.get()
 
 
 class ConnectionManager():  # pragma: no cover
@@ -33,14 +79,18 @@ class ConnectionManager():  # pragma: no cover
         self.__conversation_cache = None
         self.__deal_cache = None
         self.__embedding_cache = None
-        self.__rabbitmq_connection = None
-        self.__rabbitmq_channel = None
-        self.__connection_pool = None
+        self.__rabbitmq_connection_pool = None
+        self.postgres_max_connections = 10
+        self.rabbitmq_max_connections = 5
 
     @staticmethod
     def connect(
 
     ) -> 'ConnectionManager':
+        """
+        @rtype: ConnectionManager
+        @return: connection manager instance
+        """
         with ConnectionManager.__lock:
             if not ConnectionManager.__instance:
                 ConnectionManager.__instance = ConnectionManager()
@@ -63,8 +113,7 @@ class ConnectionManager():  # pragma: no cover
         self.__embedding_cache = self.__connect_to_redis_cache(2)
         #########################
         ## RABBITMQ CONNECTION ##
-        self.__rabbitmq_connection = self.__connect_to_rabbitmq()
-        self.__rabbitmq_channel = self.__rabbitmq_connection.channel()
+        self.__rabbitmq_pool = self.__connect_to_rabbitmq_pool()
         ###########################
         ## POSTGRESQL CONNECTION ##
         self.__connection_pool = self.__connect_to_postgresql()
@@ -105,16 +154,7 @@ class ConnectionManager():  # pragma: no cover
         @rtype: BlockingConnection
         @return: rabbitmq connection
         """
-        return self.__rabbitmq_connection
-
-    def rabbitmq_channel(
-            self
-    ) -> pika.adapters.blocking_connection.BlockingChannel:
-        """
-        @rtype: None
-        @return: rabbitmq channel
-        """
-        return self.__rabbitmq_channel
+        return self.__rabbitmq_pool.get_connection()
 
     def connection_pool(
             self
@@ -163,27 +203,17 @@ class ConnectionManager():  # pragma: no cover
                 logging.debug("Failed to connect to Redis. Retrying...")
                 time.sleep(2)
 
-    @staticmethod
-    def __connect_to_rabbitmq(
-    ) -> pika.BlockingConnection:
+    def __connect_to_rabbitmq_pool(
+            self
+    ) -> RabbitMQConnectionPool:
         """
         @rtype: BlockingConnection
-        @return: rabbitmq connection
+        @return: rabbitmq connection pool
         """
-        while True:
-            try:
-                connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    env('RABBITMQ_HOST'),
-                ))
-                logging.debug("Connected to RabbitMQ successfully.")
-                return connection
-            except Exception as e:
-                logging.error("Failed to connect to RabbitMQ. Retrying...")
-                time.sleep(2)
+        return RabbitMQConnectionPool(self.rabbitmq_max_connections)
 
-    @staticmethod
     def __connect_to_postgresql(
-
+            self
     ) -> psycopg2.pool.SimpleConnectionPool:
         """
         @rtype: psycopg2.pool.SimpleConnectionPool
@@ -191,7 +221,7 @@ class ConnectionManager():  # pragma: no cover
         """
         while True:
             try:
-                pool = psycopg2.pool.SimpleConnectionPool(1, 10, connection_string())
+                pool = psycopg2.pool.SimpleConnectionPool(1, self.postgres_max_connections, connection_string())
                 logging.debug("Connected to PostgreSQL successfully.")
                 return pool
             except psycopg2.Error:
