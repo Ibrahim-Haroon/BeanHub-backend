@@ -32,8 +32,11 @@ class AudioStreamTestCase(TestCase):
         self.mock_connection_manager_instance.rabbitmq_channel.start_consuming = MagicMock()
         self.mock_connection_manager_instance.rabbitmq_channel.queue_delete = MagicMock()
 
-        self.mock_connect = patch.object(ConnectionManager, 'connect',
-                                         return_value=self.mock_connection_manager_instance)
+        self.mock_connect = patch.object(
+            ConnectionManager,
+            'connect',
+            return_value=self.mock_connection_manager_instance
+        )
         self.mock_connect.start()
 
     def tearDown(
