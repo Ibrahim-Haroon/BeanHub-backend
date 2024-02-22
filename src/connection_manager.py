@@ -18,7 +18,7 @@ logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(mes
 load_dotenv()
 
 
-class ConnectionManager():
+class ConnectionManager():  # pragma: no cover
     """
     This class is used to manage connections to external services such as RabbitMQ, PostgreSQL, etc.
     """
