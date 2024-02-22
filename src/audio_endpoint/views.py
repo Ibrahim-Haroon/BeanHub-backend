@@ -19,31 +19,12 @@ from src.django_beanhub.settings import DEBUG
 from src.audio_endpoint.aws_utils import get_transcription, upload_file
 from src.audio_endpoint.order_processing_utils import remove_duplicate_deal, formatted_deal
 from src.ai_integration.conversational_ai import conv_ai
-from src.ai_integration.speech_to_text_api import record_until_silence, return_as_wav  # pylint: disable=C0301
+from src.ai_integration.speech_to_text_api import record_until_silence, return_as_wav
 from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_report, human_requested, accepted_deal  # pylint: disable=C0301
 from src.connection_manager import ConnectionManager
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
-
-connections = ConnectionManager.connect()
-####################
-## AWS CONNECTION ##
-s3 = connections.s3()
-bucket_name = connections.bucket_name()
-######################
-## REDIS CONNECTION ##
-conversation_cache = connections.redis_cache('conversation')
-deal_cache = connections.redis_cache('deal')
-embedding_cache = connections.redis_cache('embedding')
-#########################
-## RABBITMQ CONNECTION ##
-rabbitmq_connection = connections.rabbitmq_connection()
-rabbitmq_channel = connections.rabbitmq_channel()
-###########################
-## POSTGRESQL CONNECTION ##
-connection_pool = connections.connection_pool()
-###########################
 
 
 # pylint: disable=R0902, W0613
@@ -51,10 +32,29 @@ class AudioView(APIView):
     """
     This class is a subclass of APIView and is responsible for handling all requests and responses
     """
+
     def __init__(
             self, *args, **kwargs
     ):
         super().__init__(**kwargs)
+        connections = ConnectionManager.connect()
+        ####################
+        ## AWS CONNECTION ##
+        self.__s3 = connections.s3()
+        self.__bucket_name = connections.bucket_name()
+        ######################
+        ## REDIS CONNECTION ##
+        self.__conversation_cache = connections.redis_cache('conversation')
+        self.__deal_cache = connections.redis_cache('deal')
+        self.__embedding_cache = connections.redis_cache('embedding')
+        #########################
+        ## RABBITMQ CONNECTION ##
+        self.__rabbitmq_connection = connections.rabbitmq_connection()
+        self.__rabbitmq_channel = connections.rabbitmq_channel()
+        ###########################
+        ## POSTGRESQL CONNECTION ##
+        self.__connection_pool = connections.connection_pool()
+        ###########################
 
     @swagger_auto_schema(
         operation_description=
@@ -90,7 +90,7 @@ class AudioView(APIView):
 
         deal_object, deal_offered = None, False
         unique_id, _human_requested = uuid.uuid4(), False
-        transcription = get_transcription(s3, bucket_name, response.data['file_path'])
+        transcription = get_transcription(self.__s3, self.__bucket_name, response.data['file_path'])
 
         if human_requested(transcription):
             _human_requested = True
@@ -104,17 +104,17 @@ class AudioView(APIView):
             'json_order': order_report
         }
 
-        conversation_cache.setex(name=f"conversation_history_{unique_id}",
-                                 time=600,  # 10 minutes
-                                 value=conv_history)
+        self.__conversation_cache.setex(name=f"conversation_history_{unique_id}",
+                                        time=600,  # 10 minutes
+                                        value=conv_history)
 
         deal_data = {
             "deal_offered": deal_offered,
             "deal_object": deal_object
         }
-        deal_cache.setex(name=f"deal_history_{unique_id}",
-                         time=600,  # 10 minutes
-                         value=json.dumps(deal_data))
+        self.__deal_cache.setex(name=f"deal_history_{unique_id}",
+                                time=600,  # 10 minutes
+                                value=json.dumps(deal_data))
 
         if _human_requested:
             response_data.update({'file_path': f"result_{unique_id}.wav"})
@@ -160,11 +160,11 @@ class AudioView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         unique_id, _human_requested = response.data['unique_id'], False
-        transcription = get_transcription(s3, bucket_name, response.data['file_path'])
+        transcription = get_transcription(self.__s3, self.__bucket_name, response.data['file_path'])
 
-        if accepted_deal(transcription) and deal_cache.get(f"deal_history_{unique_id}"):
+        if accepted_deal(transcription) and self.__deal_cache.get(f"deal_history_{unique_id}"):
             order_report, conv_history = self.process_and_format_deal(unique_id, transcription)
-            deal_cache.append(key=f'deal_accepted_{unique_id}', value=json.dumps(True))
+            self.__deal_cache.append(key=f'deal_accepted_{unique_id}', value=json.dumps(True))
             if isinstance(order_report, Response):
                 return order_report
         elif human_requested(transcription):
@@ -172,7 +172,7 @@ class AudioView(APIView):
             order_report, conv_history = self.transfer_control_to_human(unique_id, transcription)
         else:
             try:
-                offer_deal = not bool(json.loads(deal_cache.get(
+                offer_deal = not bool(json.loads(self.__deal_cache.get(
                     f'deal_accepted_{unique_id}')
                 ))
             except TypeError:
@@ -182,8 +182,8 @@ class AudioView(APIView):
                                                                    transcription,
                                                                    offer_deal=offer_deal)
 
-        conversation_cache.append(key=f"conversation_history_{unique_id}",
-                                  value=conv_history)
+        self.__conversation_cache.append(key=f"conversation_history_{unique_id}",
+                                         value=conv_history)
 
         response_data = {
             'unique_id': str(unique_id),
@@ -191,7 +191,7 @@ class AudioView(APIView):
         }
 
         # delete each time since a new one will be offered per PATCH
-        deal_cache.delete(f"deal_history_{unique_id}")
+        self.__deal_cache.delete(f"deal_history_{unique_id}")
 
         if _human_requested:
             response_data.update({'file_path': f"result_{unique_id}.wav"})
@@ -215,14 +215,14 @@ class AudioView(APIView):
         deal_object, deal, model_response = None, None, []
         formatted_transcription = split_transcription(transcription)
         order_report, model_report = make_order_report(formatted_transcription,
-                                                       connection_pool,
-                                                       embedding_cache,
+                                                       self.__connection_pool,
+                                                       self.__embedding_cache,
                                                        aws_connected=True)
 
         if offer_deal and len(order_report) > 0:
             deal, deal_object, _ = get_deal(order_report[0],
-                                            connection_pool=connection_pool,
-                                            embedding_cache=embedding_cache)
+                                            connection_pool=self.__connection_pool,
+                                            embedding_cache=self.__embedding_cache)
 
         rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream,
                                            args=(transcription,
@@ -238,9 +238,8 @@ class AudioView(APIView):
 
         return order_report, conv_history, deal_object, deal_offered
 
-    @staticmethod
     def transfer_control_to_human(
-            unique_id: uuid.UUID, transcription: str
+            self, unique_id: uuid.UUID, transcription: str
     ) -> dict and str:
         """
         @rtype: dict and str
@@ -250,7 +249,7 @@ class AudioView(APIView):
         """
         human_response, response_transcription = record_until_silence()
         response_audio = return_as_wav(human_response)
-        upload_file(s3, bucket_name, unique_id, response_audio)
+        upload_file(self.__s3, self.__bucket_name, unique_id, response_audio)
         order_report = {
             'human_response': True
         }
@@ -266,7 +265,7 @@ class AudioView(APIView):
         @param transcription: string of audio file
         @return: order report and conversation history  or response and None
         """
-        deal_data = deal_cache.get(f"deal_history_{unique_id}")
+        deal_data = self.__deal_cache.get(f"deal_history_{unique_id}")
         deal_data = json.loads(deal_data)
         deal_report, order_report = formatted_deal(deal_data['deal_object']), None
         model_response = []
@@ -279,12 +278,12 @@ class AudioView(APIView):
             # edge case to avoid double ordering of deal
             remove_duplicate_deal(deal_data['deal_object'], formatted_transcription)
             order_report, _ = make_order_report(formatted_transcription,
-                                                connection_pool,
-                                                embedding_cache,
+                                                self.__connection_pool,
+                                                self.__embedding_cache,
                                                 aws_connected=True)
             order_report.extend(deal_report)
 
-        old_conv_history = conversation_cache.get(
+        old_conv_history = self.__conversation_cache.get(
             f"conversation_history_{unique_id} + 'CUSTOMER JUST ACCEPTED DEAL'"
         )
         rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream,
@@ -316,16 +315,16 @@ class AudioView(APIView):
         formatted_transcription = split_transcription(transcription)
 
         order_report, model_report = make_order_report(formatted_transcription,
-                                                       connection_pool,
-                                                       embedding_cache,
+                                                       self.__connection_pool,
+                                                       self.__embedding_cache,
                                                        aws_connected=True)
 
         if offer_deal and len(order_report) > 0:
             deal, deal_object, _ = get_deal(order_report[0],
-                                            connection_pool=connection_pool,
-                                            embedding_cache=embedding_cache)
+                                            connection_pool=self.__connection_pool,
+                                            embedding_cache=self.__embedding_cache)
 
-        old_conv_history = conversation_cache.get(f"conversation_history_{unique_id}")
+        old_conv_history = self.__conversation_cache.get(f"conversation_history_{unique_id}")
         rabbitmq_thread = threading.Thread(target=self.rabbitmq_stream,
                                            args=(transcription,
                                                  model_report,
@@ -342,15 +341,14 @@ class AudioView(APIView):
             "deal_offered": deal_offered,
             "deal_object": deal_object
         }
-        deal_cache.append(key=f"deal_history_{unique_id}",
-                          value=json.dumps(deal_data))
+        self.__deal_cache.append(key=f"deal_history_{unique_id}",
+                                 value=json.dumps(deal_data))
 
         return order_report, conv_history
 
     # pylint: disable=R0913
-    @staticmethod
     def rabbitmq_stream(
-            transcription: str, model_report: str, conversation_history: str, deal: str,
+            self, transcription: str, model_report: str, conversation_history: str, deal: str,
             unique_id: uuid.UUID, model_response: list[str]
     ) -> None:
         """
@@ -365,7 +363,7 @@ class AudioView(APIView):
         """
         channel_queue = f"audio_stream_{unique_id}"
 
-        rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
+        self.__rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
 
         for model_response_chunk in conv_ai(transcription,
                                             model_report,
@@ -373,16 +371,16 @@ class AudioView(APIView):
                                             deal=deal):
 
             if model_response_chunk:
-                rabbitmq_channel.basic_publish(exchange='',
-                                               routing_key=channel_queue,
-                                               body=model_response_chunk,
-                                               properties=BasicProperties(
-                                                   delivery_mode=2,  # make message persistent
-                                               ))
+                self.__rabbitmq_channel.basic_publish(exchange='',
+                                                      routing_key=channel_queue,
+                                                      body=model_response_chunk,
+                                                      properties=BasicProperties(
+                                                          delivery_mode=2,  # make message persistent
+                                                      ))
                 logging.debug("Successfully published message to %s", channel_queue)
 
                 model_response.append(model_response_chunk)
 
-        rabbitmq_channel.basic_publish(exchange='',
-                                       routing_key=channel_queue,
-                                       body='!COMPLETE!')
+        self.__rabbitmq_channel.basic_publish(exchange='',
+                                              routing_key=channel_queue,
+                                              body='!COMPLETE!')
