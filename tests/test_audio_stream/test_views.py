@@ -1,7 +1,7 @@
 import os
 import pytest
 from django.test import TestCase
-from unittest.mock import patch, MagicMock, ANY
+from unittest.mock import patch, MagicMock
 from django.urls import reverse
 from django.http import StreamingHttpResponse
 import queue
