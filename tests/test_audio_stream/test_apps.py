@@ -3,9 +3,7 @@ from django.test import TestCase
 from src.audio_stream.apps import AudioStreamConfig
 
 
-@pytest.mark.skip(
-    reason="ready method will always be initialized first making it impossible to mock connections"
-)
+@pytest.mark.skip(reason="Need to run with django test not pytest")
 class AudioStreamConfigTest(TestCase):
     def test_app_name_is_correct(
             self
