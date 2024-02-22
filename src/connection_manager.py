@@ -95,7 +95,8 @@ class ConnectionManager():  # pragma: no cover
         @rtype: redis.Redis
         @return: cache for conversation, deal, or embedding
         """
-        return getattr(self, f'__{_type_}_cache')
+        cache_name = f'_ConnectionManager__{_type_}_cache'
+        return getattr(self, cache_name)
 
     def rabbitmq_connection(
             self
