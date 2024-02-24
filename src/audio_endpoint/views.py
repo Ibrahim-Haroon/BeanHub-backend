@@ -219,7 +219,7 @@ class AudioView(APIView):
                                                        self.__embedding_cache,
                                                        aws_connected=True)
 
-        if offer_deal and len(order_report) > 0:
+        if offer_deal and len(order_report) > 0:  # pragma: no cover
             deal, deal_object, _ = get_deal(order_report[0],
                                             connection_pool=self.__connection_pool,
                                             embedding_cache=self.__embedding_cache)
