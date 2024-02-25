@@ -21,7 +21,7 @@ from src.audio_endpoint.order_processing_utils import remove_duplicate_deal, for
 from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.speech_to_text_api import record_until_silence, return_as_wav
 from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_report, human_requested, accepted_deal  # pylint: disable=C0301
-from src.connection_manager import ConnectionManager
+from src.external_connections.connection_manager import ConnectionManager
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
