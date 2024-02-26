@@ -21,14 +21,14 @@ class RabbitMQConnectionPool:
     def __init__(
             self, max_size
     ) -> None:
-        self.connections = Queue(maxsize=max_size)
-        self.lock = threading.Lock()
+        self._connections = Queue(maxsize=max_size)
+        self.__lock = threading.Lock()
 
         for _ in range(max_size):
-            self.connections.put(self.create_new_connection())
+            self._connections.put(self._create_new_connection())
 
     @staticmethod
-    def create_new_connection(
+    def _create_new_connection(
 
     ) -> pika.BlockingConnection:
         """
@@ -53,7 +53,7 @@ class RabbitMQConnectionPool:
         @rtype: BlockingConnection
         @return: rabbitmq connection from pool (or new connection if pool is empty)
         """
-        with self.lock:
-            if self.connections.empty():
-                return self.create_new_connection()
-            return self.connections.get()
+        with self.__lock:
+            if self._connections.empty():
+                return self._create_new_connection()
+            return self._connections.get()
