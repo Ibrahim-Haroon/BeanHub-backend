@@ -84,4 +84,5 @@ def test_create_new_connection_retries_on_failure(
     connection = pool.get_connection()
 
     # Assert
-    assert connection == "successful_connection", f"Expected successful connection, got {connection}"
+    assert connection == "successful_connection", \
+        f"Expected successful connection, got {connection}"
