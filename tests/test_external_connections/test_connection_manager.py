@@ -7,13 +7,26 @@ from src.external_connections.connection_manager import ConnectionManager
 script_path: Final[str] = 'src.external_connections.connection_manager'
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def mock_environment_variables(
 
-) -> None:
-    os.environ['S3_BUCKET_NAME'] = 'foo'
-    os.environ['REDIS_HOST'] = 'foo'
-    os.environ['REDIS_PORT'] = 'foo'
+) -> MagicMock:
+    with patch.dict(
+            os.environ,
+            {
+                "S3_BUCKET_NAME": "foo",
+                "REDIS_HOST": "foo",
+                "REDIS_PORT": "foo"
+            }
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_boto3_session_client(
+        mocker
+) -> MagicMock:
+    return mocker.patch(script_path + '.ConnectionManager.boto3.session.Session.client', return_value=MagicMock())
 
 
 @pytest.fixture(autouse=True)
@@ -22,10 +35,29 @@ def reset_connection_manager():
     yield
 
 
+@patch(script_path + ".boto3.client")
 def test_connection_manager_singleton(
-
+        mocker, mock_boto3
 ) -> None:
-    # Arrange and Act
+    # Arrange
+    mock_boto3.return_value = MagicMock(name='boto3')
+    mocker.patch.dict(os.environ, {
+        "SECRET_NAME": "test_secret_name",
+        "AWS_DEFAULT_REGION": "test_aws_default_region",
+        "AWS_ACCESS_KEY_ID": "test_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+        "S3_BUCKET_NAME": "test_bucket_name",
+        "REDIS_HOST": "test_redis_host",
+        "REDIS_PORT": "test_redis_port",
+        "RDS_DB_NAME": "test_db",
+        "RDS_HOSTNAME": "test_host",
+        "RDS_USERNAME": "test_user",
+        "RDS_PASSWORD": "test_password",
+        "RDS_PORT": "1234"
+
+    })
+
+    # Act
     manager1 = ConnectionManager.connect()
     manager2 = ConnectionManager.connect()
 
@@ -105,11 +137,3 @@ def test_connect_to_postgresql_success(
     mock_simple_connection_pool.assert_called_once()
     assert connection_pool == mock_simple_connection_pool.return_value, \
         "Expected PostgreSQL connection pool to be initialized successfully"
-
-
-
-
-
-
-
-
