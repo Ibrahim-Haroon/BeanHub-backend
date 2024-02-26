@@ -133,8 +133,8 @@ class ConnectionManager():
                 client = boto3.client('s3')
                 logging.debug("Connected to S3 successfully.")
                 return client
-            except boto3:
-                logging.debug("Failed to connect to S3. Retrying...")
+            except Exception as e:
+                logging.debug(f"Failed to connect to S3 {e}. Retrying...")
                 time.sleep(2)
 
     @staticmethod
@@ -154,8 +154,8 @@ class ConnectionManager():
                 )
                 logging.debug("Connected to cache successfully.")
                 return redis_client
-            except redis.exceptions.ConnectionError:
-                logging.debug("Failed to connect to Redis. Retrying...")
+            except redis.exceptions.ConnectionError as e:
+                logging.debug(f"Failed to connect to Redis {e}. Retrying...")
                 time.sleep(2)
 
     def __connect_to_rabbitmq_pool(
@@ -179,8 +179,8 @@ class ConnectionManager():
                 pool = psycopg2.pool.SimpleConnectionPool(1, self.postgres_max_connections, connection_string())
                 logging.debug("Connected to PostgreSQL successfully.")
                 return pool
-            except psycopg2.Error:
-                logging.debug("Failed to connect to PostgreSQL. Retrying...")
+            except psycopg2.Error as e:
+                logging.debug(f"Failed to connect to PostgreSQL {e}. Retrying...")
                 time.sleep(2)
 
 
