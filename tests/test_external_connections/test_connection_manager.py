@@ -14,19 +14,33 @@ def mock_environment_variables(
     with patch.dict(
             os.environ,
             {
-                "S3_BUCKET_NAME": "foo",
-                "REDIS_HOST": "foo",
-                "REDIS_PORT": "foo"
+                "SECRET_NAME": "test_secret_name",
+                "AWS_DEFAULT_REGION": "test_aws_default_region",
+                "AWS_ACCESS_KEY_ID": "test_access_key_id",
+                "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
+                "S3_BUCKET_NAME": "test_bucket_name",
+                "REDIS_HOST": "test_redis_host",
+                "REDIS_PORT": "test_redis_port",
+                "RDS_DB_NAME": "test_db",
+                "RDS_HOSTNAME": "test_host",
+                "RDS_USERNAME": "test_user",
+                "RDS_PASSWORD": "test_password",
+                "RDS_PORT": "1234"
             }
     ):
         yield
 
 
 @pytest.fixture
-def mock_boto3_session_client(
+def mock_components(
         mocker
-) -> MagicMock:
-    return mocker.patch(script_path + '.ConnectionManager.boto3.session.Session.client', return_value=MagicMock())
+) -> dict:
+
+    return {
+        'botocore.session.Session': mocker.patch('boto3.session.Session.client', return_value=MagicMock()),
+        'rabbitmq_connection_pool': mocker.patch(script_path + ".RabbitMQConnectionPool", return_value=MagicMock()),
+        'psycopg2.pool.SimpleConnectionPool': mocker.patch(script_path + ".psycopg2.pool.SimpleConnectionPool"),
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -35,27 +49,10 @@ def reset_connection_manager():
     yield
 
 
-@patch(script_path + ".boto3.client")
 def test_connection_manager_singleton(
-        mocker, mock_boto3
+        mocker, mock_components
 ) -> None:
     # Arrange
-    mock_boto3.return_value = MagicMock(name='boto3')
-    mocker.patch.dict(os.environ, {
-        "SECRET_NAME": "test_secret_name",
-        "AWS_DEFAULT_REGION": "test_aws_default_region",
-        "AWS_ACCESS_KEY_ID": "test_access_key_id",
-        "AWS_SECRET_ACCESS_KEY": "test_secret_access_key",
-        "S3_BUCKET_NAME": "test_bucket_name",
-        "REDIS_HOST": "test_redis_host",
-        "REDIS_PORT": "test_redis_port",
-        "RDS_DB_NAME": "test_db",
-        "RDS_HOSTNAME": "test_host",
-        "RDS_USERNAME": "test_user",
-        "RDS_PASSWORD": "test_password",
-        "RDS_PORT": "1234"
-
-    })
 
     # Act
     manager1 = ConnectionManager.connect()
@@ -68,7 +65,7 @@ def test_connection_manager_singleton(
 
 @patch(script_path + ".boto3.client")
 def test_connect_to_s3_success(
-        mock_boto_client, mock_environment_variables
+        mock_boto_client, mock_environment_variables, mock_components
 ) -> None:
     # Arrange
     mock_boto_client.return_value = MagicMock(name='s3_client')
@@ -89,7 +86,7 @@ def test_connect_to_s3_success(
 ])
 @patch(script_path + ".redis.StrictRedis")
 def test_connect_to_redis_cache_success(
-        mock_strict_redis, mock_environment_variables, db_type, expected_attribute
+        mock_strict_redis, mock_environment_variables, db_type, expected_attribute, mock_components
 ) -> None:
     # Arrange
     mock_strict_redis.return_value = MagicMock(name=f'{db_type}_cache')
@@ -105,7 +102,7 @@ def test_connect_to_redis_cache_success(
 
 @patch(script_path + ".RabbitMQConnectionPool")
 def test_connect_to_rabbitmq_pool_success(
-        mock_rabbitmq_pool, mock_environment_variables
+        mock_rabbitmq_pool, mock_environment_variables, mock_components
 ) -> None:
     # Arrange
     mock_rabbitmq_pool.return_value = MagicMock(name='rabbitmq_connection_pool')
@@ -121,13 +118,10 @@ def test_connect_to_rabbitmq_pool_success(
 
 
 @patch(script_path + ".psycopg2.pool.SimpleConnectionPool")
-@patch(script_path + ".connection_string")
 def test_connect_to_postgresql_success(
-        mock_connection_string, mock_simple_connection_pool, mock_environment_variables
+        mock_simple_connection_pool, mock_environment_variables, mock_components
 ) -> None:
     # Arrange
-    mock_connection_string.return_value = "postgres_connection_string"
-    mock_simple_connection_pool.return_value = MagicMock(name='postgresql_connection_pool')
 
     # Act
     manager = ConnectionManager.connect()
