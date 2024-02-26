@@ -16,8 +16,8 @@ from rest_framework.response import Response
 from pika import BasicProperties
 from src.vector_db.get_deal import get_deal
 from src.django_beanhub.settings import DEBUG
-from src.audio_endpoint.aws_utils import get_transcription, upload_file
-from src.audio_endpoint.order_processing_utils import remove_duplicate_deal, formatted_deal
+from src.audio_endpoint.utils.aws_s3 import get_transcription, upload_file
+from src.audio_endpoint.utils.order_processing import remove_duplicate_deal, formatted_deal
 from src.ai_integration.conversational_ai import conv_ai
 from src.ai_integration.speech_to_text_api import record_until_silence, return_as_wav
 from src.ai_integration.fine_tuned_nlp import split_transcription, make_order_report, human_requested, accepted_deal  # pylint: disable=C0301
