@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.http import StreamingHttpResponse
 import queue
 from pika.exceptions import ChannelError, ConnectionClosed
-from src.connection_manager import ConnectionManager
+from src.external_connections.connection_manager import ConnectionManager
 from src.audio_stream.views import AudioStreamView
 
 
