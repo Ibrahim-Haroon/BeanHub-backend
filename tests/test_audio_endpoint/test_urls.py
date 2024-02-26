@@ -5,7 +5,7 @@ from typing import Final
 from django.test import TestCase
 from mock import patch, MagicMock, mock_open
 from django.urls import resolve, reverse
-from src.connection_manager import ConnectionManager
+from src.external_connections.connection_manager import ConnectionManager
 from src.audio_endpoint.views import AudioView
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'

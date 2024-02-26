@@ -3,7 +3,7 @@ import pytest
 from django.test import TestCase
 from mock import patch, MagicMock
 from django.urls import resolve, reverse
-from src.connection_manager import ConnectionManager
+from src.external_connections.connection_manager import ConnectionManager
 from src.audio_stream.views import AudioStreamView
 
 

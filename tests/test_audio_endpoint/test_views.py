@@ -3,7 +3,7 @@ import json
 import pytest
 from typing import Final
 from django.test import TestCase
-from src.connection_manager import ConnectionManager
+from src.external_connections.connection_manager import ConnectionManager
 from unittest.mock import patch, MagicMock, mock_open
 
 speech_to_text_path: Final[str] = 'src.ai_integration.speech_to_text_api'
