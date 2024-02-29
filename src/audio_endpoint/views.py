@@ -14,6 +14,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pika import BasicProperties
+from other.decorators.time_log import time_log
 from src.vector_db.get_deal import get_deal
 from src.django_beanhub.settings import DEBUG
 from src.audio_endpoint.utils.aws_s3 import get_transcription, upload_file
@@ -37,23 +38,19 @@ class AudioView(APIView):
             self, *args, **kwargs
     ):
         super().__init__(**kwargs)
-        connections = ConnectionManager.connect()
+        self.connections = ConnectionManager.connect()
         ####################
         ## AWS CONNECTION ##
-        self.__s3 = connections.s3()
-        self.__bucket_name = connections.bucket_name()
+        self.__s3 = self.connections.s3()
+        self.__bucket_name = self.connections.bucket_name()
         ######################
         ## REDIS CONNECTION ##
-        self.__conversation_cache = connections.redis_cache('conversation')
-        self.__deal_cache = connections.redis_cache('deal')
-        self.__embedding_cache = connections.redis_cache('embedding')
-        #########################
-        ## RABBITMQ CONNECTION ##
-        self.__rabbitmq_connection = connections.rabbitmq_connection()
-        self.__rabbitmq_channel = self.__rabbitmq_connection.channel()
+        self.__conversation_cache = self.connections.redis_cache('conversation')
+        self.__deal_cache = self.connections.redis_cache('deal')
+        self.__embedding_cache = self.connections.redis_cache('embedding')
         ###########################
         ## POSTGRESQL CONNECTION ##
-        self.__connection_pool = connections.connection_pool()
+        self.__connection_pool = self.connections.connection_pool()
         ###########################
 
     @swagger_auto_schema(
@@ -81,6 +78,7 @@ class AudioView(APIView):
         },
     )
     # pylint: disable=C0116
+    @time_log
     def post(
             self, response
     ) -> Response:
@@ -151,10 +149,10 @@ class AudioView(APIView):
         },
     )
     # pylint: disable=C0116
+    @time_log
     def patch(
             self, response
     ) -> Response:
-        start_time = time.time()
         if 'file_path' not in response.data or 'unique_id' not in response.data:
             return Response({'error': 'file_path or unique_id not provided'},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -197,7 +195,6 @@ class AudioView(APIView):
             response_data.update({'file_path': f"result_{unique_id}.wav"})
 
         if response_data:
-            logging.debug("total time: %s", time.time() - start_time)
             return Response(response_data, status=status.HTTP_200_OK)
 
         return Response(f"{transcription}\n{response_data}", status=status.HTTP_400_BAD_REQUEST)
@@ -362,8 +359,13 @@ class AudioView(APIView):
         @return: None
         """
         channel_queue = f"audio_stream_{unique_id}"
+        create_rabbitmq_connection = time.time()
+        rabbitmq_connection = self.connections.rabbitmq_connection()
+        logging.debug("Time to get rabbitmq connection in rabbitmq_stream: %s",
+                      time.time() - create_rabbitmq_connection)
+        rabbitmq_channel = rabbitmq_connection.channel()
 
-        self.__rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
+        rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
 
         for model_response_chunk in conv_ai(transcription,
                                             model_report,
@@ -371,16 +373,19 @@ class AudioView(APIView):
                                             deal=deal):
 
             if model_response_chunk:
-                self.__rabbitmq_channel.basic_publish(exchange='',
-                                                      routing_key=channel_queue,
-                                                      body=model_response_chunk,
-                                                      properties=BasicProperties(
-                                                          delivery_mode=2,  # make message persistent
-                                                      ))
+                rabbitmq_channel.basic_publish(exchange='',
+                                               routing_key=channel_queue,
+                                               body=model_response_chunk,
+                                               properties=BasicProperties(
+                                                   delivery_mode=2,  # make message persistent
+                                               ))
                 logging.debug("Successfully published message to %s", channel_queue)
 
                 model_response.append(model_response_chunk)
 
-        self.__rabbitmq_channel.basic_publish(exchange='',
-                                              routing_key=channel_queue,
-                                              body='!COMPLETE!')
+        rabbitmq_channel.basic_publish(exchange='',
+                                       routing_key=channel_queue,
+                                       body='!COMPLETE!')
+
+        rabbitmq_channel.close()
+        rabbitmq_connection.close()
