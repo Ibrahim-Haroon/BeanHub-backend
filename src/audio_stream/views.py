@@ -1,6 +1,7 @@
 """
 This file is used to streaming audio bytes to client end over http
 """
+import time
 import logging
 import threading
 from queue import Queue, Empty
@@ -9,9 +10,10 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 from django.http import StreamingHttpResponse
 from pika.exceptions import ChannelError, ConnectionClosed
+from other.decorators.time_log import time_log
 from src.django_beanhub.settings import DEBUG
-from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 from src.external_connections.connection_manager import ConnectionManager
+from src.ai_integration.text_to_speech_api import openai_text_to_speech_api
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -23,15 +25,11 @@ class AudioStreamView(APIView):
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        connections = ConnectionManager.connect()
-        #########################
-        ## RABBITMQ CONNECTION ##
-        self._rabbitmq_connection = connections.rabbitmq_connection()
-        self._rabbitmq_channel = self._rabbitmq_connection.channel()
-        #########################
+        self.connections = ConnectionManager.connect()
         self.max_buffer_size: int = 15
         self.queue_timeout: int = 5
 
+    @time_log
     def stream_audio(
             self, unique_id: str
     ) -> bytes or None:
@@ -68,6 +66,7 @@ class AudioStreamView(APIView):
 
         self.delete_rabbitmq_queue(unique_id)
 
+    @time_log
     def consume_messages(
             self, unique_id: str, message_queue: Queue
     ) -> None:
@@ -77,16 +76,28 @@ class AudioStreamView(APIView):
         @param message_queue: rabbitmq stream to consume from
         @return: Nothing
         """
-        channel_queue = f"audio_stream_{unique_id}"
-        self._rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
+        create_rabbitmq_connection = time.time()
+        rabbitmq_connection = self.connections.rabbitmq_connection()
+        logging.debug("Time to get rabbitmq connection in consume_messages: %s",
+                      time.time() - create_rabbitmq_connection)
+        rabbitmq_channel = rabbitmq_connection.channel()
 
-        # pylint: disable=W0613
-        def callback(ch, method, properties, body):
-            message_queue.put(body.decode('utf-8'))
+        try:
+            channel_queue = f"audio_stream_{unique_id}"
+            rabbitmq_channel.queue_declare(queue=channel_queue, durable=True)
 
-        self._rabbitmq_channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
-        self._rabbitmq_channel.start_consuming()
+            # pylint: disable=W0613
+            def callback(ch, method, properties, body):
+                message_queue.put(body.decode('utf-8'))
 
+            rabbitmq_channel.basic_consume(queue=channel_queue, on_message_callback=callback, auto_ack=True)
+            rabbitmq_channel.start_consuming()
+
+        finally:
+            rabbitmq_channel.close()
+            rabbitmq_connection.close()
+
+    @time_log
     def delete_rabbitmq_queue(
             self, unique_id: str
     ) -> None:
@@ -95,13 +106,22 @@ class AudioStreamView(APIView):
         @param unique_id: identifier used to find correct channel queue to delete
         @return: None
         """
+        create_rabbitmq_connection = time.time()
+        rabbitmq_connection = self.connections.rabbitmq_connection()
+        logging.debug("Time to get rabbitmq connection in delete_rabbitmq_queue: %s",
+                      time.time() - create_rabbitmq_connection)
+        rabbitmq_channel = rabbitmq_connection.channel()
+
         channel_queue = f"audio_stream_{unique_id}"
         try:
-            self._rabbitmq_channel.queue_delete(queue=channel_queue)
+            rabbitmq_channel.queue_delete(queue=channel_queue)
         except ChannelError as e:
             logging.debug("Failed to delete queue %s: ChannelError: %s", channel_queue, e)
         except ConnectionClosed as e:
             logging.debug("Failed to delete queue %s: ConnectionClosed: %s", channel_queue, e)
+
+        rabbitmq_channel.close()
+        rabbitmq_connection.close()
 
     @swagger_auto_schema(
         operation_description=
@@ -127,6 +147,7 @@ class AudioStreamView(APIView):
         },
     )
     # pylint: disable=C0116, W0613
+    @time_log
     def get(
             self, request, *args, **kwargs
     ) -> StreamingHttpResponse:
