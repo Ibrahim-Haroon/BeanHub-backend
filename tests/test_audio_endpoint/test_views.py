@@ -100,7 +100,8 @@ class AudioEndpointTestCase(TestCase):
         self.mock_connection_manager_instance.connection_pool.return_value = MagicMock()
 
         # Patch the ConnectionManager's connect method to return the mock instance
-        self.mock_connect = patch.object(ConnectionManager, 'connect',
+        self.mock_connect = patch.object(ConnectionManager,
+                                         'connect',
                                          return_value=self.mock_connection_manager_instance)
         self.mock_connect.start()
 
