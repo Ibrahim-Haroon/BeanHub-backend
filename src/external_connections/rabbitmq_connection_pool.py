@@ -60,16 +60,8 @@ class RabbitMQConnectionPool:
         @rtype: None
         @return: nothing (creates a new connection and adds it to the pool)
         """
-        for i in range(self._max_size):
-            try:
-                connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    env('RABBITMQ_HOST'),
-                ))
-                logging.debug(f" iteration:{i} Connected to RabbitMQ successfully.")
-                self._connections.put(connection)
-            except Exception as e:
-                logging.error(f"Failed to connect to RabbitMQ {e}. Retrying...")
-                time.sleep(2)
+        for _ in range(self._max_size):
+            self._connections.put(self._create_new_connection())
 
     def get_connection(
             self
