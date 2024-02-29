@@ -1,3 +1,7 @@
+""""
+This module contains the RabbitMQConnectionPool class, which is used to manage connections to RabbitMQ. Currently,
+it is not being used since pika is not multi-thread safe.
+"""
 import time
 import logging
 import threading
@@ -5,8 +9,8 @@ from queue import Queue
 from os import getenv as env
 from dotenv import load_dotenv
 import pika
+from other.decorators.time_log import time_log
 from src.django_beanhub.settings import DEBUG
-
 
 LOGGING_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -18,11 +22,13 @@ class RabbitMQConnectionPool:
     """
     This class is used to manage connections to RabbitMQ.
     """
+
     def __init__(
             self, max_size
     ) -> None:
         self._connections = Queue(maxsize=max_size)
         self.__lock = threading.Lock()
+        self._max_size = max_size
 
         for _ in range(max_size):
             self._connections.put(self._create_new_connection())
@@ -46,6 +52,25 @@ class RabbitMQConnectionPool:
                 logging.error(f"Failed to connect to RabbitMQ {e}. Retrying...")
                 time.sleep(2)
 
+    @time_log
+    def _refill_connection_pool(
+            self
+    ) -> None:
+        """
+        @rtype: None
+        @return: nothing (creates a new connection and adds it to the pool)
+        """
+        for i in range(self._max_size):
+            try:
+                connection = pika.BlockingConnection(pika.ConnectionParameters(
+                    env('RABBITMQ_HOST'),
+                ))
+                logging.debug(f" iteration:{i} Connected to RabbitMQ successfully.")
+                self._connections.put(connection)
+            except Exception as e:
+                logging.error(f"Failed to connect to RabbitMQ {e}. Retrying...")
+                time.sleep(2)
+
     def get_connection(
             self
     ) -> pika.BlockingConnection:
@@ -55,5 +80,5 @@ class RabbitMQConnectionPool:
         """
         with self.__lock:
             if self._connections.empty():
-                return self._create_new_connection()
+                self._refill_connection_pool()
             return self._connections.get()
