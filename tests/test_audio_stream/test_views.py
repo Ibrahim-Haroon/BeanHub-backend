@@ -249,3 +249,26 @@ class AudioStreamTestCase(TestCase):
         mock_channel.queue_delete.assert_called_once_with(queue=f"audio_stream_{unique_id}")
         assert mock_logging.call_count == 3, \
             f"Expected logging.debug to be called twice but it was called {mock_logging.call_count} times."
+
+    @patch('src.audio_stream.views.openai_text_to_speech_api')
+    def test_stream_audio_exceeds_max_buffer_size_yields_audio_bytes(self, mock_tts_api):
+        # Arrange
+        view_instance = AudioStreamView()
+        unique_id = "buffer-size-test-id"
+        view_instance.max_buffer_size = 2
+
+        mock_tts_api.return_value = b'test-audio-bytes'
+
+        messages = ['first', 'second', 'third', '!COMPLETE!']
+
+        with patch('src.audio_stream.views.Queue') as mock_queue_class:
+            mock_queue = mock_queue_class.return_value
+            mock_queue.get.side_effect = messages + [queue.Empty]  # Simulating the message queue behavior
+
+            # Act
+            audio_stream_generator = view_instance.stream_audio(unique_id)
+            audio_bytes = list(audio_stream_generator)
+
+            # Assert
+            self.assertEqual(mock_tts_api.call_count, 1)
+            self.assertEqual(audio_bytes, [b'test-audio-bytes'])
