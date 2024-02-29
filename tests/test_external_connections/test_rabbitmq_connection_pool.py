@@ -61,7 +61,7 @@ def test_get_connection_creates_new_connection_when_pool_is_empty(
 
     # Act
     pool.__init__(num_connections)
-    connection = pool.get_connection()
+    pool.get_connection()
     connection = pool.get_connection()
 
     # Assert
@@ -82,7 +82,7 @@ def test_create_new_connection_retries_on_failure(
 
     # Act
     pool.__init__(num_connections)
-    connection = pool.get_connection()
+    connection = pool._connections.get()
 
     # Assert
     assert connection == "successful_connection", \
