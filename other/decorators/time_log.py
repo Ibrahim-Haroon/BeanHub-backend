@@ -17,7 +17,7 @@ def time_log(func):
         start_time = time.time()
         result = func(*args, **kwargs)
         end_time = time.time()
-        logging.debug(f"{func.__name__} took {end_time - start_time} seconds")
+        logging.debug(f"{func.__name__} time: {end_time - start_time}")
         return result
 
     return wrapper
