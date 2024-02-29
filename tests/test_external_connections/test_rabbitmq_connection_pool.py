@@ -57,15 +57,16 @@ def test_get_connection_creates_new_connection_when_pool_is_empty(
     # Arrange
     pool = RabbitMQConnectionPool.__new__(RabbitMQConnectionPool)
     mock_pika_blocking_connection.return_value = "connection"
-    num_connections = 0
+    num_connections = 1
 
     # Act
     pool.__init__(num_connections)
     connection = pool.get_connection()
+    connection = pool.get_connection()
 
     # Assert
     assert connection == "connection", f"expected connection, got {connection}"
-    assert pool._connections.qsize() == num_connections, \
+    assert pool._connections.qsize() == num_connections - 1, \
         f"expected {num_connections} connections, got {pool._connections.qsize()}"
 
 

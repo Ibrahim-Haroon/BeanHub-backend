@@ -173,6 +173,21 @@ def test_connect_to_redis_cache_fails_initially_and_succeeds_on_second_try(
         f"Expected {db_type} cache to be initialized successfully"
 
 
+@patch(script_path + ".psycopg2.pool.SimpleConnectionPool")
+def test_connect_to_postgresql_success(
+        mock_simple_connection_pool, mock_environment_variables, mock_components
+) -> None:
+    # Arrange
+
+    # Act
+    manager = ConnectionManager.connect()
+    connection_pool = manager.connection_pool()
+
+    # Assert
+    mock_simple_connection_pool.assert_called_once()
+    assert connection_pool == mock_simple_connection_pool.return_value, \
+        "Expected PostgreSQL connection pool to be initialized successfully"
+
 
 @patch(script_path + ".RabbitMQConnectionPool")
 def test_connect_to_rabbitmq_pool_success(
@@ -189,22 +204,6 @@ def test_connect_to_rabbitmq_pool_success(
     mock_rabbitmq_pool.assert_called_once_with(manager.rabbitmq_max_connections)
     assert rabbitmq_pool == mock_rabbitmq_pool.return_value.get_connection.return_value, \
         f"Expected RabbitMQ connection pool to be initialized successfully"
-
-
-@patch(script_path + ".psycopg2.pool.SimpleConnectionPool")
-def test_connect_to_postgresql_success(
-        mock_simple_connection_pool, mock_environment_variables, mock_components
-) -> None:
-    # Arrange
-
-    # Act
-    manager = ConnectionManager.connect()
-    connection_pool = manager.connection_pool()
-
-    # Assert
-    mock_simple_connection_pool.assert_called_once()
-    assert connection_pool == mock_simple_connection_pool.return_value, \
-        "Expected PostgreSQL connection pool to be initialized successfully"
 
 
 @patch(script_path + ".psycopg2.pool.SimpleConnectionPool")
