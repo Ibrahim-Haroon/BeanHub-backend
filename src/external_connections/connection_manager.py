@@ -1,3 +1,6 @@
+"""
+This module is used to manage connections to external services such as AWS, PostgreSQL, etc.
+"""
 import time
 import logging
 import threading
