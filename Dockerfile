@@ -7,17 +7,9 @@ WORKDIR /beanhub_app
 
 RUN apt-get update && \
     apt-get install -y \
-        gnupg \
-        python-is-python3 \
-        net-tools \
-        software-properties-common \
-        python3.11-distutils \
         portaudio19-dev \
         flac \
-        ffmpeg \
-        gcc \
-        python3.11-dev \
-        python3.11-venv
+        ffmpeg
 
 COPY requirements.txt .
 
