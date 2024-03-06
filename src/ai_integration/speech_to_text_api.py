@@ -143,12 +143,15 @@ def whisper_multi_speech_api(
     mel = whisper.log_mel_spectrogram(_audio_).to(model.device)
 
     _, probs = model.detect_language(mel)
-    logging.debug("Detected language: %s", max(probs, key=probs.get))
+    logging.debug(f"Detected language: {max(probs, key=probs.get)}")
 
-    options = whisper.DecodingOptions()
+    options = whisper.DecodingOptions(
+        fp16=False,
+        language="en"
+    )
     result = whisper.decode(model, mel, options)
 
-    logging.debug("whisper_multi_speech time: %s", time.time() - start_time)
+    logging.debug(f"whisper_multi_speech time: {time.time() - start_time}")
     return result.text
 
 
@@ -241,5 +244,5 @@ def save_as_mp3(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    audio, _ = record_until_silence()
-    save_as_mp3(audio)
+    transcript = whisper_multi_speech_api('/Users/ibrahimharoon/BeanHubCo/BeanHub-backend/urdu_sample.wav')
+    print(f"Transcript: {transcript}")
