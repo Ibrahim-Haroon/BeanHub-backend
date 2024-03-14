@@ -78,6 +78,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y portaudio19-dev flac ffmpeg
 
+      - name: Install pip dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install coverage pylint
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
       - name: Test with Django
         run: python -m coverage run --branch --source=src manage.py test
 
@@ -103,6 +109,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install coverage
+          
       - uses: actions/checkout@v4
       
       - name: Coverage report
