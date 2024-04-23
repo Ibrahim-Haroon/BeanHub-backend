@@ -5,6 +5,8 @@ import time
 import logging
 from os import path
 from os import getenv as env
+from pprint import pprint
+
 from openai import OpenAI
 from dotenv import load_dotenv
 from src.django_beanhub.settings import DEBUG
@@ -81,6 +83,48 @@ def conv_ai(
     logging.debug("conv_ai time: %s", (time.time() - start_time))
 
 
+def local_conv_ai(
+        transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
+        api_key: str = "sk-no-key-required"
+) -> str:  # pragma: no cover
+    """
+    @rtype: str
+    @param transcription: complete transcription of the customer's order
+    @param order_report: parsed order details from the transcription
+    @param conversation_history: all previous conversation history
+    @param deal: most relevant deal to offer customer
+    @param api_key: just to keep format consistent with conv_ai, but not used
+    """
+
+    client = OpenAI(
+        base_url="http://localhost:8080/v1",
+        api_key=api_key
+    )
+
+    response = client.chat.completions.create(
+        model='llama-2-13b-chat.Q4_K_M.gguf',
+        messages=[
+            {
+                "role": "system",
+                "content": (f"{ROLE} and all previous conversation history:"
+                            f" {conversation_history} "
+                            f"and remember to upsell customer with deal: {deal}"
+                            ),
+            },
+            {
+                "role": "user",
+                "content": f"{PROMPT}\n"
+                           f"transcription: {transcription}"
+                           f" + order details: {order_report}"
+            }
+        ],
+        stream=True
+    )
+
+    for chunk in response:  # pylint: disable=E1133
+        yield chunk.choices[0].delta.content
+
+
 def main(
 
 ) -> None:  # pragma: no cover
@@ -94,7 +138,7 @@ def main(
         key = api_key.readline().strip()
 
     start_time = time.time()
-    for _ in conv_ai(
+    for _ in local_conv_ai(
             transcription="Can I get one smoothie please",
             order_report="""
                    ([{'BeverageItem': {'item_name': 'smoothie', 'quantity': [1], 'price': [5.0], 'temp': 'regular',
@@ -104,7 +148,8 @@ def main(
                             """,
             conversation_history="",
             deal="Get a glazed donut for $1 more",
-            api_key=key):
+            api_key=key
+    ):
         print(_)
     print(f"conv_ai time: {time.time() - start_time}")
 
