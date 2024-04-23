@@ -3,7 +3,7 @@
 
 other/datasets
 other/images
-other/genai_models
+other/genai_models/ner_model
 other/codebase_structure.txt
 other/database-info.csv
 other/deepgram_api_key.txt
@@ -17,3 +17,11 @@ src/ai_integration/runs
 codecov.yml
 coverage.xml
 README.md
+
+*__pycache__*
+.idea/
+*.DS_Store
+
+environment.sh
+pytest.ini
+tests/
