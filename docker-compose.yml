@@ -1,10 +1,12 @@
 version: '3.9'
 
 services:
-  django:
+  beanhub-server:
     image: beanhub-backend:latest
     container_name: beanhub-server
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.beanhub
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
@@ -13,6 +15,23 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      - redis
+      - rabbitmq
+  llama-cpp-server:
+    image: llama-cpp-server:latest
+    container_name: llama-cpp-server
+    build:
+      context: .
+      dockerfile: Dockerfile.llama-cpp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    ports:
+      - "8080:8080"
+    depends_on:
+      - beanhub-server
       - redis
       - rabbitmq
   redis:
