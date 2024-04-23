@@ -83,6 +83,7 @@ def conv_ai(
     logging.debug("conv_ai time: %s", (time.time() - start_time))
 
 
+# pylint: disable=too-many-arguments
 def local_conv_ai(
         transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
         api_key: str = "sk-no-key-required"
