@@ -6,11 +6,6 @@ from typing import Final
 
 SIZE_PATTERN: Final = r'\b(small|medium|large|extra large)\b'
 
-COFFEE_PATTERN: Final = (
-    r'\b(coffee|black coffee|cappuccino|latte|americano|macchiato|'
-    r'frappuccino|chai latte|espresso)s?(?<!shot of)\b'
-)
-
 FLAVOR_PATTERN: Final = (
     r'\b(?!pump of |pumps of )'
     r'(vanilla|caramel|cinnamon|pumpkin|espresso spice|peppermint|chocolate|white '
@@ -34,16 +29,23 @@ QUANTITY_PATTERN: Final = (
     r'dozen|a lot|a|an|bakers dozen|\d+)\b'
 )
 
+COFFEE_PATTERN: Final = (
+    r'\b(coffee|black coffee|cappuccino|latte|americano|macchiato|'
+    r'frappuccino|chai latte|espresso)s?(?<!shot of)\b'
+)
+
 BEVERAGE_PATTERN: Final = (
     r'\b(water|waters|tea|hot chocolate|hot cocoa|apple juice|orange juice|cranberry juice|'
+    r'plain pancake|blueberry pancake|chocolate chip pancake|strawberry pancake|'
     r'mango smoothie|pineapple smoothie|pina colada smoothie|vanilla milkshake|'
     r'lemon tea|mango tea|jasmine|green tea|mint tea)s?\b'
 )
 
 FOOD_PATTERN: Final = (
     r'\b(egg and cheese croissant|egg and cheese|bacon egg and cheese|fruit|yogurt|'
-    r'oatmeal|egg and cheese on croissant||hash brown'
+    r'oatmeal|egg and cheese on croissant||hash brown|'
     r'grilled cheese|egg and cheese on english muffin|plain bagel|'
+    r''
     r'everything bagel|sesame bagel|asiago bagel)s?\b'
 )
 
