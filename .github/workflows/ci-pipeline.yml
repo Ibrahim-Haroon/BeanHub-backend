@@ -5,7 +5,7 @@ on:
     paths:
       - '**.py'
       - 'requirements.txt'
-      - '.github/workflows/unit-test.yml'
+      - '.github/workflows/ci-pipeline.yml'
       
   pull_request: {}
 
