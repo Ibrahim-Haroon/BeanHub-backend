@@ -121,7 +121,7 @@ def fine_tune_ner_bert(
         return False
 
     save_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..",
-                             "other/genai_models/")
+                             "other/genai_models/ner_model")
     data = load_data()
 
     if data.empty:

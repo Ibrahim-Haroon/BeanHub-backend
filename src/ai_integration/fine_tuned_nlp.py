@@ -40,7 +40,7 @@ def ner_transformer(
         return []
 
     transformer_file_path = path.join(path.dirname(path.realpath(__file__)), "../..",
-                                      "other/genai_models/")
+                                      "other/genai_models/ner_model")
 
     model = NERModel('bert', transformer_file_path, use_cuda=False)
 
