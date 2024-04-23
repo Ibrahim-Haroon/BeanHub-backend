@@ -78,6 +78,7 @@ def test_conv_ai_with_deal(
         "Burger: $5",
         "Hi",
         "Special deal",
+        api_key="foo",
         max_tokens=50)
     result = next(response)
 
