@@ -24,9 +24,9 @@ def google_cloud_speech_api(
         source: str = None
 ) -> str:
     """
-
-    @rtype: str
+    This function transcribes audio file using Google Cloud Speech API
     @param source: str = file path of an audio file
+    @rtype: str
     @return: transcription
     """
 
@@ -63,9 +63,9 @@ def nova_speech_api(
         source: str
 ) -> str:
     """
-
-    @rtype: str
+    This function transcribes audio file using Deepgram API
     @param source: audio file path
+    @rtype: str
     @return: transcription
     """
     key = env("DEEPGRAM_API_KEY")
@@ -98,6 +98,7 @@ def whisper_speech_api(
         source: str
 ) -> str:
     """
+    This function transcribes audio file using Whisper API
     @possible models:
         size,params,english,VRAM,relative speed
         tiny,39 M,tiny.en,1 GB,32x
@@ -105,8 +106,8 @@ def whisper_speech_api(
         small,244 M,small.en,2 GB,6x
         medium,569 M,medium.en,5 GB,2x
         large,1550 M,N/A,10 GB,1x
-    @rtype: str
     @param source: audio file path
+    @rtype: str
     @return: transcription
     """
     start_time = time.time()
@@ -122,9 +123,9 @@ def whisper_multi_speech_api(
         source: str
 ) -> str:
     """
-
+    This function transcribes multilingual audio files using Whisper API
     @possible models:
-        size,params,,multilingual,VRAM,relative speed
+        size,params,multilingual,VRAM,relative speed
         tiny,39 M,tiny,1 GB,32x
         base,74 M,base,1 GB,16x
         small,244 M,small,2 GB,6x
@@ -159,7 +160,7 @@ def record_until_silence(
 
 ) -> bytes and str:
     """
-
+    This function records audio from the microphone until silence is detected.
     @rtype: bytes and str
     @return: audio file containing recording of microphone and transcription
     """
@@ -206,8 +207,9 @@ def return_as_wav(
         audio_data: bytes
 ) -> bytes:
     """
-    @rtype: bytes
+    This function converts audio data to wav format
     @param audio_data: audio data to convert
+    @rtype: bytes
     @return: bytes of wav audio data
     """
     buffer = io.BytesIO()
@@ -231,10 +233,11 @@ def save_as_mp3(
         print_completion: bool = False
 ) -> None:
     """
-
+    This function saves audio data as an mp3 file
     @param print_completion: boolean for whether you want notification of completion
     @param audio_data: audio to save in .mp3 format
     @param output_filename: file name to save audio object under
+    @rtype: None
     @return None
     """
     audio_segment = AudioSegment(audio_data, sample_width=2, frame_rate=44100, channels=1)
