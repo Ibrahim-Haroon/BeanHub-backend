@@ -17,10 +17,9 @@ def get_secret(
         csv_file: StringIO = None
 ) -> dict:
     """
-
-    @purpose: SDK for AWS
-    @rtype: dict
+    SDK for AWS
     @param csv_file: used for unit tests and if you want to pass in own AWS authentication
+    @rtype: dict
     @return: ex. {
                     "username":"username",
                     "password":"pass",

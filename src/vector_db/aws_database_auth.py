@@ -15,9 +15,9 @@ def connection_string(
         csv_file: StringIO = None
 ) -> str:
     """
-
-    @rtype: str
+    This function is used to get the connection string for the AWS RDS database
     @param csv_file: used for unit tests and if you want to pass in own database authentication
+    @rtype: str
     @return: connection string for AWS RDS
     """
     db_info_file_path = path.join(path.dirname(path.realpath(__file__)),

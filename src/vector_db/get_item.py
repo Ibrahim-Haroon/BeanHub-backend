@@ -35,13 +35,13 @@ def get_item(
         database_csv_file: StringIO = None
 ) -> str and bool:
     """
-
-    @rtype: str + bool
+    This API is used to get the order details of the item they requested.
     @param order: customers order ex. "Can I have a black coffee with 3 shots of cream."
     @param api_key: OpenAI auth
     @param connection_pool:
     @param embedding_cache: cache to reduce number of calls to OpenAI API
     @param database_csv_file: AWS RDS and PostgreSQL auth
+    @rtype: str + bool
     @return: Closest embedding along with a boolean flag to mark successful retrieval
     """
     if not order:

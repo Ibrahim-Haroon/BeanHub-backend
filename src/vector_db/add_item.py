@@ -15,8 +15,7 @@ def add_item(
         database_csv_file: StringIO = None
 ) -> bool:
     """
-
-    @rtype: boolean
+    This API is used to add a new item to the database
     @param item: new menu item to insert ex.
                 {
                     "MenuItem":
@@ -31,6 +30,7 @@ def add_item(
     @param key: auth key for OpenAI
     @param aws_csv_file: SDK auth for AWS
     @param database_csv_file: auth to manager AWS RDS and PostgreSQL database
+    @rtype: boolean
     @return: success if added into database else failure
     """
     if not item:

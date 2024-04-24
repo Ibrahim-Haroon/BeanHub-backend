@@ -18,13 +18,13 @@ def similarity_search(
         aws_csv_file: StringIO = None, database_csv_file: StringIO = None
 ) -> list and bool:
     """
-
-    @rtype: list[list[float]] + boolean
+    This API is used to search for the most similar embeddings to a given order.
     @param order: customers order ex. "Can I have a black coffee with 3 shots of cream."
     @param top_k: The number of closest embeddings you want
     @param key: OpenAI auth
     @param aws_csv_file: AWS SDK auth
     @param database_csv_file: AWS RDS and PostgreSQL auth
+    @rtype: list[list[float]] + boolean
     @return: the list of 3 closest embeddings along with a boolean flag to mark success
     """
     if not order:

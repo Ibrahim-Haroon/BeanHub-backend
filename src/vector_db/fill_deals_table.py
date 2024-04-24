@@ -19,13 +19,13 @@ def fill_deals_table(
         aws_csv_file: StringIO = None, database_csv_file: StringIO = None
 ) -> bool:
     """
-
-    @rtype: bool
+    This function is used to fill the deals table in the database with the deal csv file.
     @param deals: all the menu items which have to be embedded and inserted in DB
     @param key: key for OpenAI auth
     @param aws_csv_file:  used for unit tests and if you want to pass in own AWS authentication
     @param database_csv_file: used for unit tests and if you want
      to pass in own database authentication
+    @rtype: bool
     @return: true if successfully created and filled table
     """
 

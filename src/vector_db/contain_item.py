@@ -17,13 +17,13 @@ def contains_quantity(
         aws_csv_file: StringIO = None, database_csv_file: StringIO = None
 ) -> str:
     """
-
-    @rtype: bool
+    This API is used to check if the item is in stock and if the quantity is available.
     @param order: customers order ex. "Can I have a black coffee with 3 shots of cream."
     @param quantity:
     @param key: auth key for OpenAI
     @param aws_csv_file: AWS SDK auth
     @param database_csv_file: AWS RDS and PostgreSQL auth
+    @rtype: bool
     @return: Boolean flag to show whether the item is in stock
     """
     if not order:
