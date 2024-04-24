@@ -16,8 +16,9 @@ def split_order(
         order: str
 ) -> list[str]:
     """
-    @rtype: list[str]
+    This function splits the order into a list of items using the regex patterns defined
     @param order: human-readable order
+    @rtype: list[str]
     @return: list of items in the order, split by the pattern
     """
     split_pattern = (
@@ -47,9 +48,10 @@ def correct_coffee_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
     """
-    @rtype: list[str]
+    This function corrects the quantities of the coffee order for when the customer did not specify a quantity
     @param order_details: dictionary of the coffee order
     @param original_order: original order
+    @rtype: list[str]
     @return: quantity of each item in the order even if the customer did not specify a quantity
     """
     updated_quantities = []
@@ -79,9 +81,10 @@ def correct_beverage_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
     """
-    @rtype: list[str]
+    This function corrects the quantities of the beverage order for when the customer did not specify a quantity
     @param order_details: dictionary of the beverage order
     @param original_order: original order
+    @rtype: list[str]
     @return: quantity of each item in the order even if the customer did not specify a quantity
     """
     updated_quantities = []
@@ -110,9 +113,10 @@ def correct_food_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
     """
-    @rtype: list[str]
+    This function corrects the quantities of the food order for when the customer did not specify a quantity
     @param order_details: dictionary of the food order
     @param original_order: original order
+    @rtype: list[str]
     @return: quantity of each item in the order even if the customer did not specify a quantity
     """
     updated_quantities = []
@@ -139,9 +143,10 @@ def correct_bakery_order_quantities(
         order_details: dict, original_order: str
 ) -> list[str]:
     """
-    @rtype: list[str]
+    This function corrects the quantities of the bakery order for when the customer did not specify a quantity
     @param order_details: dictionary of the bakery order
     @param original_order: original order
+    @rtype: list[str]
     @return: quantity of each item in the order even if the customer did not specify a quantity
     """
     updated_quantities = []
