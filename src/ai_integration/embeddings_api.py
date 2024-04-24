@@ -16,11 +16,11 @@ def openai_embedding_api(
         text: str, api_key: str = None
 ) -> []:
     """
-
-    @rtype: list[list[float]] (embeddings vector)
+    This function takes in a menu item and returns the embeddings vector representation of the menu item
     @param text: str = menu item
     @param api_key: auth key for OpenAI
-    @return: vector of menu item
+    @rtype: list[list[float]] (embeddings vector)
+    @return: vector representation of menu item
     """
     if api_key:
         embeddings = OpenAIEmbeddings(api_key=api_key)
@@ -34,9 +34,9 @@ def get_item_quantity(
         row: pd.Series
 ) -> int:
     """
-
-    @rtype: int
+    This function takes in a row from the pandas dataframe and returns the quantity of the item
     @param row: object from pandas dataframe
+    @rtype: int
     @return: INT_MAX if item is a combo, else return the quantity
     """
     item_quantity = row
@@ -51,9 +51,9 @@ def get_common_allergin(
         row: pd.Series
 ) -> str:
     """
-
-    @rtype: str
+    This function takes in a row from the pandas dataframe and returns the common allergin of the item
     @param row: object from pandas dataframe
+    @rtype: str
     @return: "none" if item has no common allergin, else return the allergin
     """
     common_allergin = row
@@ -67,9 +67,9 @@ def get_calorie_range(
         row: pd.Series
 ) -> tuple[int, int]:
     """
-
-    @rtype: tuple[int, int]
+    This function takes in a row from the pandas dataframe and returns the calorie range of the item
     @param row: object from pandas dataframe
+    @rtype: tuple[int, int]
     @return: if object has set calories then tuple of min, min,
     else return tuple of min and max calories
     """
@@ -86,7 +86,7 @@ def parse_menu_csv(
 
 ) -> list[dict]:
     """
-
+    This function parses the menu.csv and returns a dictionary representation of the menu items
     @rtype: list[dict]
     @return: JSON object of menu items
     """
@@ -122,7 +122,7 @@ def parse_deals_csv(
 
 ) -> list[dict]:
     """
-
+    This function parses the deals.csv and returns a dictionary representation of the menu items
     @rtype: list[dict]
     @return: JSON object of menu items
     """
