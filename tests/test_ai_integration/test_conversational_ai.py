@@ -22,7 +22,7 @@ def mock_client(
         yield mock
 
 
-def test_conv_ai_without_deal(
+def test_conv_ai_streams_expected_string_response_when_given_no_deal(
         mock_client, mock_environment_variables
 ) -> None:
     # Arrange
@@ -53,7 +53,38 @@ def test_conv_ai_without_deal(
     assert result == "Response without deal"
 
 
-def test_conv_ai_with_deal(
+def test_conv_ai_streams_an_empty_string_response_when_api_returns_nothing(
+        mock_client, mock_environment_variables
+) -> None:
+    # Arrange
+    expected_response = ""
+    mock_client.return_value.chat.completions.create.return_value = iter(
+        [
+            MagicMock(
+                choices=[
+                    MagicMock(
+                        delta=MagicMock(
+                            content=expected_response
+                        )
+                    )
+                ]
+            )
+        ]
+    )
+
+    # Act
+    response = conv_ai(
+        "Order: One coffee",
+        "Coffee: $3",
+        "Hello",
+        max_tokens=50)
+    result = next(response)
+
+    # Assert
+    assert result == expected_response
+
+
+def test_conv_ai_streams_expected_string_response_when_given_deal(
         mock_client, mock_environment_variables
 ) -> None:
     # Arrange
@@ -86,7 +117,7 @@ def test_conv_ai_with_deal(
     assert result == expected_response
 
 
-def test_local_conv_ai_without_deal(
+def test_local_conv_ai_streams_expected_string_response_when_given_no_deal(
         mock_client
 ) -> None:
     # Arrange
@@ -115,10 +146,10 @@ def test_local_conv_ai_without_deal(
     result = next(response)
 
     # Assert
-    assert result == "Local Response without deal"
+    assert result == expected_response
 
 
-def test_local_conv_ai_with_deal(
+def test_local_conv_ai_streams_expected_string_response_when_given_deal(
         mock_client
 ) -> None:
     # Arrange
@@ -147,4 +178,36 @@ def test_local_conv_ai_with_deal(
     result = next(response)
 
     # Assert
-    assert result == "Local Response with deal"
+    assert result == expected_response
+
+
+def test_local_conv_ai_streams_empty_string_response_when_api_returns_nothing(
+        mock_client
+) -> None:
+    # Arrange
+    expected_response = ""
+    mock_client.return_value.chat.completions.create.return_value = iter(
+        [
+            MagicMock(
+                choices=[
+                    MagicMock(
+                        delta=MagicMock(
+                            content=expected_response
+                        )
+                    )
+                ]
+            )
+        ]
+    )
+
+    # Act
+    response = local_conv_ai(
+        "Order: One salad",
+        "Salad: $4", "Good morning",
+        "Lunch special",
+        api_key="dummy-key"
+    )
+    result = next(response)
+
+    # Assert
+    assert result == expected_response
