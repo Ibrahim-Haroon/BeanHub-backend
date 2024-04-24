@@ -8,9 +8,10 @@ def number_map(
         num: str
 ) -> int:
     """
-    @rtype: int
+    This function maps a string representation of a number to an integer representation of the number.
     @param num: string representation of a number
     @return: integer representation of the number
+    @rtype: int
     """
     _number_map = {
         "one": 1,
