@@ -17,12 +17,10 @@ def hello_world(
     return hello
 
 
-# Set up your OpenAI API key and organization
-API_KEY = "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"
+API_KEY = ""
 client = OpenAI(api_key=API_KEY)
 
 
-# Define your ChatGPT function
 # pylint: disable=unused-argument
 def call_chat_gpt_with_functions(
         append_string
