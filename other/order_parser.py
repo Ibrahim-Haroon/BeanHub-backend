@@ -1,8 +1,6 @@
 """
 parser function that takes in an order and returns a dictionary of the items in the order.
 Currently, this function is not being utilized in the codebase, as it's being done in the frontend.
-However, it's a good practice to have a parser function that takes in an order and returns a
- dictionary of the items in the order.
 """
 order = [
     {
@@ -83,9 +81,10 @@ def parse_coffee_or_beverage_item(
         item: dict, key: str
 ) -> dict:
     """
-    @rtype: dict
+    This function parses coffee or beverage items.
     @param item: item in un-parsable format
     @param key: type, e.g. CoffeeItem, BeverageItem
+    @rtype: dict
     @return: dictionary of the item in parsable format
     """
     i, res = 0, {}
@@ -137,9 +136,10 @@ def parse_bakery_or_food_item(
         item: dict, key: str
 ) -> dict:
     """
-    @rtype: dict
+    This function parses bakery or food items.
     @param item: item in un-parsable format
     @param key: type, e.g. BakeryItem, FoodItem
+    @rtype: dict
     @return: dictionary of the item in parsable format
     """
     modification = item[key]['cart_action'] == "modification"
@@ -157,8 +157,10 @@ def parser(
         _order_
 ) -> None:
     """
-    @rtype: None
+    This function is a duplicate of the parser used on the frontend to parse order before displaying it.
     @param _order_: un-parsable order
+    @rtype: None
+    @return: None
     """
     for item in _order_:
         res = {}
