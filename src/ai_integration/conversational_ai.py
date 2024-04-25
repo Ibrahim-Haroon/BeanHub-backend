@@ -5,6 +5,8 @@ import time
 import logging
 from os import path
 from os import getenv as env
+from pprint import pprint
+
 from openai import OpenAI
 from dotenv import load_dotenv
 from src.django_beanhub.settings import DEBUG
