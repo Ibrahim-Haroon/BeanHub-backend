@@ -30,10 +30,10 @@ def ner_transformer(
         print_prediction: bool = False
 ) -> list:
     """
-
-    @rtype: list of dictionaries
+    This function takes in a customer request and predicts the entities in the request using a fine-tuned BERT model
     @param input_string: customer request ex. "I want a black coffee"
     @param print_prediction: boolean flag to print predictions
+    @rtype: list of dictionaries
     @return: predictions generated from fine-tuned transformer
     """
     if not input_string or not isinstance(input_string, str):
@@ -55,7 +55,7 @@ def ner_transformer(
 # pylint: disable=R0902, R0903
 class Order:
     """
-    class to process the order and make a report
+    class to process the order and make a report to be sent to the frontend
     """
 
     def __init__(
@@ -103,6 +103,7 @@ class Order:
             self
     ) -> dict:
         """
+        This function processes the order and returns a dictionary object of the order
         @rtype: dict
         @return: dictionary object of the order
         """
@@ -415,8 +416,9 @@ def split_transcription(
         order: str
 ) -> list[str]:
     """
-    @rtype: list[str]
+    This function splits the order into 4 types: coffee, beverage, food, and bakery
     @param order: original transcription
+    @rtype: list[str]
     @return: order split into 4 types: coffee, beverage, food, and bakery
     """
     start_time = time.time()
@@ -436,11 +438,12 @@ def make_order_report(
         aws_connected: bool = False
 ) -> [list[dict]] and str:
     """
-    @rtype: list[dict] and str
+    This function processes the split orders and makes a report to be sent to the frontend
     @param split_orders: order split into 4 types: coffee, beverage, food, and bakery
     @param connection_pool: connection for postgres vector database
     @param embedding_cache: redis cache to reduce database queries
     @param aws_connected: flag to check if aws credentials are connected
+    @rtype: list[dict] and str
     @return: all the orders and the str version for conversational AI model
     """
     start_time = time.time()
@@ -473,13 +476,14 @@ def process_order(
         embedding_cache, aws_connected
 ) -> None:
     """
-    @rtype: None
+    This function processes the split order and appends the final order to the order_report
     @param order: one of the split orders
     @param order_report: pass by reference to append the final order
     @param model_report: pass by reference to append the final order
     @param connection_pool: connection for postgres vector database
     @param embedding_cache: redis cache to reduce database queries
     @param aws_connected: flag to check if aws credentials are connected
+    @rtype: None
     @return: None because order_report and model_report are passed by reference
     """
     item_types = ['CoffeeItem', 'BeverageItem', 'FoodItem', 'BakeryItem']
@@ -499,8 +503,9 @@ def human_requested(
         transcription: str
 ) -> bool:
     """
-    @rtype: bool
+    This function checks if the transcription contains any indicators to talk to a human (HITL)
     @param transcription: transcription from customer
+    @rtype: bool
     @return: true if regex pattern is found in transcription
     """
     transcription = transcription.lower()
@@ -513,8 +518,9 @@ def accepted_deal(
         transcription: str
 ) -> bool:  # pragma: no cover
     """
-    @rtype: bool
+    This function checks if the transcription contains any indicators to accept the deal
     @param transcription: transcription from customer
+    @rtype: bool
     @return: true if regex pattern is found in transcription
     """
     transcription = transcription.lower()

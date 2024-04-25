@@ -30,14 +30,14 @@ def get_deal(
         embedding_cache: redis.Redis = None, database_csv_file: StringIO = None
 ) -> str and dict and bool:
     """
-
-    @rtype: str + dict + bool
+    This API is used to get the best deal for the customer based on the order.
     @param order: order_report from fine_tuned_nlp.py
     @param api_key: OpenAI auth
     @param connection_pool:
     @param embedding_cache: cache to reduce number of calls to OpenAI API
     @param database_csv_file: AWS RDS and PostgreSQL auth
-    @return: Closest embedding along, object that can be used by frontend,
+    @rtype: str + dict + bool
+    @return: Closest embedding along with object that can be used by frontend,
     a boolean flag to mark successful retrieval
     """
     if not order:

@@ -14,11 +14,11 @@ def openai_text_to_speech_api(
         text: str, api_key: str = None, audio_file_path: str = None
 ) -> bytes:
     """
-
-    @rtype: bytes
+    This function converts text to speech using OpenAI's API
     @param text: desired text to convert into audio
     @param api_key: key for OpenAI auth
     @param audio_file_path: file path to save if wanted
+    @rtype: bytes
     @return audio
     """
     if api_key:

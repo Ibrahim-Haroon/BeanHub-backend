@@ -24,7 +24,7 @@ load_dotenv()
 
 class ConnectionManager():
     """
-    This class is used to manage connections to external services such as RabbitMQ, PostgreSQL, etc.
+    This singleton class is used to manage connections to external services such as RabbitMQ, PostgreSQL, etc.
     """
     __lock: threading.Lock = threading.Lock()
     __instance: Optional['ConnectionManager'] = None
@@ -46,6 +46,7 @@ class ConnectionManager():
 
     ) -> 'ConnectionManager':
         """
+        This method is used to get the connection manager instance.
         @rtype: ConnectionManager
         @return: connection manager instance
         """
@@ -81,6 +82,7 @@ class ConnectionManager():
             self
     ) -> boto3.client:
         """
+        This method is used to get the s3 client.
         @rtype: boto3.client
         @return: s3 client
         """
@@ -90,6 +92,7 @@ class ConnectionManager():
             self
     ) -> str:
         """
+        This method is used to get the s3 bucket name.
         @rtype: str
         @return: s3 bucket name
         """
@@ -99,6 +102,7 @@ class ConnectionManager():
             self, _type_: str
     ) -> redis.Redis:
         """
+        This method is used to get the cache for conversation, deal, or embedding.
         @rtype: redis.Redis
         @return: cache for conversation, deal, or embedding
         """
@@ -109,6 +113,7 @@ class ConnectionManager():
             self
     ) -> pika.BlockingConnection:
         """
+        This method is used to get the rabbitmq connection.
         @rtype: BlockingConnection
         @return: rabbitmq connection
         """
@@ -118,6 +123,7 @@ class ConnectionManager():
             self
     ) -> psycopg2.pool.SimpleConnectionPool:
         """
+        This method is used to get the postgresql connection pool.
         @rtype: psycopg2.pool.SimpleConnectionPool
         @return: postgresql connection pool
         """

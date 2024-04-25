@@ -15,10 +15,10 @@ def load_data(
         csv_file: StringIO = None, display_data: bool = False
 ) -> pd.core.frame.DataFrame:
     """
-
-    @rtype: pandas DataFrame
+    This function loads the dataset and preprocesses it to be used by the transformer.
     @param csv_file: dataset containing tagged sentences
     @param display_data: boolean to print the amount of columns in csv_file
+    @rtype: pandas DataFrame
     @return: formatted dataset which is parsable by transformer
     """
     if csv_file is None:
@@ -47,9 +47,9 @@ def __labels__(
         data: pd.core.frame.DataFrame
 ) -> []:
     """
-
-    @rtype: list(str)
+    This function returns the unique labels in the dataset.
     @param data: formatted dataset
+    @rtype: list(str)
     @return: list of labels ex. B-COFFEE-TYPE, I-BAKERY-ITEM
     """
     return data["labels"].unique().tolist()
@@ -59,7 +59,7 @@ def __args__(
 
 ) -> NERArgs:
     """
-
+    This function returns the arguments for the NER class.
     @rtype: NERArgs
     @return: class which contains args/params for NER class
     """
@@ -77,9 +77,9 @@ def separate_into_test_and_train(
         data: pd.core.frame.DataFrame
 ) -> tuple and tuple:
     """
-
-    @rtype: 2x tuple[DataFrame, DataFrame]
+    This function splits the dataset into training and testing data (80% training, 20% testing).
     @param data: formatted dataset
+    @rtype: 2x tuple[DataFrame, DataFrame]
     @return: dataset split into train (80% original) and test (20% original)
     """
     x = data[["sentence_id", "words"]]
@@ -110,8 +110,9 @@ def fine_tune_ner_bert(
         model_save_path: str = None
 ) -> bool:
     """
-
+    This function fine-tunes BERT for NER task.
     @param model_save_path: if you want to change default save path of `other/genai_models/`
+    @rtype: bool
     @return: boolean to know training was success
     """
     if input_red("ARE YOU SURE YOU WANT TO DELETE AND REFINE BERT: ") != "YES":
@@ -155,7 +156,7 @@ def fine_tune_ner_bert(
 
 def main(
 
-) -> int:
+) -> int:  # pragma: no cover
     """
     @rtype: int
     @return: 0 if successful
@@ -165,5 +166,5 @@ def main(
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

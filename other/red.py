@@ -7,8 +7,9 @@ def input_red(
         string: str = "ARE YOU SURE YOU WANT TO DUMP AND CREATE A NEW TABLE (YES/NO) "
 ) -> str:
     """
-    @rtype: str
+    This function just takes input from stdin and prints to stdout in red
     @param string: the string to print in red
+    @rtype: str
     @return: input from stdout
     """
     print("\033[91m", end="")
@@ -22,8 +23,9 @@ def print_red(
         string: str = "RED"
 ) -> None:
     """
-    @rtype: None
+    This function just prints to stdout in red
     @param string: string to print in red
+    @rtype: None
     @return: Nothing
     """
     print("\033[91m", end="")

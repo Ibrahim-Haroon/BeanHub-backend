@@ -67,6 +67,7 @@ class RabbitMQConnectionPool:
             self
     ) -> pika.BlockingConnection:
         """
+        This functino is used to get a rabbitmq connection from the pool.
         @rtype: BlockingConnection
         @return: rabbitmq connection from pool (or new connection if pool is empty)
         """

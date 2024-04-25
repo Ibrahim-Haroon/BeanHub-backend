@@ -12,6 +12,9 @@ logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s:%(levelname)s:%(mes
 def time_log(func):
     """
     This decorator logs the time taken for a function to execute.
+    @param func: function to be decorated
+    @rtype: function
+    @return: wrapper function
     """
     def wrapper(*args, **kwargs):
         start_time = time.time()

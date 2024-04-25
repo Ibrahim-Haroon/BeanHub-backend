@@ -5,8 +5,6 @@ import time
 import logging
 from os import path
 from os import getenv as env
-from pprint import pprint
-
 from openai import OpenAI
 from dotenv import load_dotenv
 from src.django_beanhub.settings import DEBUG
@@ -36,13 +34,15 @@ def conv_ai(
         api_key: str = None, max_tokens: int = 200
 ) -> str:
     """
-    @rtype: str
+    This function uses the openai api to get a conversational ai response from the gpt model
     @param transcription: complete transcription of the customer's order
     @param order_report: parsed order details from the transcription
     @param conversation_history: all previous conversation history
     @param deal: most relevant deal to offer customer
     @param api_key: openi api key
     @param max_tokens: control the length of the response
+    @rtype: str
+    @return: response from the gpt model
     """
     if api_key is None:
         api_key = env('OPENAI_API_KEY')
@@ -87,12 +87,14 @@ def local_conv_ai(
         api_key: str = "sk-no-key-required"
 ) -> str:
     """
-    @rtype: str
+    This function uses openai's class to get a conversational ai response from the local llama-2 model
     @param transcription: complete transcription of the customer's order
     @param order_report: parsed order details from the transcription
     @param conversation_history: all previous conversation history
     @param deal: most relevant deal to offer customer
     @param api_key: just to keep format consistent with conv_ai, but not used
+    @rtype: str
+    @return: response from the local llama-2 model
     """
 
     client = OpenAI(
