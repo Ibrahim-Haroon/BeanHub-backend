@@ -34,7 +34,7 @@ PROMPT = """
 def conv_ai(
         transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
         api_key: str = None, max_tokens: int = 200
-) -> str:  # pragma: no cover
+) -> str:
     """
     @rtype: str
     @param transcription: complete transcription of the customer's order
@@ -48,10 +48,8 @@ def conv_ai(
         api_key = env('OPENAI_API_KEY')
 
     start_time = time.time()
-    if api_key:
-        client = OpenAI(api_key=api_key)
-    else:
-        client = OpenAI(api_key=api_key)
+
+    client = OpenAI(api_key=api_key)
 
     response = client.chat.completions.create(
         model='gpt-3.5-turbo',
@@ -87,7 +85,7 @@ def conv_ai(
 def local_conv_ai(
         transcription: str, order_report: str, conversation_history: str, deal: str | None = None,
         api_key: str = "sk-no-key-required"
-) -> str:  # pragma: no cover
+) -> str:
     """
     @rtype: str
     @param transcription: complete transcription of the customer's order
