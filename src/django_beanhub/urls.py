@@ -25,7 +25,6 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from pika import BlockingConnection, ConnectionParameters
 
 load_dotenv()
 
@@ -65,14 +64,6 @@ def health_check(
         health_status['services']['redis'] = "ok"
     except Exception as e:
         health_status['services']['redis'] = str(e)
-        health_status['status'] = "unhealthy"
-
-    try:
-        rabbitmq_client = BlockingConnection(ConnectionParameters(env('RABBITMQ_HOST')))
-        rabbitmq_client.close()
-        health_status['services']['rabbitmq'] = "ok"
-    except Exception as e:
-        health_status['services']['rabbitmq'] = str(e)
         health_status['status'] = "unhealthy"
 
     if health_status['status'] == "unhealthy":
